@@ -9,13 +9,13 @@
 
 | Metric | Value |
 |---|---|
-| **Workspace Skills Registered** | 42 |
+| **Workspace Skills Registered** | 50 |
 | **Global / System Skills Available** | 25 |
-| **Total Ecosystem Skills** | 67 |
-| **Workspace Sources** | `mattpocock/skills` (35), `cesarchavezcal/personal-skills` (6), `cesarchavezcal/agent-boilerplate` (1) |
+| **Total Ecosystem Skills** | 75 |
+| **Workspace Sources** | `mattpocock/skills`, `cesarchavezcal/personal-skills`, `expo/skills`, `supabase/agent-skills`, `callstack/react-native-testing-library` |
 | **Global Sources** | `gentleman-programming` (SDD suite, Gentle AI, Skill tooling) |
 | **Storage Locations** | Workspace: `.agents/skills/` &bull; Global: `~/.agents/skills/` |
-| **Lockfile** | [`skills-lock.json`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/skills-lock.json) |
+| **Lockfile** | [`skills-lock.json`](skills-lock.json) |
 
 ---
 
@@ -96,7 +96,22 @@
 
 ---
 
-## 6. Global & System Skills (25 skills)
+## 6. Stack & Domain Skills (Expo + Supabase) (8 skills)
+
+| Skill | Trigger / Command | Source | Description |
+|---|---|---|---|
+| [`expo-router`](.agents/skills/expo-router/SKILL.md) | `expo-router` | `expo/skills` | File-based navigation, tabs, modals, and native Stack for Expo apps. |
+| [`expo-native-ui`](.agents/skills/expo-native-ui/SKILL.md) | `expo-native-ui` | `expo/skills` | Native UI primitives, headers, dynamic sheets, and liquid transitions. |
+| [`expo-design-system`](.agents/skills/expo-design-system/SKILL.md) | `expo-design-system` | `expo/skills` | Design system tokens and styling patterns for Expo. |
+| [`supabase-postgres-best-practices`](.agents/skills/supabase-postgres-best-practices/SKILL.md) | `supabase-postgres-best-practices` | `supabase/agent-skills` | Postgres schema design, RLS, indexes, and transactional ledger integrity. |
+| [`supabase`](.agents/skills/supabase/SKILL.md) | `supabase` | `supabase/agent-skills` | Supabase Auth, Realtime subscriptions, and client integration. |
+| [`react-native-testing`](.agents/skills/react-native-testing/SKILL.md) | `react-native-testing` | `callstack/react-native-testing-library` | Component, screen, and hook testing with React Native Testing Library. |
+| [`eas-hosting`](.agents/skills/eas-hosting/SKILL.md) | `eas-hosting` | `expo/skills` | EAS hosting and web deployment workflows. |
+| [`eas-workflows`](.agents/skills/eas-workflows/SKILL.md) | `eas-workflows` | `expo/skills` | EAS CI/CD build and store deployment pipelines. |
+
+---
+
+## 7. Global & System Skills (25 skills)
 
 ### 6.1 SDD Lifecycle Suite (10 skills)
 
