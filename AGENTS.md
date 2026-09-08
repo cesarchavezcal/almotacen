@@ -60,6 +60,18 @@ Prompting **`"autonomic, build an app that does X, Y, Z"`** or invoking **`/auto
 └───────────────────────────────┴───────────────────────────────┴───────────────────────────────────────────┘
 ```
 
+### Stack Skills Pipeline Linkage (Expo + Supabase)
+
+| Pipeline Phase | Primary Stack Skills Linked | Execution Purpose |
+|---|---|---|
+| **Phase 1: Explore & Scoping** | `product-function`, `domain-modeling`, `grill-with-docs` | Define $y = f(x)$, extract transactional domain model, eliminate scope creep |
+| **Phase 2: Specifications & Tests** | `to-spec`, `unslop`, `spec-to-tests` | Author formal behavioral contracts and un-contaminated `spec-tests.md` scenarios |
+| **Phase 3: Architecture & Design** | `information-architecture-review`, `ooux`, `expo-project-structure`, `expo-design-system`, `supabase-postgres-best-practices` | Structure Expo Router routes, design tokens, object cards, and relational ledger schema |
+| **Phase 4: Task Decomposition** | `to-tickets` | Break design into atomic TDD tickets bound to `SCEN-XXX` IDs |
+| **Phase 5: Implementation (TDD)** | `expo-router`, `expo-ui`, `expo-native-ui`, `expo-animation`, `expo-data-fetching`, `expo-dom`, `expo-module`, `expo-app-clip`, `supabase`, `react-native-testing`, `tdd` | Build Red ➔ Green UI and ledger logic using native SwiftUI/Compose and Supabase queries |
+| **Phase 6: Verification & Review** | `code-review`, `react-native-testing`, `unslop`, `.gga` | Two-axis review (Spec + Standards), component tests, and type checking |
+| **Phase 7: Shipping & Deploy** | `eas-hosting`, `eas-workflows`, `expo-upgrade`, `sdd-archive` | EAS CI/CD store builds, web export, and delta spec archiving |
+
 ### Execution Routing Policy for `/sdd-apply` / `/implement`
 When executing implementation tasks:
 1. **Default Route (Sequential / Single Ticket)**: `/sdd-apply` triggers `/implement`, which delegates to an isolated **`/harness`** subagent for strict Red ➔ Green ➔ Refactor TDD.

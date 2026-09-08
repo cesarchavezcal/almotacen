@@ -42,22 +42,63 @@ conventions:
     explore:
       command: "/product-function"
       secondary: "/grill-with-docs"
+      skills:
+        - product-function
+        - grill-with-docs
+        - domain-modeling
     spec:
       command: "/to-spec"
+      secondary: "/spec-to-tests"
+      skills:
+        - to-spec
+        - unslop
+        - spec-to-tests
     design:
       command: "/information-architecture"
       secondary: "/ooux"
+      skills:
+        - information-architecture-review
+        - ooux
+        - expo-project-structure
+        - expo-design-system
+        - expo-native-ui
+        - expo-ui
+        - supabase-postgres-best-practices
     tasks:
       command: "/to-tickets"
+      skills:
+        - to-tickets
     apply:
       executor: "/implement"
       worker: "/harness"
       swarm: "/team-cheap"
+      skills:
+        - expo-router
+        - expo-ui
+        - expo-native-ui
+        - expo-animation
+        - expo-data-fetching
+        - expo-dom
+        - expo-module
+        - expo-app-clip
+        - supabase-postgres-best-practices
+        - supabase
+        - tdd
+        - react-native-testing
     verify:
       review: "/code-review"
       gate: ".gga"
+      skills:
+        - code-review
+        - react-native-testing
+        - unslop
     archive:
       command: "/sdd-archive"
+      skills:
+        - sdd-archive
+        - eas-hosting
+        - eas-workflows
+        - expo-upgrade
 
 skills:
   registry_path: ".atl/skill-registry.md"
