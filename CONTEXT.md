@@ -1,23 +1,24 @@
 # Project Context (`CONTEXT.md`)
 
-This file holds the project's domain definition, architecture overview, and technology stack. Fill out these sections when initializing a new project from this boilerplate template.
+This file holds the project's domain definition, architecture overview, and technology stack.
 
 ---
 
 ## 1. Project Overview
 
-- **Project Name**: `[Your Project Name]`
-- **Domain / Description**: `[Brief 1-2 sentence description of what this application does]`
-- **Target Audience / Mental Model**: `[Core user profile and mental model]`
+- **Project Name**: `almotacen`
+- **Domain / Description**: A reactive cash flow manager and proactive zero-based budgeting tool combining the best of Monarch Money (tracking where your money went) and YNAB (deciding where your money will go).
+- **Target Audience / Mental Model**: Individuals and households seeking financial clarity and intentionality. Dual mental model: (1) Reactive cash flow tracking and transaction awareness, and (2) Proactive zero-based envelope budgeting where every currency unit is given a job.
 
 ---
 
 ## 2. Technology Stack
 
-- **Frontend**: `[e.g., Next.js 16 (App Router), React 19, Tailwind CSS]`
-- **Backend / Database**: `[e.g., Supabase Postgres, Node.js, Python FastAPI]`
-- **Testing Framework**: `[e.g., Vitest, Jest, Playwright]`
-- **Deployment Platform**: `[e.g., Vercel, Railway, Docker, AWS]`
+- **Frontend / Mobile**: Expo SDK 57 (Expo Router, React Native 0.86, React 19, TypeScript)
+- **Backend / Database**: Supabase (PostgreSQL, Row-Level Security, Realtime, Edge Functions)
+- **Local Storage / Caching**: Expo SQLite / OP-SQLite for offline-first reactive cash logging
+- **Testing Framework**: Vitest / Jest (`jest-expo`, `@testing-library/react-native`)
+- **Deployment & Distribution**: EAS (Expo Application Services) for iOS and Android native binaries; Vercel / Cloudflare for Web & PWA
 
 ---
 
@@ -25,6 +26,14 @@ This file holds the project's domain definition, architecture overview, and tech
 
 ```text
 .
+├── app/                    # Expo Router file-based navigation (tabs, layouts, modals)
+│   ├── (tabs)/             # Main tab navigator (Dashboard/Cashflow, Budget, Accounts)
+│   ├── _layout.tsx         # Root app layout & providers
+│   └── modal.tsx           # Quick transaction entry modal
+├── assets/                 # App icons, splash screens, and images
+├── components/             # Reusable UI components (Themed, Parallax, Forms)
+├── constants/              # App themes, colors, and static configuration
+├── .agents/                # Local agent skills and specialized workflows
 ├── .atl/                   # Skill registry index (.atl/skill-registry.md)
 ├── .gga                    # Gentleman Guardian Angel AI code review configuration
 ├── .github/                # GitHub workflows, issue templates, and PR template
@@ -44,6 +53,7 @@ This file holds the project's domain definition, architecture overview, and tech
 
 ## 4. Key Conventions & Design System
 
-- **Styling**: Use Vanilla CSS / Tailwind utility classes.
-- **Components**: Functional React/Framework components with explicit prop interfaces.
-- **Formatting**: Actionable microcopy, accessible focus indicators, and reduced-motion support.
+- **Styling**: React Native StyleSheet with unified theme tokens (`constants/Colors.ts`).
+- **Components**: Functional components with strict TypeScript prop contracts and accessibility labels.
+- **Architecture**: Modular separation between domain financial logic (ledgers, allocation calculations), state/data hooks, and UI presentational components.
+- **Local-First & Offline**: Optimistic UI updates for quick expense logging with background sync.

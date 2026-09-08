@@ -2,40 +2,40 @@
   "features": [
     {
       "id": "feat-001",
-      "name": "Project Setup",
-      "description": "Confirm the project can install dependencies, run verification, and start from a clean checkout",
+      "name": "Project Setup & Expo Scaffolding",
+      "description": "Initialize Expo SDK 57 template with Expo Router, TypeScript, and verification harness for almotacen",
       "dependencies": [],
-      "status": "not-started",
-      "evidence": ""
+      "status": "in-progress",
+      "evidence": "./init.sh clean pass"
     },
     {
       "id": "feat-002",
-      "name": "First User-Facing Feature",
-      "description": "Replace this placeholder with the first concrete behavior the agent should implement",
+      "name": "Cash Flow Tracking & Transaction Logging",
+      "description": "Reactive transaction entry and cash flow visualization (Monarch style)",
       "dependencies": ["feat-001"],
       "status": "not-started",
       "evidence": ""
     },
     {
       "id": "feat-003",
-      "name": "Verification Coverage",
-      "description": "Add or confirm tests, type checks, linting, or manual verification for the active feature",
+      "name": "Zero-Based Proactive Budgeting Engine",
+      "description": "Envelope allocation system where every dollar is given a job (YNAB style)",
       "dependencies": ["feat-002"],
       "status": "not-started",
       "evidence": ""
     },
     {
       "id": "feat-004",
-      "name": "Documentation Update",
-      "description": "Update README, architecture notes, or product docs affected by the implemented feature",
+      "name": "Supabase & Local-First SQLite Persistence",
+      "description": "Offline-first transactional cache with cloud synchronization and RLS policies",
       "dependencies": ["feat-003"],
       "status": "not-started",
       "evidence": ""
     },
     {
       "id": "feat-005",
-      "name": "Cleanup and Handoff",
-      "description": "Record verification evidence, update progress.md, and leave a clear next-session path",
+      "name": "Verification Coverage & E2E Validation",
+      "description": "Unit tests, contract tests, and type checking for the financial ledger engine",
       "dependencies": ["feat-004"],
       "status": "not-started",
       "evidence": ""
