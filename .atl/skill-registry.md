@@ -9,9 +9,9 @@
 
 | Metric | Value |
 |---|---|
-| **Workspace Skills Registered** | 51 |
+| **Workspace Skills Registered** | 58 |
 | **Global / System Skills Available** | 25 |
-| **Total Ecosystem Skills** | 76 |
+| **Total Ecosystem Skills** | 83 |
 | **Workspace Sources** | `mattpocock/skills`, `cesarchavezcal/personal-skills`, `expo/skills`, `supabase/agent-skills`, `callstack/react-native-testing-library` |
 | **Global Sources** | `gentleman-programming` (SDD suite, Gentle AI, Skill tooling) |
 | **Storage Locations** | Workspace: `.agents/skills/` &bull; Global: `~/.agents/skills/` |
@@ -96,7 +96,7 @@
 
 ---
 
-## 6. Stack & Domain Skills (Expo + Supabase) (9 skills)
+## 6. Stack & Domain Skills (Expo + Supabase) (16 skills)
 
 | Skill | Trigger / Command | Source | Description |
 |---|---|---|---|
@@ -104,6 +104,13 @@
 | [`expo-router`](.agents/skills/expo-router/SKILL.md) | `expo-router` | `expo/skills` | File-based navigation, tabs, modals, and native Stack for Expo apps. |
 | [`expo-native-ui`](.agents/skills/expo-native-ui/SKILL.md) | `expo-native-ui` | `expo/skills` | Native UI primitives, headers, dynamic sheets, and liquid transitions. |
 | [`expo-design-system`](.agents/skills/expo-design-system/SKILL.md) | `expo-design-system` | `expo/skills` | Design system tokens and styling patterns for Expo. |
+| [`expo-animation`](.agents/skills/expo-animation/SKILL.md) | `expo-animation` | `expo/skills` | Motion, entering/exiting animations, gesture transitions, and springs. |
+| [`expo-data-fetching`](.agents/skills/expo-data-fetching/SKILL.md) | `expo-data-fetching` | `expo/skills` | Network requests, React Query, SWR, offline support, and loaders. |
+| [`expo-dom`](.agents/skills/expo-dom/SKILL.md) | `expo-dom` | `expo/skills` | DOM components for running web code in webviews and incremental migration. |
+| [`expo-project-structure`](.agents/skills/expo-project-structure/SKILL.md) | `expo-project-structure` | `expo/skills` | Idiomatic folder organization for Expo apps with Expo Router. |
+| [`expo-module`](.agents/skills/expo-module/SKILL.md) | `expo-module` | `expo/skills` | Custom local native Swift and Kotlin modules for Expo apps. |
+| [`expo-app-clip`](.agents/skills/expo-app-clip/SKILL.md) | `expo-app-clip` | `expo/skills` | iOS App Clip target integration and apple-app-site-association. |
+| [`expo-upgrade`](.agents/skills/expo-upgrade/SKILL.md) | `expo-upgrade` | `expo/skills` | Expo SDK version upgrade workflows and dependency resolution. |
 | [`supabase-postgres-best-practices`](.agents/skills/supabase-postgres-best-practices/SKILL.md) | `supabase-postgres-best-practices` | `supabase/agent-skills` | Postgres schema design, RLS, indexes, and transactional ledger integrity. |
 | [`supabase`](.agents/skills/supabase/SKILL.md) | `supabase` | `supabase/agent-skills` | Supabase Auth, Realtime subscriptions, and client integration. |
 | [`react-native-testing`](.agents/skills/react-native-testing/SKILL.md) | `react-native-testing` | `callstack/react-native-testing-library` | Component, screen, and hook testing with React Native Testing Library. |
