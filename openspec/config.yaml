@@ -62,9 +62,9 @@ conventions:
 skills:
   registry_path: ".atl/skill-registry.md"
   lockfile_path: "skills-lock.json"
-  count: 56
+  count: 57
   global_count: 25
-  total_ecosystem_count: 81
+  total_ecosystem_count: 82
 
 persistence:
   mode: openspec

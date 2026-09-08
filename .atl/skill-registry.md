@@ -9,9 +9,9 @@
 
 | Metric | Value |
 |---|---|
-| **Workspace Skills Registered** | 50 |
+| **Workspace Skills Registered** | 51 |
 | **Global / System Skills Available** | 25 |
-| **Total Ecosystem Skills** | 75 |
+| **Total Ecosystem Skills** | 76 |
 | **Workspace Sources** | `mattpocock/skills`, `cesarchavezcal/personal-skills`, `expo/skills`, `supabase/agent-skills`, `callstack/react-native-testing-library` |
 | **Global Sources** | `gentleman-programming` (SDD suite, Gentle AI, Skill tooling) |
 | **Storage Locations** | Workspace: `.agents/skills/` &bull; Global: `~/.agents/skills/` |
@@ -96,10 +96,11 @@
 
 ---
 
-## 6. Stack & Domain Skills (Expo + Supabase) (8 skills)
+## 6. Stack & Domain Skills (Expo + Supabase) (9 skills)
 
 | Skill | Trigger / Command | Source | Description |
 |---|---|---|---|
+| [`expo-ui`](.agents/skills/expo-ui/SKILL.md) | `expo-ui` | `expo/skills` | Real native SwiftUI (iOS) and Jetpack Compose (Android) components wrapped in Host. |
 | [`expo-router`](.agents/skills/expo-router/SKILL.md) | `expo-router` | `expo/skills` | File-based navigation, tabs, modals, and native Stack for Expo apps. |
 | [`expo-native-ui`](.agents/skills/expo-native-ui/SKILL.md) | `expo-native-ui` | `expo/skills` | Native UI primitives, headers, dynamic sheets, and liquid transitions. |
 | [`expo-design-system`](.agents/skills/expo-design-system/SKILL.md) | `expo-design-system` | `expo/skills` | Design system tokens and styling patterns for Expo. |

@@ -67,6 +67,12 @@
       "skillPath": "plugins/expo/skills/expo-router/SKILL.md",
       "computedHash": "9dfdcd75e5f473b468aa3decc0ba1ac7af6641a0a777611ef7173cc4232ddb7c"
     },
+    "expo-ui": {
+      "source": "expo/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/expo/skills/expo-ui/SKILL.md",
+      "computedHash": "0e3b343c6e60acab6f4fd4ae6364973f3641ee6de609f3e469bf0347302ead9e"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
