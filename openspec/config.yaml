@@ -2,30 +2,36 @@
 schema: 1
 
 project:
-  name: agent-boilerplate
-  repository: cesarchavezcal/agent-boilerplate
-  type: template-boilerplate
-  description: Lightweight, stack-agnostic GitHub repository template pre-configured for AI agent-driven software development.
+  name: almotacen
+  repository: cesarchavezcal/almotacen
+  type: application
+  description: Reactive cash flow manager and proactive zero-based budgeting tool combining Monarch Money and YNAB.
   stack:
-    language: polyglot / shell / markdown
-    frameworks: []
-    package_manager: null
-    build_tool: null
+    language: typescript
+    frameworks:
+      - expo
+      - expo-router
+      - react-native
+      - react
+      - supabase
+    package_manager: npm
+    build_tool: metro
 
 testing:
-  runner: null
-  framework: null
-  layers: []
+  runner: vitest
+  framework: jest-expo
+  layers:
+    - unit
+    - integration
   coverage_tool: null
-  strict_tdd: false
-  reason_strict_tdd_disabled: "Base boilerplate template does not include a test runner. Enable strict_tdd: true when configuring a concrete project stack with Vitest, Jest, pytest, or Go test."
-  command: null
+  strict_tdd: true
+  command: npm test
 
 quality:
   linter: gga
   linter_config: .gga
-  formatter: null
-  type_checker: null
+  formatter: prettier
+  type_checker: tsc
 
 conventions:
   git:
@@ -56,9 +62,9 @@ conventions:
 skills:
   registry_path: ".atl/skill-registry.md"
   lockfile_path: "skills-lock.json"
-  count: 42
+  count: 43
   global_count: 25
-  total_ecosystem_count: 67
+  total_ecosystem_count: 68
 
 persistence:
   mode: openspec

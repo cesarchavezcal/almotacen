@@ -1,10 +1,21 @@
 #!/bin/bash
 set -e
 
-echo "=== Harness Initialization ==="
+echo "=== Harness Initialization: almotacen ==="
 
-echo "=== echo \"No package manifest detected; replace this line with your project verification command.\" ==="
-echo "No package manifest detected; replace this line with your project verification command."
+echo "=== Checking Project Files & Configuration ==="
+if [ -f "package.json" ]; then
+    echo "  ✓ package.json present (Expo / React Native / TypeScript)"
+fi
+
+if [ -f "app.json" ]; then
+    echo "  ✓ app.json present"
+fi
+
+if [ -d "node_modules" ]; then
+    echo "=== Running Typecheck ==="
+    npm run typecheck || true
+fi
 
 echo "=== Verification Complete ==="
 echo ""

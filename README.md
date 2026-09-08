@@ -1,6 +1,6 @@
-# Agent Boilerplate Template
+# almotacen
 
-A lightweight, stack-agnostic GitHub Repository Template pre-configured for autonomous AI agent-driven software development across any AI environment (Google Antigravity, Cursor, Claude Code, Windsurf, Aider, GitHub Copilot).
+A reactive cash flow manager and proactive zero-based budgeting tool combining the best of Monarch Money (tracking where money went) and YNAB (deciding where money will go). Built with Expo (React Native & Web), TypeScript, and Supabase.
 
 ```text
 ┌────────────────────────────────────────────────────────────────┐
