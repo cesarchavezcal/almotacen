@@ -4,4 +4,9 @@ export const radius = {
   lg: 16,
   xl: 20,
   full: 9999,
+  card: 10,
+  sheet: 14,
+  pill: 9999,
 } as const;
+
+export type RadiusSize = keyof typeof radius;

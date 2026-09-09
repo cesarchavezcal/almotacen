@@ -1,47 +1,43 @@
-import { SymbolView } from 'expo-symbols';
+import React from 'react';
 import { Link, Tabs } from 'expo-router';
-import { Platform, Pressable } from 'react-native';
-
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors } from '@/src/theme/colors';
+import { typography } from '@/src/theme/typography';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
+        tabBarActiveTintColor: colors.systemBlue,
+        tabBarInactiveTintColor: colors.textTertiary,
+        tabBarStyle: styles.tabBar,
+        headerStyle: styles.header,
+        headerTitleStyle: styles.headerTitle,
+        headerTintColor: colors.textPrimary,
+        headerShadowVisible: false,
         headerShown: useClientOnlyValue(false, true),
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Cash Flow',
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chart.line.uptrend.xyaxis',
-                android: 'analytics',
-                web: 'analytics',
-              }}
-              tintColor={color}
-              size={26}
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'trending-up' : 'trending-up-outline'}
+              size={24}
+              color={color}
             />
           ),
           headerRight: () => (
             <Link href="/modal" asChild>
-              <Pressable style={{ marginRight: 15 }}>
+              <Pressable style={styles.headerButton}>
                 {({ pressed }) => (
-                  <SymbolView
-                    name={{ ios: 'plus.circle.fill', android: 'add_circle', web: 'add_circle' }}
-                    size={26}
-                    tintColor={Colors[colorScheme].tint}
-                    style={{ opacity: pressed ? 0.5 : 1 }}
-                  />
+                  <View style={[styles.glassCircle, pressed && styles.glassCirclePressed]}>
+                    <Ionicons name="add" size={20} color="#FFFFFF" />
+                  </View>
                 )}
               </Pressable>
             </Link>
@@ -52,16 +48,23 @@ export default function TabLayout() {
         name="budget"
         options={{
           title: 'Budget',
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chart.pie.fill',
-                android: 'pie_chart',
-                web: 'pie_chart',
-              }}
-              tintColor={color}
-              size={26}
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'pie-chart' : 'pie-chart-outline'}
+              size={24}
+              color={color}
             />
+          ),
+          headerRight: () => (
+            <Link href="/modal" asChild>
+              <Pressable style={styles.headerButton}>
+                {({ pressed }) => (
+                  <View style={[styles.glassCircle, pressed && styles.glassCirclePressed]}>
+                    <Ionicons name="add" size={20} color="#FFFFFF" />
+                  </View>
+                )}
+              </Pressable>
+            </Link>
           ),
         }}
       />
@@ -69,19 +72,64 @@ export default function TabLayout() {
         name="accounts"
         options={{
           title: 'Accounts',
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'building.columns.fill',
-                android: 'account_balance',
-                web: 'account_balance',
-              }}
-              tintColor={color}
-              size={26}
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'card' : 'card-outline'}
+              size={24}
+              color={color}
             />
+          ),
+          headerRight: () => (
+            <Link href="/modal" asChild>
+              <Pressable style={styles.headerButton}>
+                {({ pressed }) => (
+                  <View style={[styles.glassCircle, pressed && styles.glassCirclePressed]}>
+                    <Ionicons name="add" size={20} color="#FFFFFF" />
+                  </View>
+                )}
+              </Pressable>
+            </Link>
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: colors.canvas,
+    borderTopColor: colors.hairline,
+    borderTopWidth: 0.5,
+    elevation: 0,
+    height: 60,
+    paddingBottom: 8,
+    paddingTop: 6,
+  },
+  header: {
+    backgroundColor: colors.canvas,
+    borderBottomColor: colors.hairline,
+    borderBottomWidth: 0.5,
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  headerTitle: {
+    ...typography.cardIssuer,
+    color: colors.textPrimary,
+  },
+  headerButton: {
+    marginRight: 16,
+  },
+  glassCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.glass,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  glassCirclePressed: {
+    opacity: 0.7,
+    transform: [{ scale: 0.95 }],
+  },
+});
