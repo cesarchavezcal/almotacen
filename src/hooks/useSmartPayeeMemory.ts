@@ -6,17 +6,6 @@ export interface PayeeSuggestion {
   accountId?: string;
 }
 
-export function parseCurrencyToCents(amountStr: string): number {
-  if (!amountStr) return 0;
-  const trimmed = amountStr.trim();
-  if (trimmed.startsWith('-') || trimmed.includes('-')) return 0;
-  const cleaned = trimmed.replace(/[^0-9.]/g, '');
-  if (!cleaned) return 0;
-  const parsed = parseFloat(cleaned);
-  if (isNaN(parsed) || parsed <= 0) return 0;
-  return Math.round(parsed * 100);
-}
-
 export function findPayeeSuggestion(
   transactions: Transaction[],
   payeeInput: string
@@ -54,7 +43,12 @@ export function getDistinctRecentPayees(transactions: Transaction[], limit: numb
   return result;
 }
 
-export function useSmartPayeeMemory(transactions: Transaction[]) {
+export interface UseSmartPayeeMemoryResult {
+  recentPayees: string[];
+  suggestForPayee: (payee: string) => PayeeSuggestion | null;
+}
+
+export function useSmartPayeeMemory(transactions: Transaction[]): UseSmartPayeeMemoryResult {
   const recentPayees = useMemo(() => {
     return getDistinctRecentPayees(transactions);
   }, [transactions]);

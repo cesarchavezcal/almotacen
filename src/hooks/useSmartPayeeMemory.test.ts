@@ -1,5 +1,6 @@
 import { describe, it, expect } from '@jest/globals';
-import { findPayeeSuggestion, getDistinctRecentPayees, parseCurrencyToCents } from './useSmartPayeeMemory';
+import { findPayeeSuggestion, getDistinctRecentPayees } from './useSmartPayeeMemory';
+import { parseCurrencyToCents } from '../domain/ledger/currency';
 import { Transaction } from '../domain/ledger/types';
 
 describe('Smart Payee Memory & Quick Currency Parser (SCEN-012 & SCEN-013)', () => {
