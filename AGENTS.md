@@ -233,3 +233,13 @@ Before ending any agent session:
 1. Update `progress.md` with completed milestones and current objective.
 2. Record any blockers, modified files, and recommended next steps in `session-handoff.md`.
 3. Ensure the workspace is left in a clean, restartable state.
+
+---
+
+## 8. Verification & Tooling Invariants
+
+### Browser & Playwright Tooling Restrictions
+- **No Playwright / Headless Browser on Mobile Tasks**: Almotacen is primarily an Expo / React Native mobile application. Agents MUST NOT open Playwright, launch headless Chromium, or trigger browser automation during routine development or verification.
+- **Explicit Request Only**: Browser automation via Playwright may ONLY be used when the user explicitly requests web-specific browser testing or web automation.
+- **Native Verification Priority**: For visual and UI verification, prioritize native environments (e.g. iOS Simulator via `xcrun simctl io booted screenshot`) and automated harness checks (`./init.sh`, `tsc --noEmit`, `jest`).
+
