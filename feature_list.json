@@ -31,7 +31,8 @@
       "name": "POS Quick Capture Modal & Smart Payee Memory",
       "description": "Sub-3-second capture modal with auto-focused keypad, smart payee prefill, live category preview, and haptics",
       "dependencies": ["ALM-002"],
-      "status": "ready-for-agent",
+      "status": "done",
+      "evidence": "./init.sh clean pass, 22/22 tests passing",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/03-pos-quick-capture-modal.md"
     },
     {

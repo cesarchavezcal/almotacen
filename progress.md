@@ -28,18 +28,23 @@
   - Created `src/storage/ledgerRepository.ts` with atomic double-sided writes, rollback safety, and query hydration
   - Created `src/storage/ledgerRepository.test.ts` integration suite (7/7 tests passing)
   - Created `src/storage/useLedgerStore.ts` reactive state hook using `useSyncExternalStore`
+- [x] Executed Step 7 (TDD Implementation - ALM-003):
+  - Created `src/hooks/useSmartPayeeMemory.ts` with payee lookup & currency parser (`parseCurrencyToCents`)
+  - Added unit test suite in `src/hooks/useSmartPayeeMemory.test.ts` (5/5 tests passing for `SCEN-012` and `SCEN-013`)
+  - Refactored `app/modal.tsx` to connect live accounts, categories, smart payee prefill, and real-time envelope impact preview (`$Current ➔ $Remaining`)
+  - Integrated single-tap atomic outflow commit with haptic tick and auto-dismissal
 - [x] Executed Step 8 (Verification):
-  - `./init.sh` runs with `set -e`: `tsc --noEmit` clean, Jest 17/17 tests passing.
+  - `./init.sh` runs with `set -e`: `tsc --noEmit` clean, Jest 22/22 tests passing.
 
 ### What's In Progress
 
-- [ ] ALM-003: POS Quick Capture Modal & Smart Payee Memory (`openspec/changes/dual-cashflow-budgeting/tickets/03-pos-quick-capture-modal.md`)
+- [ ] ALM-004: Proactive Zero-Based Budgeting & Envelope Allocator (`openspec/changes/dual-cashflow-budgeting/tickets/04-proactive-budgeting-screen.md`)
 
 ### What's Next
 
-1. Commit ALM-002 changes to branch `feature/CCH/ALM-002-sqlite-store-seed`
-2. Implement ALM-003: Sub-3-second POS quick capture modal with smart payee memory and haptics
+1. Run `/autonomic work openspec/changes/dual-cashflow-budgeting/tickets/04-proactive-budgeting-screen.md`
+2. Connect `app/(tabs)/budget.tsx` to `useLedgerStore` for envelope allocations and quick-fill pills
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 17/17 Jest unit/integration tests pass, `tsc --noEmit` 0 errors.
+- [x] `./init.sh`: 22/22 Jest unit/integration tests pass, `tsc --noEmit` 0 errors.

@@ -39,10 +39,10 @@ Ticket 2: SQLite Local-First Store & Seed Data
 - **Blocked by**: Ticket 2
 - **What it delivers**: Sub-3-second point-of-sale quick expense capture modal (`/modal.tsx`). Typing or tapping a payee auto-populates category and account from the last transaction with that payee, with live envelope balance impact preview and haptic feedback.
 - **Criteria**:
-  - [ ] Auto-focused numeric pad with amount formatting.
-  - [ ] Smart Payee Memory prefills category and account from payee history.
-  - [ ] Real-time category preview reflects available balance before saving.
-  - [ ] Single-tap save with debouncing and instant haptic tick.
+  - [x] Auto-focused numeric pad with amount formatting.
+  - [x] Smart Payee Memory prefills category and account from payee history.
+  - [x] Real-time category preview reflects available balance before saving.
+  - [x] Single-tap save with debouncing and instant haptic tick.
 
 ### Ticket 4: Proactive Zero-Based Budgeting & Envelope Allocator
 - **Blocked by**: Ticket 2

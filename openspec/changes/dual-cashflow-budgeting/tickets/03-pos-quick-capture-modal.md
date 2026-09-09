@@ -4,14 +4,14 @@
 
 **Blocked by:** 02 — SQLite Local-First Store & Seed Data
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Bound Test Scenarios:** `SCEN-012` (Smart Payee Prefill), `SCEN-013` (Quick Outflow Submission)
 
 ### Criteria
-- [ ] Connect `app/modal.tsx` to `useLedgerStore` for live accounts and categories.
-- [ ] Auto-focused numeric keypad with clean currency decimal formatting (`$0.00`).
-- [ ] `useSmartPayeeMemory` hook querying recent transactions to auto-select `categoryId` and `accountId` (`SCEN-012`).
-- [ ] Live category impact card previewing balance deduction (`$Current ➔ $Remaining`) and amber warning on deficit.
-- [ ] Atomic `postOutflow` commit via `useLedgerStore` with light haptic confirmation and instant sheet dismissal (`SCEN-013`).
-- [ ] Unit & hook test suite verifying smart payee prefill and quick transaction mutation.
+- [x] Connect `app/modal.tsx` to `useLedgerStore` for live accounts and categories.
+- [x] Auto-focused numeric keypad with clean currency decimal formatting (`$0.00`).
+- [x] `useSmartPayeeMemory` hook querying recent transactions to auto-select `categoryId` and `accountId` (`SCEN-012`).
+- [x] Live category impact card previewing balance deduction (`$Current ➔ $Remaining`) and amber warning on deficit.
+- [x] Atomic `postOutflow` commit via `useLedgerStore` with light haptic confirmation and instant sheet dismissal (`SCEN-013`).
+- [x] Unit & hook test suite verifying smart payee prefill and quick transaction mutation.

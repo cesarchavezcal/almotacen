@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   StyleSheet,
   TextInput,
@@ -14,46 +14,129 @@ import * as Haptics from 'expo-haptics';
 import { colors } from '@/src/theme/colors';
 import { typography } from '@/src/theme/typography';
 import { radius } from '@/src/theme/radius';
+import { useLedgerStore } from '@/src/storage/useLedgerStore';
+import { useSmartPayeeMemory, parseCurrencyToCents } from '@/src/hooks/useSmartPayeeMemory';
 
 export default function QuickEntryModal() {
   const router = useRouter();
+  const { state, postOutflow } = useLedgerStore();
+  const { recentPayees, suggestForPayee } = useSmartPayeeMemory(state.transactions);
 
-  const [amount, setAmount] = useState('42.50');
-  const [payee, setPayee] = useState("Trader Joe's");
-  const [category, setCategory] = useState('Groceries');
-  const [account, setAccount] = useState('Primary Checking');
+  // Accounts list (checking, credit, cash, savings)
+  const accounts = useMemo(() => Object.values(state.accounts), [state.accounts]);
+
+  // Categories list (excluding internal credit card payment envelopes)
+  const categories = useMemo(
+    () => Object.values(state.categories).filter((c) => !c.isCreditPayment),
+    [state.categories]
+  );
+
+  const [amount, setAmount] = useState('');
+  const [payee, setPayee] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(categories[0]?.id || '');
+  const [selectedAccountId, setSelectedAccountId] = useState<string>(accounts[0]?.id || '');
   const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const categories = [
-    'Groceries',
-    'Dining Out',
-    'Utilities',
-    'Transportation',
-    'Entertainment',
-    'Health',
-  ];
-  const accounts = [
-    'Primary Checking',
-    'Sapphire Preferred',
-    'Amex Everyday',
-    'Cash',
-  ];
+  // Keep defaults updated if categories/accounts load
+  useEffect(() => {
+    if (!selectedCategoryId && categories.length > 0) {
+      setSelectedCategoryId(categories[0].id);
+    }
+  }, [categories, selectedCategoryId]);
 
-  const handlePillSelect = (setter: (val: string) => void, val: string) => {
+  useEffect(() => {
+    if (!selectedAccountId && accounts.length > 0) {
+      setSelectedAccountId(accounts[0].id);
+    }
+  }, [accounts, selectedAccountId]);
+
+  // Handle Payee Change and Smart Memory Lookup (SCEN-012)
+  const handlePayeeChange = (text: string) => {
+    setPayee(text);
+    setErrorMsg(null);
+    const suggestion = suggestForPayee(text);
+    if (suggestion) {
+      if (suggestion.categoryId && state.categories[suggestion.categoryId]) {
+        setSelectedCategoryId(suggestion.categoryId);
+      }
+      if (suggestion.accountId && state.accounts[suggestion.accountId]) {
+        setSelectedAccountId(suggestion.accountId);
+      }
+    }
+  };
+
+  const handlePayeePillTap = (p: string) => {
     try {
       Haptics.selectionAsync();
     } catch {}
-    setter(val);
+    handlePayeeChange(p);
+  };
+
+  const handleCategorySelect = (id: string) => {
+    try {
+      Haptics.selectionAsync();
+    } catch {}
+    setSelectedCategoryId(id);
+    setErrorMsg(null);
+  };
+
+  const handleAccountSelect = (id: string) => {
+    try {
+      Haptics.selectionAsync();
+    } catch {}
+    setSelectedAccountId(id);
+    setErrorMsg(null);
+  };
+
+  // Live Envelope Balance Calculation (SCEN-013 & Req 4.2)
+  const selectedCategory = state.categories[selectedCategoryId];
+  const parsedCents = parseCurrencyToCents(amount);
+  const currentAvailableCents = selectedCategory?.availableCents ?? 0;
+  const remainingAvailableCents = currentAvailableCents - parsedCents;
+  const isOverspent = remainingAvailableCents < 0;
+
+  const formatCurrency = (cents: number) => {
+    return (cents / 100).toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    });
   };
 
   const handleSave = () => {
+    if (parsedCents <= 0) {
+      setErrorMsg('Please enter an amount greater than $0.00');
+      try {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      } catch {}
+      return;
+    }
+
+    if (!selectedCategoryId) {
+      setErrorMsg('Please select an envelope category');
+      return;
+    }
+
+    if (!selectedAccountId) {
+      setErrorMsg('Please select a payment account');
+      return;
+    }
+
     try {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {}
+
+    postOutflow({
+      accountId: selectedAccountId,
+      categoryId: selectedCategoryId,
+      amountCents: parsedCents,
+      payee: payee.trim() || 'Outflow',
+    });
+
     setSubmitted(true);
     setTimeout(() => {
       router.back();
-    }, 450);
+    }, 350);
   };
 
   const handleClose = () => {
@@ -76,7 +159,7 @@ export default function QuickEntryModal() {
         <View>
           <Text style={[typography.sheetTitle, styles.title]}>Quick Expense</Text>
           <Text style={[typography.footnote, styles.subtitle]}>
-            Log outflow and sync zero-based ledger
+            Sub-3-second point-of-sale capture
           </Text>
         </View>
         <Pressable onPress={handleClose} style={styles.closeButton}>
@@ -92,24 +175,74 @@ export default function QuickEntryModal() {
           <TextInput
             style={styles.amountInput}
             value={amount}
-            onChangeText={setAmount}
+            onChangeText={(text) => {
+              setAmount(text);
+              setErrorMsg(null);
+            }}
             keyboardType="decimal-pad"
             placeholder="0.00"
             placeholderTextColor={colors.textTertiary}
+            autoFocus={true}
           />
         </View>
       </View>
 
-      {/* Payee / Merchant Input */}
+      {/* Live Category Balance Impact Preview (Req 4.2) */}
+      {selectedCategory && (
+        <View style={[styles.previewCard, isOverspent && styles.previewCardWarning]}>
+          <View style={styles.previewHeader}>
+            <Text style={styles.previewLabel}>
+              {selectedCategory.name.toUpperCase()} IMPACT
+            </Text>
+            {isOverspent && (
+              <View style={styles.warningBadge}>
+                <Text style={styles.warningBadgeText}>OVERSPENT</Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.previewBalanceRow}>
+            <Text style={styles.previewCurrent}>
+              {formatCurrency(currentAvailableCents)}
+            </Text>
+            <Text style={styles.previewArrow}>➔</Text>
+            <Text
+              style={[
+                styles.previewRemaining,
+                isOverspent && styles.previewRemainingOverspent,
+              ]}
+            >
+              {formatCurrency(remainingAvailableCents)}
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {/* Payee / Merchant Input with Smart Memory Suggestions */}
       <View style={styles.inputGroup}>
         <Text style={[typography.sectionHdr, styles.inputLabel]}>MERCHANT / PAYEE</Text>
         <TextInput
           style={styles.textInput}
           value={payee}
-          onChangeText={setPayee}
-          placeholder="e.g. Supermarket, Coffee shop"
+          onChangeText={handlePayeeChange}
+          placeholder="e.g. Whole Foods, Blue Bottle Coffee"
           placeholderTextColor={colors.textTertiary}
         />
+        {recentPayees.length > 0 && (
+          <View style={styles.recentPayeeRow}>
+            <Text style={styles.recentPayeeLabel}>Recent:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recentPayeeList}>
+              {recentPayees.map((p) => (
+                <Pressable
+                  key={p}
+                  onPress={() => handlePayeePillTap(p)}
+                  style={styles.recentPayeePill}
+                >
+                  <Text style={styles.recentPayeeText}>{p}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        )}
       </View>
 
       {/* Category Selection */}
@@ -117,15 +250,15 @@ export default function QuickEntryModal() {
         <Text style={[typography.sectionHdr, styles.inputLabel]}>ENVELOPE CATEGORY</Text>
         <View style={styles.pillRow}>
           {categories.map((cat) => {
-            const isSelected = category === cat;
+            const isSelected = selectedCategoryId === cat.id;
             return (
               <Pressable
-                key={cat}
-                onPress={() => handlePillSelect(setCategory, cat)}
+                key={cat.id}
+                onPress={() => handleCategorySelect(cat.id)}
                 style={[styles.pill, isSelected && styles.pillActive]}
               >
                 <Text style={[styles.pillText, isSelected && styles.pillTextActive]}>
-                  {cat}
+                  {cat.name}
                 </Text>
               </Pressable>
             );
@@ -138,21 +271,23 @@ export default function QuickEntryModal() {
         <Text style={[typography.sectionHdr, styles.inputLabel]}>PAYMENT SOURCE / ACCOUNT</Text>
         <View style={styles.pillRow}>
           {accounts.map((acct) => {
-            const isSelected = account === acct;
+            const isSelected = selectedAccountId === acct.id;
             return (
               <Pressable
-                key={acct}
-                onPress={() => handlePillSelect(setAccount, acct)}
+                key={acct.id}
+                onPress={() => handleAccountSelect(acct.id)}
                 style={[styles.pill, isSelected && styles.pillActive]}
               >
                 <Text style={[styles.pillText, isSelected && styles.pillTextActive]}>
-                  {acct}
+                  {acct.name}
                 </Text>
               </Pressable>
             );
           })}
         </View>
       </View>
+
+      {errorMsg && <Text style={styles.errorMessage}>{errorMsg}</Text>}
 
       {/* Submit Button */}
       <Pressable
@@ -169,7 +304,7 @@ export default function QuickEntryModal() {
             submitted && styles.submitButtonTextDone,
           ]}
         >
-          {submitted ? '✓ Logged to Ledger' : 'Log Transaction'}
+          {submitted ? '✓ Saved to Local Ledger' : 'Save Outflow'}
         </Text>
       </Pressable>
 
@@ -187,7 +322,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 40,
-    gap: 20,
+    gap: 18,
   },
   sheetHandle: {
     width: 36,
@@ -247,6 +382,63 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontVariant: ['tabular-nums'],
   },
+  previewCard: {
+    backgroundColor: colors.surface1,
+    borderRadius: radius.card,
+    padding: 14,
+    borderWidth: 0.5,
+    borderColor: colors.hairline,
+    gap: 6,
+  },
+  previewCardWarning: {
+    borderColor: 'rgba(255, 159, 10, 0.4)',
+    backgroundColor: 'rgba(255, 159, 10, 0.08)',
+  },
+  previewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  previewLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    letterSpacing: 0.5,
+  },
+  warningBadge: {
+    backgroundColor: 'rgba(255, 159, 10, 0.25)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  warningBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FF9F0A',
+    letterSpacing: 0.5,
+  },
+  previewBalanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  previewCurrent: {
+    ...typography.body,
+    color: colors.textSecondary,
+    fontVariant: ['tabular-nums'],
+  },
+  previewArrow: {
+    color: colors.textTertiary,
+    fontSize: 14,
+  },
+  previewRemaining: {
+    ...typography.body,
+    color: colors.success,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+  },
+  previewRemainingOverspent: {
+    color: '#FF9F0A',
+  },
   textInput: {
     backgroundColor: colors.surface1,
     borderRadius: radius.card,
@@ -256,6 +448,30 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     borderWidth: 0.5,
     borderColor: colors.hairline,
+  },
+  recentPayeeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  recentPayeeLabel: {
+    ...typography.caption,
+    color: colors.textTertiary,
+  },
+  recentPayeeList: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  recentPayeePill: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface2,
+  },
+  recentPayeeText: {
+    ...typography.caption,
+    color: colors.textSecondary,
   },
   pillRow: {
     flexDirection: 'row',
@@ -283,13 +499,18 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
   },
+  errorMessage: {
+    ...typography.footnote,
+    color: colors.error,
+    textAlign: 'center',
+  },
   submitButton: {
     height: 54,
     borderRadius: radius.sheet,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
+    marginTop: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
