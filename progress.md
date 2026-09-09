@@ -2,8 +2,8 @@
 
 ## Current State
 
-**Last Updated:** 2026-09-09 16:04
-**Active Feature:** ALM-001 - Core Dual-Ledger with Credit Payment Reserve
+**Last Updated:** 2026-09-09 16:10
+**Active Feature:** ALM-002 - SQLite Local-First Store & Seed Data
 
 ## Status
 
@@ -21,18 +21,25 @@
   - Implemented unfunded credit debt calculation and category tracking without errors
   - Implemented `postCreditCardPayment` for balance settlement and envelope deduction
   - Expanded `src/domain/ledger/ledgerEngine.test.ts` with `SCEN-008` through `SCEN-011`
+- [x] Executed Step 7 (TDD Implementation - ALM-002):
+  - Installed `expo-sqlite` and created `DatabaseAdapter` interface
+  - Created `src/storage/schema.ts` with SQLite DDL, migrations, and default seed data
+  - Created `src/storage/database.ts` with runtime adapter (expo-sqlite / node:sqlite)
+  - Created `src/storage/ledgerRepository.ts` with atomic double-sided writes, rollback safety, and query hydration
+  - Created `src/storage/ledgerRepository.test.ts` integration suite (7/7 tests passing)
+  - Created `src/storage/useLedgerStore.ts` reactive state hook using `useSyncExternalStore`
 - [x] Executed Step 8 (Verification):
-  - `./init.sh` runs with `set -e`: `tsc --noEmit` clean, Jest 10/10 tests passing.
+  - `./init.sh` runs with `set -e`: `tsc --noEmit` clean, Jest 17/17 tests passing.
 
 ### What's In Progress
 
-- [ ] ALM-002: SQLite Local-First Store & Seed Data (`openspec/changes/dual-cashflow-budgeting/tickets/02-sqlite-store-seed.md`)
+- [ ] ALM-003: POS Quick Capture Modal & Smart Payee Memory (`openspec/changes/dual-cashflow-budgeting/tickets/03-pos-quick-capture-modal.md`)
 
 ### What's Next
 
-1. Commit ALM-001 changes to `feature/CCH/ALM-001-core-dual-ledger`
-2. Implement ALM-002: SQLite schema, repository, and reactive hook
+1. Commit ALM-002 changes to branch `feature/CCH/ALM-002-sqlite-store-seed`
+2. Implement ALM-003: Sub-3-second POS quick capture modal with smart payee memory and haptics
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 10/10 Jest unit tests pass (`SCEN-001` through `SCEN-011`), `tsc --noEmit` 0 errors.
+- [x] `./init.sh`: 17/17 Jest unit/integration tests pass, `tsc --noEmit` 0 errors.

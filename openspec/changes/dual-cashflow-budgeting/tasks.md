@@ -30,10 +30,10 @@ Ticket 2: SQLite Local-First Store & Seed Data
 - **Blocked by**: Ticket 1
 - **What it delivers**: Persistent local SQLite database layer with atomic transactions and reactive state hook (`useLedgerStore`). App launches with instant default accounts and envelope groups.
 - **Criteria**:
-  - [ ] SQLite tables created for accounts, categories, and transactions with offline sync markers.
-  - [ ] Transactional repository executes atomic double-sided updates.
-  - [ ] Initial database seed initializes Checking, Credit Card, and primary category groups.
-  - [ ] Integration test verifies state persists across app reloads.
+  - [x] SQLite tables created for accounts, categories, and transactions with offline sync markers.
+  - [x] Transactional repository executes atomic double-sided updates.
+  - [x] Initial database seed initializes Checking, Credit Card, and primary category groups.
+  - [x] Integration test verifies state persists across app reloads.
 
 ### Ticket 3: POS Quick Capture Modal & Smart Payee Memory
 - **Blocked by**: Ticket 2
