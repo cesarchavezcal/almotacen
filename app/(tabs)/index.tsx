@@ -1,13 +1,11 @@
 import React from 'react';
-import { StyleSheet, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, ScrollView } from 'react-native';
 import { Link } from 'expo-router';
 import { Text, View } from '@/components/Themed';
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import { colors, spacing, radius } from '@/src/theme';
+import { Button } from '@/src/components/Button';
 
 export default function CashFlowScreen() {
-  const colorScheme = useColorScheme();
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Monthly Net Summary */}
@@ -19,15 +17,15 @@ export default function CashFlowScreen() {
 
       {/* Reactive Flow KPI Split */}
       <View style={styles.statsRow}>
-        <View style={[styles.statCard, { marginRight: 10 }]}>
+        <View style={[styles.statCard, { marginRight: spacing.sm }]}>
           <Text style={styles.statLabel}>Total Inflow</Text>
-          <Text style={[styles.statValue, { color: '#10B981' }]}>+$4,850.00</Text>
+          <Text style={[styles.statValue, { color: colors.inflow }]}>+$4,850.00</Text>
           <Text style={styles.statSub}>Paycheck & Transfers</Text>
         </View>
 
-        <View style={[styles.statCard, { marginLeft: 10 }]}>
+        <View style={[styles.statCard, { marginLeft: spacing.sm }]}>
           <Text style={styles.statLabel}>Total Outflow</Text>
-          <Text style={[styles.statValue, { color: '#EF4444' }]}>-$3,424.50</Text>
+          <Text style={[styles.statValue, { color: colors.outflow }]}>-$3,424.50</Text>
           <Text style={styles.statSub}>Spent this cycle</Text>
         </View>
       </View>
@@ -46,9 +44,12 @@ export default function CashFlowScreen() {
 
       {/* Quick Action Button */}
       <Link href="/modal" asChild>
-        <Pressable style={styles.actionButton}>
-          <Text style={styles.actionButtonText}>+ Log Quick Expense</Text>
-        </Pressable>
+        <Button
+          title="+ Log Quick Expense"
+          variant="primary"
+          size="lg"
+          style={styles.actionButton}
+        />
       </Link>
     </ScrollView>
   );
@@ -59,13 +60,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
-    gap: 16,
+    padding: spacing.md + 4,
+    gap: spacing.md,
   },
   heroCard: {
-    borderRadius: 16,
-    padding: 24,
-    backgroundColor: '#0F172A',
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    backgroundColor: colors.surfaceCard,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -74,7 +75,7 @@ const styles = StyleSheet.create({
   },
   heroSubtitle: {
     fontSize: 14,
-    color: '#94A3B8',
+    color: colors.tertiaryLabel,
     textTransform: 'uppercase',
     letterSpacing: 1,
     fontWeight: '600',
@@ -88,45 +89,49 @@ const styles = StyleSheet.create({
   heroStatus: {
     fontSize: 14,
     color: '#34D399',
-    marginTop: 8,
+    marginTop: spacing.sm,
     fontWeight: '500',
   },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    backgroundColor: 'transparent',
+    borderRadius: radius.md,
   },
   statCard: {
     flex: 1,
-    padding: 16,
-    borderRadius: 12,
+    padding: spacing.md,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.2)',
+    borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
   },
   statLabel: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.secondaryLabel,
     fontWeight: '500',
   },
   statValue: {
     fontSize: 20,
     fontWeight: '700',
-    marginTop: 4,
+    marginTop: spacing.xs,
   },
   statSub: {
     fontSize: 11,
-    color: '#94A3B8',
-    marginTop: 4,
+    color: colors.tertiaryLabel,
+    marginTop: spacing.xs,
   },
   sectionCard: {
-    padding: 18,
-    borderRadius: 12,
+    padding: spacing.md + 2,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.2)',
+    borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    marginBottom: 12,
+    marginBottom: spacing.sm + 4,
   },
   progressBarBackground: {
     height: 10,
@@ -136,28 +141,19 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#3B82F6',
+    backgroundColor: colors.primary,
     borderRadius: 5,
   },
   progressLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 8,
+    marginTop: spacing.sm,
   },
   progressText: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.secondaryLabel,
   },
   actionButton: {
-    backgroundColor: '#2563EB',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  actionButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
+    marginTop: spacing.xs,
   },
 });
