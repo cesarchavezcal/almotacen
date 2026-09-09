@@ -35,25 +35,26 @@
   - Integrated smart payee inference (`SCEN-012`) and live balance impact preview (`SCEN-013`)
   - Two-Axis Review completed: Spec behavioral verification + GGA standards review (`PROVIDER="gemini"`) PASSED
   - PR opened & merged: [PR #18](https://github.com/cesarchavezcal/almotacen/pull/18)
-- [x] Executed Step 7 (TDD Implementation - ALM-004):
+- [x] Executed Step 7 & 8 (Implementation & Review - ALM-004):
   - Created `src/domain/ledger/budgetViewHelpers.ts` for banner states, quick-fill allocation math, and display groups
   - Created `src/domain/ledger/budgetViewHelpers.test.ts` unit suite (14/14 tests passing)
   - Refactored `EnvelopePassFace.tsx` to strict integer cents, domain currency formatting, and expandable quick-fill pills
   - Refactored `app/(tabs)/budget.tsx` with container/presentational architecture (`BudgetScreen` + `BudgetView`)
   - Connected `Ready to Assign` header banner and obligation-grouped categories to live `useLedgerStore`
-  - Verified with GGA code review with `PROVIDER="gemini"` PASSED
+  - Two-Axis Review: Behavioral contracts + GGA standards review (`PROVIDER="gemini"`) PASSED
+  - PR opened: [PR #19](https://github.com/cesarchavezcal/almotacen/pull/19)
 
 ### What's In Progress
 
-- [ ] ALM-004 Review: `/autonomic review Ticket 4` (PR creation & verification)
+- [ ] Merge PR #19 ➔ Transition to Ticket 5 (`05-apple-card-daily-cash-ledger.md`)
 
 ### What's Next
 
-1. Run `/autonomic review Ticket 4` to open the PR with Gate 2 `/unslop` description
-2. Merge PR and transition to Ticket 5 (`05-apple-card-daily-cash-ledger.md`)
+1. Merge PR #19 into `main`
+2. Run `/autonomic plan Ticket 5` (`ALM-005: Apple Card & Daily Cash Ledger Integration`)
 
 ## Evidence of Completion
 
 - [x] `./init.sh`: 39/39 Jest unit/integration tests pass (5 suites), `tsc --noEmit` 0 errors.
 - [x] GGA Review: PASSED with `PROVIDER="gemini"` (container/presentational split, strict integer cents, zero float leaks).
-- [x] Git Commit: `4502da7` on `feature/CCH/ALM-004-proactive-budgeting-screen`.
+- [x] GitHub PR: [PR #19](https://github.com/cesarchavezcal/almotacen/pull/19) pushed to `cesarchavezcal/almotacen`.
