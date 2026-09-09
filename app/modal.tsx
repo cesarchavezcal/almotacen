@@ -1,104 +1,179 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, Pressable, ScrollView, Platform } from 'react-native';
+import {
+  StyleSheet,
+  TextInput,
+  Pressable,
+  ScrollView,
+  View,
+  Text,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
-import { Text, View } from '@/components/Themed';
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { colors } from '@/src/theme/colors';
+import { typography } from '@/src/theme/typography';
+import { radius } from '@/src/theme/radius';
 
 export default function QuickEntryModal() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
 
   const [amount, setAmount] = useState('42.50');
-  const [payee, setPayee] = useState('Trader Joe\'s');
+  const [payee, setPayee] = useState("Trader Joe's");
   const [category, setCategory] = useState('Groceries');
   const [account, setAccount] = useState('Primary Checking');
   const [submitted, setSubmitted] = useState(false);
 
-  const categories = ['Groceries', 'Dining Out', 'Utilities', 'Transportation', 'Entertainment'];
-  const accounts = ['Primary Checking', 'Sapphire Preferred', 'Cash'];
+  const categories = [
+    'Groceries',
+    'Dining Out',
+    'Utilities',
+    'Transportation',
+    'Entertainment',
+    'Health',
+  ];
+  const accounts = [
+    'Primary Checking',
+    'Sapphire Preferred',
+    'Amex Everyday',
+    'Cash',
+  ];
+
+  const handlePillSelect = (setter: (val: string) => void, val: string) => {
+    try {
+      Haptics.selectionAsync();
+    } catch {}
+    setter(val);
+  };
 
   const handleSave = () => {
+    try {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch {}
     setSubmitted(true);
     setTimeout(() => {
       router.back();
-    }, 400);
+    }, 450);
+  };
+
+  const handleClose = () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch {}
+    router.back();
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Quick Expense Entry</Text>
-      <Text style={styles.subtitle}>Log an outflow and sync across cash flow & envelopes</Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
+      {/* Sheet Grab Handle & Header */}
+      <View style={styles.sheetHandle} />
+
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={[typography.sheetTitle, styles.title]}>Quick Expense</Text>
+          <Text style={[typography.footnote, styles.subtitle]}>
+            Log outflow and sync zero-based ledger
+          </Text>
+        </View>
+        <Pressable onPress={handleClose} style={styles.closeButton}>
+          <Ionicons name="close" size={20} color="#FFFFFF" />
+        </Pressable>
+      </View>
 
       {/* Amount Input */}
       <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Amount ($)</Text>
-        <TextInput
-          style={[styles.textInput, styles.amountInput]}
-          value={amount}
-          onChangeText={setAmount}
-          keyboardType="decimal-pad"
-          placeholder="0.00"
-          placeholderTextColor="#64748B"
-        />
+        <Text style={[typography.sectionHdr, styles.inputLabel]}>AMOUNT ($)</Text>
+        <View style={styles.amountInputRow}>
+          <Text style={styles.dollarSign}>$</Text>
+          <TextInput
+            style={styles.amountInput}
+            value={amount}
+            onChangeText={setAmount}
+            keyboardType="decimal-pad"
+            placeholder="0.00"
+            placeholderTextColor={colors.textTertiary}
+          />
+        </View>
       </View>
 
-      {/* Payee Input */}
+      {/* Payee / Merchant Input */}
       <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Payee / Merchant</Text>
+        <Text style={[typography.sectionHdr, styles.inputLabel]}>MERCHANT / PAYEE</Text>
         <TextInput
           style={styles.textInput}
           value={payee}
           onChangeText={setPayee}
-          placeholder="e.g. Supermarket"
-          placeholderTextColor="#64748B"
+          placeholder="e.g. Supermarket, Coffee shop"
+          placeholderTextColor={colors.textTertiary}
         />
       </View>
 
       {/* Category Selection */}
       <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Envelope Category</Text>
+        <Text style={[typography.sectionHdr, styles.inputLabel]}>ENVELOPE CATEGORY</Text>
         <View style={styles.pillRow}>
-          {categories.map((cat) => (
-            <Pressable
-              key={cat}
-              onPress={() => setCategory(cat)}
-              style={[styles.pill, category === cat && styles.pillActive]}
-            >
-              <Text style={[styles.pillText, category === cat && styles.pillTextActive]}>{cat}</Text>
-            </Pressable>
-          ))}
+          {categories.map((cat) => {
+            const isSelected = category === cat;
+            return (
+              <Pressable
+                key={cat}
+                onPress={() => handlePillSelect(setCategory, cat)}
+                style={[styles.pill, isSelected && styles.pillActive]}
+              >
+                <Text style={[styles.pillText, isSelected && styles.pillTextActive]}>
+                  {cat}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       </View>
 
       {/* Account Selection */}
       <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Account</Text>
+        <Text style={[typography.sectionHdr, styles.inputLabel]}>PAYMENT SOURCE / ACCOUNT</Text>
         <View style={styles.pillRow}>
-          {accounts.map((acct) => (
-            <Pressable
-              key={acct}
-              onPress={() => setAccount(acct)}
-              style={[styles.pill, account === acct && styles.pillActive]}
-            >
-              <Text style={[styles.pillText, account === acct && styles.pillTextActive]}>{acct}</Text>
-            </Pressable>
-          ))}
+          {accounts.map((acct) => {
+            const isSelected = account === acct;
+            return (
+              <Pressable
+                key={acct}
+                onPress={() => handlePillSelect(setAccount, acct)}
+                style={[styles.pill, isSelected && styles.pillActive]}
+              >
+                <Text style={[styles.pillText, isSelected && styles.pillTextActive]}>
+                  {acct}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       </View>
 
       {/* Submit Button */}
       <Pressable
-        style={[styles.submitButton, submitted && styles.submitButtonDone]}
+        style={[
+          styles.submitButton,
+          submitted && styles.submitButtonDone,
+        ]}
         onPress={handleSave}
       >
-        <Text style={styles.submitButtonText}>
+        <Text
+          style={[
+            typography.action,
+            styles.submitButtonText,
+            submitted && styles.submitButtonTextDone,
+          ]}
+        >
           {submitted ? '✓ Logged to Ledger' : 'Log Transaction'}
         </Text>
       </Pressable>
 
-      <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
+      <StatusBar style="light" />
     </ScrollView>
   );
 }
@@ -106,86 +181,129 @@ export default function QuickEntryModal() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.canvas,
   },
   content: {
-    padding: 20,
-    gap: 18,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 40,
+    gap: 20,
+  },
+  sheetHandle: {
+    width: 36,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: colors.surface2,
+    alignSelf: 'center',
+    marginBottom: 8,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
   title: {
-    fontSize: 22,
-    fontWeight: '800',
+    color: '#FFFFFF',
   },
   subtitle: {
-    fontSize: 13,
-    color: '#64748B',
-    marginTop: -10,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.glass,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   inputGroup: {
     gap: 8,
-    backgroundColor: 'transparent',
   },
   inputLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#475569',
-    textTransform: 'uppercase',
+    color: colors.textSecondary,
     letterSpacing: 0.5,
   },
-  textInput: {
-    backgroundColor: 'rgba(148, 163, 184, 0.1)',
-    borderRadius: 10,
+  amountInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface1,
+    borderRadius: radius.card,
+    borderWidth: 0.5,
+    borderColor: colors.hairline,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#0F172A',
-    borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.25)',
+    paddingVertical: 10,
+  },
+  dollarSign: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    marginRight: 6,
   },
   amountInput: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#2563EB',
+    flex: 1,
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    fontVariant: ['tabular-nums'],
+  },
+  textInput: {
+    backgroundColor: colors.surface1,
+    borderRadius: radius.card,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#FFFFFF',
+    borderWidth: 0.5,
+    borderColor: colors.hairline,
   },
   pillRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    backgroundColor: 'transparent',
   },
   pill: {
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.3)',
-    backgroundColor: 'rgba(148, 163, 184, 0.08)',
+    paddingVertical: 9,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface1,
+    borderWidth: 0.5,
+    borderColor: colors.hairline,
   },
   pillActive: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
+    backgroundColor: colors.systemBlue,
+    borderColor: colors.systemBlue,
   },
   pillText: {
-    fontSize: 13,
+    ...typography.footnote,
+    color: colors.textSecondary,
     fontWeight: '500',
-    color: '#475569',
   },
   pillTextActive: {
     color: '#FFFFFF',
     fontWeight: '700',
   },
   submitButton: {
-    backgroundColor: '#2563EB',
-    paddingVertical: 16,
-    borderRadius: 12,
+    height: 54,
+    borderRadius: radius.sheet,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   submitButtonDone: {
-    backgroundColor: '#10B981',
+    backgroundColor: colors.success,
   },
   submitButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: '#000000',
     fontWeight: '700',
+  },
+  submitButtonTextDone: {
+    color: '#FFFFFF',
   },
 });

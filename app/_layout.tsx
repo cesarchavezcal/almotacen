@@ -1,10 +1,9 @@
 import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-
-import { useColorScheme } from '@/components/useColorScheme';
+import { colors } from '@/src/theme';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -43,13 +42,24 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
+    <ThemeProvider value={DarkTheme}>
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.canvas },
+          headerTintColor: colors.textPrimary,
+          contentStyle: { backgroundColor: colors.canvas },
+        }}
+      >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        <Stack.Screen
+          name="modal"
+          options={{
+            presentation: 'modal',
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.canvas },
+          }}
+        />
       </Stack>
     </ThemeProvider>
   );

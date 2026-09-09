@@ -1,30 +1,53 @@
-import { Platform } from 'react-native';
-
 export const colors = {
-  // Semantic UI
-  label: Platform.select({
-    ios: '#000000',
-    android: '#1E293B',
-    default: '#0F172A',
-  }),
-  secondaryLabel: '#64748B',
-  tertiaryLabel: '#94A3B8',
-  background: '#FFFFFF',
-  surfaceCard: '#0F172A',
-  surfaceCardSubtle: '#F8FAFC',
-  border: 'rgba(148, 163, 184, 0.25)',
-  borderSubtle: 'rgba(148, 163, 184, 0.15)',
+  // Canvas & surfaces
+  canvas: '#000000', // TRUE BLACK — not #1C1C1E
+  surface1: '#1C1C1E',
+  surface2: '#2C2C2E',
+  glass: 'rgba(255,255,255,0.12)',
+  hairline: '#262629',
 
-  // Brand & Accents
-  primary: '#2563EB',
-  primaryDark: '#1D4ED8',
+  // Text
+  textPrimary: '#FFFFFF',
+  textSecondary: '#A0A0A5',
+  textTertiary: '#636368',
+
+  // Semantic UI labels (backwards compatible)
+  label: '#FFFFFF',
+  secondaryLabel: '#A0A0A5',
+  tertiaryLabel: '#636368',
+  background: '#000000',
+  surfaceCard: '#1C1C1E',
+  surfaceCardSubtle: '#2C2C2E',
+  border: '#262629',
+  borderSubtle: 'rgba(255, 255, 255, 0.08)',
+
+  // Apple Card titanium gradient stops
+  titaniumHi: '#E8E8EB',
+  titaniumMid: '#A8A8AD',
+  titaniumLo: '#3D3D3F',
+  chipGold: '#C7AC73',
+  dailyCash: '#FF3B30',
+
+  // Semantic (HIG dark mode)
+  systemBlue: '#0A84FF',
+  primary: '#0A84FF',
+  primaryDark: '#0071E3',
   onPrimary: '#FFFFFF',
+  success: '#30D158',
+  warning: '#FF9F0A',
+  error: '#FF453A',
 
   // Status & Financial Indicators
-  inflow: '#10B981',
-  inflowBg: 'rgba(16, 185, 129, 0.12)',
-  outflow: '#EF4444',
-  outflowBg: 'rgba(239, 68, 68, 0.12)',
-  warning: '#F59E0B',
-  neutral: '#64748B',
+  inflow: '#30D158',
+  inflowBg: 'rgba(48, 209, 88, 0.15)',
+  outflow: '#FF453A',
+  outflowBg: 'rgba(255, 69, 58, 0.15)',
+  neutral: '#A0A0A5',
+
+  // Brand hints
+  chaseBlue: '#1A2D4F',
+  amexSilver: '#A7B0B7',
+  visaNavy: '#1A1F71',
 } as const;
+
+export type WalletColor = keyof typeof colors;
