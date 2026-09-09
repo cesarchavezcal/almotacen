@@ -1,54 +1,75 @@
-import React from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { StyleSheet, ScrollView, View, Text } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { colors } from '@/src/theme/colors';
 import { typography } from '@/src/theme/typography';
 import { radius } from '@/src/theme/radius';
 import { EnvelopePassFace } from '@/src/components/EnvelopePassFace';
+import { useLedgerStore } from '@/src/storage/useLedgerStore';
+import { formatCentsToCurrency } from '@/src/domain/ledger/currency';
+import {
+  QuickFillAction,
+  calculateQuickFillAllocation,
+  getReadyToAssignBannerState,
+  ReadyToAssignBannerState,
+  BudgetDisplayGroup,
+  buildBudgetDisplayGroups,
+  calculateBudgetTotals,
+} from '@/src/domain/ledger/budgetViewHelpers';
+import { Category } from '@/src/domain/ledger/types';
 
-interface CategoryItem {
-  id: string;
-  name: string;
-  assigned: number;
-  activity: number;
-  available: number;
-  accentColor?: string;
+/**
+ * Executes haptic feedback safely. Discarded if platform lacks haptic hardware.
+ */
+async function safeHaptic(action: () => Promise<unknown>): Promise<void> {
+  try {
+    await action();
+  } catch (err: unknown) {
+    console.debug('[safeHaptic] feedback skipped:', err);
+  }
 }
 
-interface CategoryGroup {
-  name: string;
-  items: CategoryItem[];
+export interface BudgetViewProps {
+  readyToAssignCents: number;
+  bannerState: ReadyToAssignBannerState;
+  totalAssignedCents: number;
+  totalAvailableCents: number;
+  displayGroups: BudgetDisplayGroup[];
+  expandedCategoryId: string | null;
+  onToggleExpand: (id: string) => void;
+  onAllocateQuickFill: (categoryId: string, action: QuickFillAction) => void;
 }
 
-const BUDGET_GROUPS: CategoryGroup[] = [
-  {
-    name: 'Immediate Obligations',
-    items: [
-      { id: 'groceries', name: 'Groceries & Provisions', assigned: 650, activity: -342.5, available: 307.5, accentColor: colors.systemBlue },
-      { id: 'rent', name: 'Housing & Rent', assigned: 1800, activity: -1800, available: 0, accentColor: colors.warning },
-      { id: 'utilities', name: 'Utilities & Internet', assigned: 220, activity: -165, available: 55, accentColor: colors.systemBlue },
-    ],
-  },
-  {
-    name: 'True Expenses',
-    items: [
-      { id: 'auto', name: 'Auto Maintenance', assigned: 150, activity: 0, available: 150, accentColor: colors.success },
-      { id: 'health', name: 'Medical & Dental', assigned: 100, activity: -45, available: 55, accentColor: colors.systemBlue },
-      { id: 'insurance', name: 'Annual Insurance', assigned: 125, activity: 0, available: 125, accentColor: colors.success },
-    ],
-  },
-  {
-    name: 'Quality of Life & Goals',
-    items: [
-      { id: 'dining', name: 'Dining Out', assigned: 200, activity: -182, available: 18, accentColor: colors.warning },
-      { id: 'vacation', name: 'Vacation Fund', assigned: 350, activity: 0, available: 350, accentColor: colors.success },
-      { id: 'investing', name: 'Index Funds', assigned: 500, activity: -500, available: 0, accentColor: colors.textTertiary },
-    ],
-  },
-];
+export function BudgetView({
+  readyToAssignCents,
+  bannerState,
+  totalAssignedCents,
+  totalAvailableCents,
+  displayGroups,
+  expandedCategoryId,
+  onToggleExpand,
+  onAllocateQuickFill,
+}: BudgetViewProps): React.JSX.Element {
+  const isOverAssigned = bannerState.isOverAssigned;
+  const isPositive = bannerState.status === 'positive';
 
-export default function BudgetScreen() {
-  const totalAssigned = BUDGET_GROUPS.flatMap((g) => g.items).reduce((sum, item) => sum + item.assigned, 0);
-  const totalAvailable = BUDGET_GROUPS.flatMap((g) => g.items).reduce((sum, item) => sum + item.available, 0);
+  const bannerColor = isOverAssigned
+    ? colors.error
+    : isPositive
+    ? colors.success
+    : colors.textSecondary;
+
+  const pillBg = isOverAssigned
+    ? 'rgba(255, 69, 58, 0.15)'
+    : isPositive
+    ? 'rgba(48, 209, 88, 0.15)'
+    : colors.surface2;
+
+  const pillBorder = isOverAssigned
+    ? 'rgba(255, 69, 58, 0.3)'
+    : isPositive
+    ? 'rgba(48, 209, 88, 0.3)'
+    : colors.hairline;
 
   return (
     <ScrollView
@@ -56,40 +77,48 @@ export default function BudgetScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* Ready to Assign PassKit Badge Header */}
-      <View style={styles.rtaCard}>
-        <View style={styles.rtaTopRow}>
-          <Text style={styles.rtaSubtitle}>READY TO ASSIGN</Text>
-          <View style={styles.zeroPill}>
-            <Text style={styles.zeroPillText}>ZERO-BASED</Text>
+      {/* Ready to Assign PassKit Badge Header (SCEN-005 & SCEN-006) */}
+      <View style={[styles.readyToAssignCard, isOverAssigned && styles.readyToAssignCardWarning]}>
+        <View style={styles.readyToAssignTopRow}>
+          <Text style={styles.readyToAssignSubtitle}>{bannerState.badgeText}</Text>
+          <View style={[styles.zeroPill, { backgroundColor: pillBg, borderColor: pillBorder }]}>
+            <Text style={[styles.zeroPillText, { color: bannerColor }]}>
+              {bannerState.badgeText}
+            </Text>
           </View>
         </View>
 
-        <Text style={[typography.balanceHero, styles.rtaAmount]}>$0.00</Text>
-        <Text style={styles.rtaDescription}>
-          All dollars have been given a job • Every dollar accounted for
+        <Text style={[typography.balanceHero, styles.readyToAssignAmount, { color: bannerColor }]}>
+          {formatCentsToCurrency(readyToAssignCents)}
         </Text>
+        <Text style={styles.readyToAssignDescription}>{bannerState.description}</Text>
       </View>
 
       {/* Summary Totals Row */}
       <View style={styles.summaryRow}>
         <View style={[styles.summaryCard, { marginRight: 6 }]}>
           <Text style={styles.summaryLabel}>TOTAL ASSIGNED</Text>
-          <Text style={[typography.title, styles.summaryValue]}>
-            ${totalAssigned.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          <Text style={[typography.title, styles.summaryValue, { color: colors.textPrimary }]}>
+            {formatCentsToCurrency(totalAssignedCents)}
           </Text>
         </View>
         <View style={[styles.summaryCard, { marginLeft: 6 }]}>
           <Text style={styles.summaryLabel}>TOTAL AVAILABLE</Text>
-          <Text style={[typography.title, styles.summaryValue, { color: colors.success }]}>
-            ${totalAvailable.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          <Text
+            style={[
+              typography.title,
+              styles.summaryValue,
+              { color: totalAvailableCents < 0 ? colors.error : colors.success },
+            ]}
+          >
+            {formatCentsToCurrency(totalAvailableCents)}
           </Text>
         </View>
       </View>
 
       {/* Category Groups rendered with EnvelopePassFace cards */}
-      {BUDGET_GROUPS.map((group) => (
-        <View key={group.name} style={styles.groupSection}>
+      {displayGroups.map((group) => (
+        <View key={group.id} style={styles.groupSection}>
           <Text style={[typography.sectionHdr, styles.groupHeader]}>
             {group.name}
           </Text>
@@ -99,10 +128,13 @@ export default function BudgetScreen() {
                 key={item.id}
                 name={item.name}
                 group={group.name}
-                assigned={item.assigned}
-                activity={item.activity}
-                available={item.available}
-                accentColor={item.accentColor}
+                assignedCents={item.assignedCents}
+                activityCents={item.activityCents}
+                availableCents={item.availableCents}
+                unfundedDebtCents={item.unfundedDebtCents}
+                isExpanded={expandedCategoryId === item.id}
+                onToggleExpand={() => onToggleExpand(item.id)}
+                onAllocateQuickFill={(action) => onAllocateQuickFill(item.id, action)}
                 style={styles.envelopePass}
               />
             ))}
@@ -110,6 +142,68 @@ export default function BudgetScreen() {
         </View>
       ))}
     </ScrollView>
+  );
+}
+
+// Container Component
+export default function BudgetScreen(): React.JSX.Element {
+  const { state, groups, allocateEnvelope } = useLedgerStore();
+  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+
+  const bannerState = useMemo(
+    () => getReadyToAssignBannerState(state.readyToAssignCents),
+    [state.readyToAssignCents]
+  );
+
+  // Group and sort categories using domain helper (SCEN-005 & SCEN-015)
+  const displayGroups = useMemo(
+    () => buildBudgetDisplayGroups(state.categories, groups),
+    [state.categories, groups]
+  );
+
+  // Totals calculations in integer cents using domain helper
+  const { totalAssignedCents, totalAvailableCents } = useMemo(
+    () => calculateBudgetTotals(state.categories),
+    [state.categories]
+  );
+
+  const handleToggleExpand = useCallback((id: string) => {
+    void safeHaptic(() => Haptics.selectionAsync());
+    setExpandedCategoryId((prev) => (prev === id ? null : id));
+  }, []);
+
+  const handleAllocateQuickFill = useCallback(
+    (categoryId: string, action: QuickFillAction) => {
+      const targetCat: Category | undefined = state.categories[categoryId];
+      if (!targetCat) return;
+
+      const newAssignedCents = calculateQuickFillAllocation(
+        targetCat.assignedCents,
+        state.readyToAssignCents,
+        action
+      );
+
+      allocateEnvelope({
+        categoryId,
+        amountCents: newAssignedCents,
+      });
+
+      void safeHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
+    },
+    [state.categories, state.readyToAssignCents, allocateEnvelope]
+  );
+
+  return (
+    <BudgetView
+      readyToAssignCents={state.readyToAssignCents}
+      bannerState={bannerState}
+      totalAssignedCents={totalAssignedCents}
+      totalAvailableCents={totalAvailableCents}
+      displayGroups={displayGroups}
+      expandedCategoryId={expandedCategoryId}
+      onToggleExpand={handleToggleExpand}
+      onAllocateQuickFill={handleAllocateQuickFill}
+    />
   );
 }
 
@@ -124,48 +218,47 @@ const styles = StyleSheet.create({
     gap: 18,
     paddingBottom: 40,
   },
-  rtaCard: {
+  readyToAssignCard: {
     backgroundColor: colors.surface1,
     borderRadius: radius.card,
     padding: 20,
     borderWidth: 0.5,
     borderColor: colors.hairline,
-    shadowColor: '#000',
+    shadowColor: colors.canvas,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,
     shadowRadius: 10,
     elevation: 8,
   },
-  rtaTopRow: {
+  readyToAssignCardWarning: {
+    borderColor: colors.error,
+  },
+  readyToAssignTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  rtaSubtitle: {
+  readyToAssignSubtitle: {
     ...typography.sectionHdr,
     color: colors.textSecondary,
     letterSpacing: 0.8,
   },
   zeroPill: {
-    backgroundColor: 'rgba(48, 209, 88, 0.15)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: radius.pill,
     borderWidth: 0.5,
-    borderColor: 'rgba(48, 209, 88, 0.3)',
   },
   zeroPillText: {
-    color: colors.success,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
-  rtaAmount: {
-    color: colors.success,
+  readyToAssignAmount: {
     marginTop: 6,
     marginBottom: 4,
   },
-  rtaDescription: {
+  readyToAssignDescription: {
     ...typography.footnote,
     color: colors.textSecondary,
   },
@@ -196,11 +289,12 @@ const styles = StyleSheet.create({
   },
   groupHeader: {
     paddingHorizontal: 4,
+    color: colors.textSecondary,
   },
   passesColumn: {
     gap: 14,
   },
   envelopePass: {
-    marginHorizontal: 0, // Inset managed by screen container
+    marginHorizontal: 0,
   },
 });
