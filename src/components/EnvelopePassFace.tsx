@@ -1,50 +1,83 @@
 import React from 'react';
-import { View, Text, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, StyleProp, ViewStyle, Pressable } from 'react-native';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { radius } from '../theme/radius';
 
+import { formatCentsToCurrency } from '../domain/ledger/currency';
+import { QuickFillAction, getEnvelopeBadge } from '../domain/ledger/budgetViewHelpers';
+
 export interface EnvelopePassFaceProps {
   name: string;
   group?: string;
-  assigned: number;
-  activity: number;
-  available: number;
+  assignedCents: number;
+  activityCents: number;
+  availableCents: number;
+  unfundedDebtCents?: number;
   accentColor?: string;
   style?: StyleProp<ViewStyle>;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
+  onAllocateQuickFill?: (action: QuickFillAction) => void;
 }
 
 export function EnvelopePassFace({
   name,
   group,
-  assigned,
-  activity,
-  available,
+  assignedCents,
+  activityCents,
+  availableCents,
+  unfundedDebtCents,
   accentColor = colors.systemBlue,
   style,
-}: EnvelopePassFaceProps) {
-  const isOverspent = available < 0;
-  const isDepleted = available === 0;
-  const spentPercent = assigned > 0 ? Math.min(100, Math.round((Math.abs(activity) / assigned) * 100)) : 0;
+  isExpanded,
+  onToggleExpand,
+  onAllocateQuickFill,
+}: EnvelopePassFaceProps): React.JSX.Element {
+  const badge = getEnvelopeBadge({
+    availableCents,
+    unfundedDebtCents,
+  });
 
-  const statusColor = isOverspent ? colors.error : isDepleted ? colors.textTertiary : colors.success;
-  const statusLabel = isOverspent ? 'OVERSPENT' : isDepleted ? 'DEPLETED' : 'FUNDED';
+  const isOverspent = availableCents < 0;
+  const isDepleted = availableCents === 0 && !unfundedDebtCents;
+  const spentPercent = assignedCents > 0
+    ? Math.min(100, Math.round((Math.abs(activityCents) / assignedCents) * 100))
+    : 0;
+
+  let statusBg = 'rgba(48,209,88,0.15)';
+  let statusColor: string = colors.success;
+
+  if (badge.type === 'credit_debt') {
+    statusBg = 'rgba(255,159,10,0.15)';
+    statusColor = colors.warning;
+  } else if (badge.type === 'cash_overspent') {
+    statusBg = 'rgba(255,69,58,0.15)';
+    statusColor = colors.error;
+  } else if (badge.type === 'depleted') {
+    statusBg = colors.surface2;
+    statusColor = colors.textTertiary;
+  }
 
   return (
     <View style={[styles.shadow, style]}>
-      <View style={styles.frame}>
+      <View style={[styles.frame, isExpanded && styles.frameExpanded]}>
         {/* Top Section */}
-        <View style={styles.topSection}>
+        <Pressable
+          onPress={onToggleExpand}
+          style={styles.topSection}
+          accessibilityRole="button"
+        >
           <View style={styles.headerLeft}>
             {group ? <Text style={styles.groupLabel}>{group.toUpperCase()}</Text> : null}
-            <Text style={[typography.headline, { color: '#FFFFFF' }]} numberOfLines={1}>
+            <Text style={[typography.headline, { color: colors.textPrimary }]} numberOfLines={1}>
               {name}
             </Text>
           </View>
-          <View style={[styles.statusPill, { backgroundColor: isOverspent ? 'rgba(255,69,58,0.15)' : 'rgba(48,209,88,0.15)' }]}>
-            <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
+          <View style={[styles.statusPill, { backgroundColor: statusBg }]}>
+            <Text style={[styles.statusText, { color: statusColor }]}>{badge.label}</Text>
           </View>
-        </View>
+        </Pressable>
 
         {/* Perforated Divider with Cutout Notches */}
         <View style={styles.notchContainer}>
@@ -62,18 +95,18 @@ export function EnvelopePassFace({
                 style={[
                   typography.title,
                   styles.availableAmount,
-                  { color: isOverspent ? colors.error : '#FFFFFF' },
+                  { color: isOverspent ? colors.error : colors.textPrimary },
                 ]}
               >
-                ${available < 0 ? `(${Math.abs(available).toFixed(2)})` : available.toFixed(2)}
+                {formatCentsToCurrency(availableCents)}
               </Text>
             </View>
             <View style={styles.statsCol}>
               <Text style={styles.statDetail}>
-                Assigned: <Text style={styles.statBold}>${assigned.toFixed(0)}</Text>
+                Assigned: <Text style={styles.statBold}>{formatCentsToCurrency(assignedCents)}</Text>
               </Text>
               <Text style={styles.statDetail}>
-                Activity: <Text style={[styles.statBold, { color: colors.outflow }]}>-${Math.abs(activity).toFixed(0)}</Text>
+                Activity: <Text style={[styles.statBold, { color: colors.outflow }]}>{formatCentsToCurrency(activityCents)}</Text>
               </Text>
             </View>
           </View>
@@ -94,6 +127,41 @@ export function EnvelopePassFace({
             <Text style={styles.progressText}>{spentPercent}% spent</Text>
             <Text style={styles.progressText}>Zero-Based Envelope</Text>
           </View>
+
+          {/* 1-Tap Quick-Fill Pills (SCEN-014) */}
+          {onAllocateQuickFill && isExpanded && (
+            <View style={styles.quickFillSection}>
+              <Text style={styles.quickFillHeader}>QUICK ALLOCATE</Text>
+              <View style={styles.quickFillRow}>
+                <Pressable
+                  style={styles.quickFillPill}
+                  onPress={() => onAllocateQuickFill('add_50')}
+                >
+                  <Text style={styles.quickFillText}>+$50</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.quickFillPill}
+                  onPress={() => onAllocateQuickFill('add_100')}
+                >
+                  <Text style={styles.quickFillText}>+$100</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.quickFillPill, styles.quickFillFillAll]}
+                  onPress={() => onAllocateQuickFill('fill_remaining')}
+                >
+                  <Text style={[styles.quickFillText, styles.quickFillFillAllText]}>
+                    Fill Remaining
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.quickFillPill, styles.quickFillSub]}
+                  onPress={() => onAllocateQuickFill('sub_50')}
+                >
+                  <Text style={styles.quickFillText}>-$50</Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
         </View>
 
         <View style={styles.innerHighlight} pointerEvents="none" />
@@ -214,7 +282,7 @@ const styles = StyleSheet.create({
   },
   statBold: {
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.textPrimary,
     fontVariant: ['tabular-nums'],
   },
   progressTrack: {
@@ -236,6 +304,53 @@ const styles = StyleSheet.create({
   progressText: {
     fontSize: 11,
     color: colors.textTertiary,
+  },
+  quickFillSection: {
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 0.5,
+    borderTopColor: colors.hairline,
+    gap: 8,
+  },
+  quickFillHeader: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    color: colors.textTertiary,
+  },
+  quickFillRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    alignItems: 'center',
+  },
+  quickFillPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface2,
+    borderWidth: 0.5,
+    borderColor: colors.hairline,
+  },
+  quickFillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  quickFillFillAll: {
+    backgroundColor: 'rgba(48, 209, 88, 0.15)',
+    borderColor: 'rgba(48, 209, 88, 0.3)',
+  },
+  quickFillFillAllText: {
+    color: colors.success,
+    fontWeight: '700',
+  },
+  quickFillSub: {
+    backgroundColor: 'rgba(255, 69, 58, 0.12)',
+    borderColor: 'rgba(255, 69, 58, 0.25)',
+  },
+  frameExpanded: {
+    minHeight: 280,
   },
   innerHighlight: {
     position: 'absolute',

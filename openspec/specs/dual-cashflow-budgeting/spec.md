@@ -69,3 +69,27 @@ The transaction capture modal MUST minimize point-of-sale friction (< 3 seconds 
   - **And** a success haptic notification fires.
   - **And** the modal dismisses immediately.
 
+### Requirement 5: Proactive Envelope Allocation & Overspending Badges
+The budgeting tab MUST display a dynamic `Ready to Assign` header banner reflecting unallocated cash, render categories grouped by obligation, provide 1-tap quick-fill allocation pills, and visually distinguish unfunded credit debt from liquid cash overspending.
+
+- **Scenario 5.1 (Ready to Assign Header Banner States)**:
+  - **Given** positive `readyToAssignCents`.
+  - **When** viewing the budgeting tab.
+  - **Then** the header banner renders in emerald green with total available to assign.
+  - **And** if `readyToAssignCents` is exactly zero, it displays a neutral zero-based badge.
+  - **And** if `readyToAssignCents` is negative, it displays a red over-assigned warning.
+
+- **Scenario 5.2 (1-Tap Quick-Fill Allocation)**:
+  - **Given** an envelope category and a positive `readyToAssign` pool.
+  - **When** tapping quick-fill pills (+$50, +$100, or "Fill Remaining").
+  - **Then** the envelope assigned amount increases by the chosen amount.
+  - **And** `readyToAssignCents` decreases accordingly in real-time.
+
+- **Scenario 5.3 (Dual-Axis Debt vs Cash Overspending Badges)**:
+  - **Given** envelope categories with negative or debt status.
+  - **When** a category has unfunded credit debt.
+  - **Then** an amber `CREDIT DEBT` badge is displayed.
+  - **When** a category has negative available cash.
+  - **Then** a red `CASH OVERSPENT` badge is displayed.
+
+

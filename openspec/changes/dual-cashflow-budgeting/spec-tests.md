@@ -19,6 +19,8 @@
 | `SCEN-007` | Req 3.1 | Offline | Device disconnected, transaction logged | Local record created with `syncStatus: 'pending'` |
 | `SCEN-012` | Req 4.1 | Happy Path | Smart payee memory queried for existing payee | Returns most recent `categoryId` and `accountId` from ledger history |
 | `SCEN-013` | Req 4.3 | Happy Path | Quick outflow submission with valid amount, payee, account, category | Persists double-sided outflow to SQLite within 50ms |
+| `SCEN-014` | Req 5.2 | Happy Path | Tap quick-fill pills (+$50, +$100, Fill Remaining) on envelope | Allocates chosen amount to envelope, decrements `readyToAssign` |
+| `SCEN-015` | Req 5.3 | Visual/Logic | Render envelope badges with debt or cash overspending | Distinguishes amber `CREDIT DEBT` vs red `CASH OVERSPENT` |
 
 ---
 
@@ -60,6 +62,14 @@ describe('Dual Ledger Engine Contract', () => {
 
   it('SCEN-013: quick outflow submission parses currency amount, validates > 0, and commits to SQLite', () => {
     // RED: Must fail until modal transaction submission is connected to useLedgerStore
+  });
+
+  it('SCEN-014: 1-tap quick-fill pills allocate funds to envelope and decrement readyToAssign', () => {
+    // RED: Must fail until quick-fill allocation pills are connected
+  });
+
+  it('SCEN-015: envelope badges differentiate amber credit debt from red cash overspending', () => {
+    // RED: Must fail until two-axis overspending badges are rendered
   });
 });
 ```
