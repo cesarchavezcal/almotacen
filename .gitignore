@@ -110,8 +110,10 @@ expo-env.d.ts
 *.p8
 *.p12
 *.key
-*.mobileprovision
 .metro-health-check*
 /ios/
 /android/
 .playwright-mcp/
+.scratch/
+
+
