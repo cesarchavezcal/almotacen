@@ -20,16 +20,16 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
+          title: 'Cash Flow',
           tabBarIcon: ({ color }) => (
             <SymbolView
               name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
+                ios: 'chart.line.uptrend.xyaxis',
+                android: 'analytics',
+                web: 'analytics',
               }}
               tintColor={color}
-              size={28}
+              size={26}
             />
           ),
           headerRight: () => (
@@ -37,9 +37,9 @@ export default function TabLayout() {
               <Pressable style={{ marginRight: 15 }}>
                 {({ pressed }) => (
                   <SymbolView
-                    name={{ ios: 'info.circle', android: 'info', web: 'info' }}
-                    size={25}
-                    tintColor={Colors[colorScheme].text}
+                    name={{ ios: 'plus.circle.fill', android: 'add_circle', web: 'add_circle' }}
+                    size={26}
+                    tintColor={Colors[colorScheme].tint}
                     style={{ opacity: pressed ? 0.5 : 1 }}
                   />
                 )}
@@ -49,18 +49,35 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="budget"
         options={{
-          title: 'Tab Two',
+          title: 'Budget',
           tabBarIcon: ({ color }) => (
             <SymbolView
               name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
+                ios: 'chart.pie.fill',
+                android: 'pie_chart',
+                web: 'pie_chart',
               }}
               tintColor={color}
-              size={28}
+              size={26}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="accounts"
+        options={{
+          title: 'Accounts',
+          tabBarIcon: ({ color }) => (
+            <SymbolView
+              name={{
+                ios: 'building.columns.fill',
+                android: 'account_balance',
+                web: 'account_balance',
+              }}
+              tintColor={color}
+              size={26}
             />
           ),
         }}
