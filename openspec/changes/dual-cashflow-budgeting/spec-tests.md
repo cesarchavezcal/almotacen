@@ -17,6 +17,8 @@
 | `SCEN-005` | Req 2.2 | Happy Path | Assign $1,200 from `readyToAssign` ($2,000) to Rent ($0) | `readyToAssign` = $800, Rent Available = $1,200 |
 | `SCEN-006` | Req 2.2 | Boundary | Assign $2,500 when `readyToAssign` is $2,000 | `readyToAssign` becomes -$500, over-assigned warning emitted |
 | `SCEN-007` | Req 3.1 | Offline | Device disconnected, transaction logged | Local record created with `syncStatus: 'pending'` |
+| `SCEN-012` | Req 4.1 | Happy Path | Smart payee memory queried for existing payee | Returns most recent `categoryId` and `accountId` from ledger history |
+| `SCEN-013` | Req 4.3 | Happy Path | Quick outflow submission with valid amount, payee, account, category | Persists double-sided outflow to SQLite within 50ms |
 
 ---
 
@@ -50,6 +52,14 @@ describe('Dual Ledger Engine Contract', () => {
 
   it('SCEN-007: writes transaction locally with pending sync status when offline', () => {
     // RED: Must fail until offline queue is implemented
+  });
+
+  it('SCEN-012: smart payee memory returns last used account and category for existing payee', () => {
+    // RED: Must fail until Smart Payee Memory lookup is implemented
+  });
+
+  it('SCEN-013: quick outflow submission parses currency amount, validates > 0, and commits to SQLite', () => {
+    // RED: Must fail until modal transaction submission is connected to useLedgerStore
   });
 });
 ```

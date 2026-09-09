@@ -46,3 +46,26 @@ Transactions entered while disconnected MUST commit immediately to local SQLite 
   - **When** the user enters a transaction.
   - **Then** local ledger and category balances update instantly (< 50ms).
   - **And** the transaction is marked with `pending_sync` status.
+
+### Requirement 4: Point-of-Sale Quick Capture & Smart Payee Memory
+The transaction capture modal MUST minimize point-of-sale friction (< 3 seconds entry) by auto-focusing numeric input, intelligently recalling past categories and accounts by payee, and previewing envelope balance impact before saving.
+
+- **Scenario 4.1 (Smart Payee Prefill)**:
+  - **Given** a historical transaction with payee "Trader Joe's" using account "Apple Card" and category "Groceries".
+  - **When** the user enters or selects "Trader Joe's" in the quick capture modal.
+  - **Then** the category is automatically preselected as "Groceries".
+  - **And** the account is automatically preselected as "Apple Card".
+
+- **Scenario 4.2 (Live Envelope Balance Impact Preview)**:
+  - **Given** an envelope "Dining Out" with available balance $50.00.
+  - **When** the user types amount $20.00 for category "Dining Out".
+  - **Then** the interface displays an impact preview showing `$50.00 ➔ $30.00`.
+  - **And** if amount exceeds available balance ($65.00), the preview badges overspending in amber warning style (`$50.00 ➔ -$15.00`).
+
+- **Scenario 4.3 (Atomic Commit & Haptic Dismissal)**:
+  - **Given** a completed entry with positive amount, account, and category.
+  - **When** the user taps "Save".
+  - **Then** an atomic outflow transaction is committed to SQLite.
+  - **And** a success haptic notification fires.
+  - **And** the modal dismisses immediately.
+

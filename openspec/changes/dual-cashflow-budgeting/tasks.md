@@ -21,28 +21,28 @@ Ticket 2: SQLite Local-First Store & Seed Data
 - **Blocked by**: None — can start immediately
 - **What it delivers**: Pure domain ledger engine supporting atomic cash and credit card outflows. Credit charges automatically transfer available cash from the spending category to a dedicated credit card payment envelope, flagging any deficit as unfunded credit debt.
 - **Criteria**:
-  - [ ] `Account`, `Category`, `Transaction` types updated with credit payment envelope IDs and debt flags.
-  - [ ] `postOutflowTransaction` transfers cash to payment envelope up to available category balance.
-  - [ ] Unfunded credit debt calculated and flagged without throwing errors.
-  - [ ] Unit test suite verifying credit reserve transfers and cash deficit scenarios.
+  - [x] `Account`, `Category`, `Transaction` types updated with credit payment envelope IDs and debt flags.
+  - [x] `postOutflowTransaction` transfers cash to payment envelope up to available category balance.
+  - [x] Unfunded credit debt calculated and flagged without throwing errors.
+  - [x] Unit test suite verifying credit reserve transfers and cash deficit scenarios.
 
 ### Ticket 2: SQLite Local-First Store & Seed Data
 - **Blocked by**: Ticket 1
 - **What it delivers**: Persistent local SQLite database layer with atomic transactions and reactive state hook (`useLedgerStore`). App launches with instant default accounts and envelope groups.
 - **Criteria**:
-  - [ ] SQLite tables created for accounts, categories, and transactions with offline sync markers.
-  - [ ] Transactional repository executes atomic double-sided updates.
-  - [ ] Initial database seed initializes Checking, Credit Card, and primary category groups.
-  - [ ] Integration test verifies state persists across app reloads.
+  - [x] SQLite tables created for accounts, categories, and transactions with offline sync markers.
+  - [x] Transactional repository executes atomic double-sided updates.
+  - [x] Initial database seed initializes Checking, Credit Card, and primary category groups.
+  - [x] Integration test verifies state persists across app reloads.
 
 ### Ticket 3: POS Quick Capture Modal & Smart Payee Memory
 - **Blocked by**: Ticket 2
 - **What it delivers**: Sub-3-second point-of-sale quick expense capture modal (`/modal.tsx`). Typing or tapping a payee auto-populates category and account from the last transaction with that payee, with live envelope balance impact preview and haptic feedback.
 - **Criteria**:
-  - [ ] Auto-focused numeric pad with amount formatting.
-  - [ ] Smart Payee Memory prefills category and account from payee history.
-  - [ ] Real-time category preview reflects available balance before saving.
-  - [ ] Single-tap save with debouncing and instant haptic tick.
+  - [x] Auto-focused numeric pad with amount formatting.
+  - [x] Smart Payee Memory prefills category and account from payee history.
+  - [x] Real-time category preview reflects available balance before saving.
+  - [x] Single-tap save with debouncing and instant haptic tick.
 
 ### Ticket 4: Proactive Zero-Based Budgeting & Envelope Allocator
 - **Blocked by**: Ticket 2

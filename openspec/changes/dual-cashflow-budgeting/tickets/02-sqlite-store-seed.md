@@ -4,10 +4,10 @@
 
 **Blocked by:** 01 — Core Dual-Ledger with Credit Payment Reserve
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Define and execute SQLite schema migrations for `accounts`, `categories`, `category_groups`, and `transactions`.
-- [ ] Implement atomic transactional repository executing double-sided writes with rollback safety.
-- [ ] Provide reactive state hook (`useLedgerStore`) that emits live state updates to UI components.
-- [ ] Implement first-launch database seeding with standard budget envelopes and liquid accounts.
-- [ ] Integration test verifying state persists across database reload.
+- [x] Define and execute SQLite schema migrations for `accounts`, `categories`, `category_groups`, and `transactions`.
+- [x] Implement atomic transactional repository executing double-sided writes with rollback safety.
+- [x] Provide reactive state hook (`useLedgerStore`) that emits live state updates to UI components.
+- [x] Implement first-launch database seeding with standard budget envelopes and liquid accounts.
+- [x] Integration test verifying state persists across database reload.

@@ -13,7 +13,8 @@
       "name": "Core Dual-Ledger with Credit Payment Reserve",
       "description": "Atomic cash and credit outflows; automatic cash transfer to credit card payment reserve envelope with unfunded debt tracking",
       "dependencies": ["feat-001"],
-      "status": "ready-for-agent",
+      "status": "done",
+      "evidence": "./init.sh clean pass, 10/10 tests passing",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/01-core-dual-ledger.md"
     },
     {
@@ -21,7 +22,8 @@
       "name": "SQLite Local-First Store & Seed Data",
       "description": "SQLite schema migrations, atomic double-sided repository, reactive useLedgerStore hook, and first-launch seed data",
       "dependencies": ["ALM-001"],
-      "status": "blocked",
+      "status": "done",
+      "evidence": "./init.sh clean pass, 17/17 tests passing",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/02-sqlite-store-seed.md"
     },
     {
@@ -29,7 +31,8 @@
       "name": "POS Quick Capture Modal & Smart Payee Memory",
       "description": "Sub-3-second capture modal with auto-focused keypad, smart payee prefill, live category preview, and haptics",
       "dependencies": ["ALM-002"],
-      "status": "blocked",
+      "status": "done",
+      "evidence": "./init.sh clean pass, 22/22 tests passing",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/03-pos-quick-capture-modal.md"
     },
     {
@@ -37,7 +40,7 @@
       "name": "Proactive Zero-Based Budgeting & Envelope Allocator",
       "description": "Live Ready to Assign banner, category groups, quick-fill pills, and distinct visual badges for credit debt vs cash overspending",
       "dependencies": ["ALM-002"],
-      "status": "blocked",
+      "status": "ready-for-agent",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/04-proactive-budgeting-screen.md"
     },
     {
@@ -45,7 +48,7 @@
       "name": "Reactive Cash Flow Trajectory Curve & Income Ceiling",
       "description": "Cumulative spending curve, linear budget pace, blended EOM velocity, and horizontal Income Ceiling marker",
       "dependencies": ["ALM-002"],
-      "status": "blocked",
+      "status": "ready-for-agent",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/05-reactive-cashflow-trajectory.md"
     },
     {
