@@ -2,8 +2,8 @@
 
 ## Current State
 
-**Last Updated:** 2026-09-09 16:47
-**Active Feature:** ALM-003 Completed (PR #18) ➔ Ready for ALM-004
+**Last Updated:** 2026-09-09 16:55
+**Active Feature:** ALM-004 Work Completed ➔ Ready for `/autonomic review Ticket 4`
 
 ## Status
 
@@ -34,20 +34,26 @@
   - Implemented container/presentational split in `app/modal.tsx` (`QuickEntryModal` + `QuickEntryView`)
   - Integrated smart payee inference (`SCEN-012`) and live balance impact preview (`SCEN-013`)
   - Two-Axis Review completed: Spec behavioral verification + GGA standards review (`PROVIDER="gemini"`) PASSED
-  - PR opened: [PR #18](https://github.com/cesarchavezcal/almotacen/pull/18)
+  - PR opened & merged: [PR #18](https://github.com/cesarchavezcal/almotacen/pull/18)
+- [x] Executed Step 7 (TDD Implementation - ALM-004):
+  - Created `src/domain/ledger/budgetViewHelpers.ts` for banner states, quick-fill allocation math, and display groups
+  - Created `src/domain/ledger/budgetViewHelpers.test.ts` unit suite (14/14 tests passing)
+  - Refactored `EnvelopePassFace.tsx` to strict integer cents, domain currency formatting, and expandable quick-fill pills
+  - Refactored `app/(tabs)/budget.tsx` with container/presentational architecture (`BudgetScreen` + `BudgetView`)
+  - Connected `Ready to Assign` header banner and obligation-grouped categories to live `useLedgerStore`
+  - Verified with GGA code review with `PROVIDER="gemini"` PASSED
 
 ### What's In Progress
 
-- [ ] ALM-004: Proactive Zero-Based Budgeting & Envelope Allocator (`openspec/changes/dual-cashflow-budgeting/tickets/04-proactive-budgeting-screen.md`)
+- [ ] ALM-004 Review: `/autonomic review Ticket 4` (PR creation & verification)
 
 ### What's Next
 
-1. Branch `feature/CCH/ALM-004-proactive-budgeting-screen`
-2. Run `/autonomic plan Ticket 4` to verify `SCEN-005` & `SCEN-006` contract bindings
-3. Run `/autonomic work Ticket 4` to connect `app/(tabs)/budget.tsx` to `useLedgerStore`
+1. Run `/autonomic review Ticket 4` to open the PR with Gate 2 `/unslop` description
+2. Merge PR and transition to Ticket 5 (`05-apple-card-daily-cash-ledger.md`)
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 25/25 Jest unit/integration tests pass (4 suites), `tsc --noEmit` 0 errors.
-- [x] GGA Review: PASSED with `PROVIDER="gemini"` (container/presentational split, zero swallowed exceptions, explicit return types).
-- [x] GitHub PR: [PR #18](https://github.com/cesarchavezcal/almotacen/pull/18) pushed to `cesarchavezcal/almotacen`.
+- [x] `./init.sh`: 39/39 Jest unit/integration tests pass (5 suites), `tsc --noEmit` 0 errors.
+- [x] GGA Review: PASSED with `PROVIDER="gemini"` (container/presentational split, strict integer cents, zero float leaks).
+- [x] Git Commit: `4502da7` on `feature/CCH/ALM-004-proactive-budgeting-screen`.
