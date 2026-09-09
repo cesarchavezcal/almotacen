@@ -171,6 +171,7 @@ const styles = StyleSheet.create({
   heroFrame: {
     height: 220,
     borderRadius: radius.card,
+    borderCurve: 'continuous',
     overflow: 'hidden',
     backgroundColor: '#000',
   },

@@ -114,6 +114,7 @@ const styles = StyleSheet.create({
   frame: {
     height: 220,
     borderRadius: radius.card,
+    borderCurve: 'continuous',
     overflow: 'hidden',
     backgroundColor: colors.surface1,
     borderWidth: 0.5,
