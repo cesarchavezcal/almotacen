@@ -5,7 +5,7 @@
       "name": "Project Setup & Expo Scaffolding",
       "description": "Initialize Expo SDK 57 template with Expo Router, TypeScript, and verification harness for almotacen",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "done",
       "evidence": "./init.sh clean pass"
     },
     {
@@ -13,8 +13,8 @@
       "name": "Cash Flow Tracking & Transaction Logging",
       "description": "Reactive transaction entry and cash flow visualization (Monarch style)",
       "dependencies": ["feat-001"],
-      "status": "not-started",
-      "evidence": ""
+      "status": "in-progress",
+      "evidence": "LedgerService unit tests passing 6/6 (SCEN-001..SCEN-006)"
     },
     {
       "id": "feat-003",

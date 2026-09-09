@@ -2,38 +2,38 @@
 
 ## Current State
 
-**Last Updated:** 2026-09-08 17:26
-**Active Feature:** feat-001 - Project Setup & Expo Scaffolding
+**Last Updated:** 2026-09-08 18:05
+**Active Feature:** feat-002 - Cash Flow Tracking & Transaction Logging (Core Engine)
 
 ## Status
 
 ### What's Done
 
-- [x] Repository created on GitHub: `cesarchavezcal/almotacen` from `cesarchavezcal/agent-boilerplate`
-- [x] Workspace initialized with Expo SDK 57, Expo Router, TypeScript, and React Native
-- [x] Discovered and installed `expo/skills@expo-router` skill
-- [x] Populated quad files: `CONTEXT.md`, `MEMORY.md` (ADR-001), `README.md`, `openspec/config.yaml`
-- [x] Configured harness verification script (`./init.sh`)
+- [x] Executed Step 1: `/product-function` (`docs/product-design/product_function.md`)
+- [x] Executed Step 2: `/product-description` (`docs/product-description/`)
+- [x] Executed Step 3: `/to-spec` + Gate 1 `/unslop` (`openspec/specs/dual-cashflow-budgeting/spec.md`)
+- [x] Executed Step 4: `/spec-to-tests` (`openspec/changes/dual-cashflow-budgeting/spec-tests.md`)
+- [x] Executed Step 5: `/ia` & `/ooux` (`docs/product-design/ia.md`, `ooux.md`, `design.md`)
+- [x] Executed Step 6: `/to-tickets` (`openspec/changes/dual-cashflow-budgeting/tasks.md`)
+- [x] Executed Step 7 (TDD Implementation):
+  - Created `src/domain/ledger/types.ts`
+  - Created `src/domain/ledger/errors.ts`
+  - Created `src/domain/ledger/ledgerEngine.ts`
+  - Created `src/domain/ledger/ledgerEngine.test.ts`
+  - Configured `jest.config.js` and test runner
+- [x] Executed Step 8 (Verification):
+  - `./init.sh` runs with `set -e`: `tsc --noEmit` clean, Jest 6/6 tests passing.
 
 ### What's In Progress
 
-- [ ] Complete initial setup branch and open PR
+- [ ] Open feature PR and deliver `dual-cashflow-budgeting` core domain engine.
 
 ### What's Next
 
-1. Create git branch `chore/CCH/initial-setup-project-context`
-2. Commit changes following conventional commits
-3. Push to `origin` and open PR via `gh pr create`
-
-## Blockers / Risks
-
-- None
-
-## Decisions Made
-
-- **ADR-001: Mobile-First Expo Stack & Dual Financial Model**: Adopted Expo with Expo Router + Supabase to satisfy reactive on-the-go logging and desktop zero-based budgeting.
+1. Commit all files on branch `feature/CCH/ALM-001-core-ledger-engine`
+2. Push to origin and open PR with `/unslop` description
+3. Merge to `main`
 
 ## Evidence of Completion
 
-- [x] `./init.sh` runs cleanly with zero failures.
-- [x] `git status` verifies cleanly configured workspace.
+- [x] `./init.sh`: 6/6 Jest unit tests pass (`SCEN-001` through `SCEN-006`), `tsc --noEmit` 0 errors.
