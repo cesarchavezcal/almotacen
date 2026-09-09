@@ -14,7 +14,9 @@ fi
 
 if [ -d "node_modules" ]; then
     echo "=== Running Typecheck ==="
-    npm run typecheck || true
+    npm run typecheck
+    echo "=== Running Unit & Behavioral Tests ==="
+    npm test
 fi
 
 echo "=== Verification Complete ==="
