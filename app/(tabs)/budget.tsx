@@ -216,6 +216,7 @@ const styles = StyleSheet.create({
     color: '#475569',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    paddingTop: 8,
   },
   groupCard: {
     borderRadius: 14,
