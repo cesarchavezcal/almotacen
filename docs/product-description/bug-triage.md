@@ -1,5 +1,5 @@
-# Product Defect Triage Log
+# Product Bug Triage & Behavioral Defects
 
-| ID | Feature | Observed Behavior | Root Cause | Status | Decision |
-|---|---|---|---|---|---|
-| - | - | No active defects reported | - | Clean | Baseline verified |
+| ID | Feature Area | Observed Behavior | Expected Behavior | Decision / Status |
+|---|---|---|---|---|
+| BT-001 | Quick Entry | Rapid double-tap on Save could submit duplicate local entry | Debounce save action and lock button on first press | Scheduled for hardening |

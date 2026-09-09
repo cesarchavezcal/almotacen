@@ -9,36 +9,60 @@
       "evidence": "./init.sh clean pass"
     },
     {
-      "id": "feat-002",
-      "name": "Cash Flow Tracking & Transaction Logging",
-      "description": "Reactive transaction entry and cash flow visualization (Monarch style)",
+      "id": "ALM-001",
+      "name": "Core Dual-Ledger with Credit Payment Reserve",
+      "description": "Atomic cash and credit outflows; automatic cash transfer to credit card payment reserve envelope with unfunded debt tracking",
       "dependencies": ["feat-001"],
-      "status": "in-progress",
-      "evidence": "LedgerService unit tests passing 6/6 (SCEN-001..SCEN-006)"
+      "status": "ready-for-agent",
+      "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/01-core-dual-ledger.md"
     },
     {
-      "id": "feat-003",
-      "name": "Zero-Based Proactive Budgeting Engine",
-      "description": "Envelope allocation system where every dollar is given a job (YNAB style)",
-      "dependencies": ["feat-002"],
-      "status": "not-started",
-      "evidence": ""
+      "id": "ALM-002",
+      "name": "SQLite Local-First Store & Seed Data",
+      "description": "SQLite schema migrations, atomic double-sided repository, reactive useLedgerStore hook, and first-launch seed data",
+      "dependencies": ["ALM-001"],
+      "status": "blocked",
+      "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/02-sqlite-store-seed.md"
     },
     {
-      "id": "feat-004",
-      "name": "Supabase & Local-First SQLite Persistence",
-      "description": "Offline-first transactional cache with cloud synchronization and RLS policies",
-      "dependencies": ["feat-003"],
-      "status": "not-started",
-      "evidence": ""
+      "id": "ALM-003",
+      "name": "POS Quick Capture Modal & Smart Payee Memory",
+      "description": "Sub-3-second capture modal with auto-focused keypad, smart payee prefill, live category preview, and haptics",
+      "dependencies": ["ALM-002"],
+      "status": "blocked",
+      "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/03-pos-quick-capture-modal.md"
     },
     {
-      "id": "feat-005",
-      "name": "Verification Coverage & E2E Validation",
-      "description": "Unit tests, contract tests, and type checking for the financial ledger engine",
-      "dependencies": ["feat-004"],
-      "status": "not-started",
-      "evidence": ""
+      "id": "ALM-004",
+      "name": "Proactive Zero-Based Budgeting & Envelope Allocator",
+      "description": "Live Ready to Assign banner, category groups, quick-fill pills, and distinct visual badges for credit debt vs cash overspending",
+      "dependencies": ["ALM-002"],
+      "status": "blocked",
+      "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/04-proactive-budgeting-screen.md"
+    },
+    {
+      "id": "ALM-005",
+      "name": "Reactive Cash Flow Trajectory Curve & Income Ceiling",
+      "description": "Cumulative spending curve, linear budget pace, blended EOM velocity, and horizontal Income Ceiling marker",
+      "dependencies": ["ALM-002"],
+      "status": "blocked",
+      "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/05-reactive-cashflow-trajectory.md"
+    },
+    {
+      "id": "ALM-006",
+      "name": "Interactive Chart Scrubbing & Dynamic Day Filter",
+      "description": "Horizontal thumb drag gesture, micro-haptics on day ticks, HUD tooltip, and live day-filtered transaction feed",
+      "dependencies": ["ALM-005"],
+      "status": "blocked",
+      "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/06-interactive-chart-scrubbing.md"
+    },
+    {
+      "id": "ALM-007",
+      "name": "Month Cycle Paging & Rollover",
+      "description": "Month selector header with curve animations, historical cycle loading, and month-end envelope/deficit rollover",
+      "dependencies": ["ALM-005"],
+      "status": "blocked",
+      "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/07-month-cycle-paging.md"
     }
   ]
 }
