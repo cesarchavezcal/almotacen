@@ -13,7 +13,8 @@
       "name": "Core Dual-Ledger with Credit Payment Reserve",
       "description": "Atomic cash and credit outflows; automatic cash transfer to credit card payment reserve envelope with unfunded debt tracking",
       "dependencies": ["feat-001"],
-      "status": "ready-for-agent",
+      "status": "done",
+      "evidence": "./init.sh clean pass, 10/10 tests passing",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/01-core-dual-ledger.md"
     },
     {
@@ -21,7 +22,7 @@
       "name": "SQLite Local-First Store & Seed Data",
       "description": "SQLite schema migrations, atomic double-sided repository, reactive useLedgerStore hook, and first-launch seed data",
       "dependencies": ["ALM-001"],
-      "status": "blocked",
+      "status": "ready-for-agent",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/02-sqlite-store-seed.md"
     },
     {

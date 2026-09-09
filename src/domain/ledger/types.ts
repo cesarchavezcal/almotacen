@@ -5,6 +5,7 @@ export interface Account {
   name: string;
   accountType: AccountType;
   balanceCents: number;
+  creditPaymentCategoryId?: string;
 }
 
 export interface Category {
@@ -14,6 +15,8 @@ export interface Category {
   targetCents: number;
   assignedCents: number;
   availableCents: number;
+  isCreditPayment?: boolean;
+  unfundedDebtCents?: number;
 }
 
 export type TransactionDirection = 'inflow' | 'outflow';
@@ -28,6 +31,8 @@ export interface Transaction {
   direction: TransactionDirection;
   occurredAt: string;
   syncStatus: SyncStatus;
+  unfundedDebtCents?: number;
+  transferredToReserveCents?: number;
 }
 
 export interface BudgetState {

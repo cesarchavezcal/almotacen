@@ -15,6 +15,8 @@ export interface PostOutflowResult {
   state: BudgetState;
   transaction: Transaction;
   isOverspent: boolean;
+  unfundedDebtCents: number;
+  transferredToReserveCents: number;
 }
 
 export interface PostInflowParams {
@@ -42,6 +44,21 @@ export interface AllocateEnvelopeResult {
   isOverAssigned: boolean;
 }
 
+export interface PostCreditPaymentParams {
+  state: BudgetState;
+  id: string;
+  fromAccountId: string;
+  toAccountId: string;
+  amountCents: number;
+  payee?: string;
+  occurredAt?: string;
+}
+
+export interface PostCreditPaymentResult {
+  state: BudgetState;
+  transaction: Transaction;
+}
+
 export function postOutflowTransaction(params: PostOutflowParams): PostOutflowResult {
   const { state, id, accountId, categoryId, amountCents, payee, occurredAt = new Date().toISOString() } = params;
 
@@ -63,6 +80,37 @@ export function postOutflowTransaction(params: PostOutflowParams): PostOutflowRe
   const newCategoryAvailable = category.availableCents - amountCents;
   const isOverspent = newCategoryAvailable < 0;
 
+  let transferredToReserveCents = 0;
+  let unfundedDebtCents = 0;
+  const updatedCategories: Record<string, Category> = {
+    ...state.categories,
+  };
+
+  if (account.accountType === 'credit') {
+    const availableCash = Math.max(0, category.availableCents);
+    transferredToReserveCents = Math.min(amountCents, availableCash);
+    unfundedDebtCents = amountCents - transferredToReserveCents;
+
+    updatedCategories[categoryId] = {
+      ...category,
+      availableCents: newCategoryAvailable,
+      unfundedDebtCents: (category.unfundedDebtCents || 0) + unfundedDebtCents,
+    };
+
+    if (account.creditPaymentCategoryId && updatedCategories[account.creditPaymentCategoryId]) {
+      const paymentCat = updatedCategories[account.creditPaymentCategoryId];
+      updatedCategories[account.creditPaymentCategoryId] = {
+        ...paymentCat,
+        availableCents: paymentCat.availableCents + transferredToReserveCents,
+      };
+    }
+  } else {
+    updatedCategories[categoryId] = {
+      ...category,
+      availableCents: newCategoryAvailable,
+    };
+  }
+
   const transaction: Transaction = {
     id,
     accountId,
@@ -72,6 +120,8 @@ export function postOutflowTransaction(params: PostOutflowParams): PostOutflowRe
     direction: 'outflow',
     occurredAt,
     syncStatus: 'pending',
+    unfundedDebtCents,
+    transferredToReserveCents,
   };
 
   const updatedAccounts: Record<string, Account> = {
@@ -79,14 +129,6 @@ export function postOutflowTransaction(params: PostOutflowParams): PostOutflowRe
     [accountId]: {
       ...account,
       balanceCents: newAccountBalance,
-    },
-  };
-
-  const updatedCategories: Record<string, Category> = {
-    ...state.categories,
-    [categoryId]: {
-      ...category,
-      availableCents: newCategoryAvailable,
     },
   };
 
@@ -102,6 +144,8 @@ export function postOutflowTransaction(params: PostOutflowParams): PostOutflowRe
     state: nextState,
     transaction,
     isOverspent,
+    unfundedDebtCents,
+    transferredToReserveCents,
   };
 }
 
@@ -183,3 +227,79 @@ export function allocateEnvelope(params: AllocateEnvelopeParams): AllocateEnvelo
     isOverAssigned,
   };
 }
+
+export function postCreditCardPayment(params: PostCreditPaymentParams): PostCreditPaymentResult {
+  const {
+    state,
+    id,
+    fromAccountId,
+    toAccountId,
+    amountCents,
+    payee = 'Credit Card Payment',
+    occurredAt = new Date().toISOString(),
+  } = params;
+
+  if (amountCents <= 0) {
+    throw new ValidationError('Amount must be greater than zero');
+  }
+
+  const fromAccount = state.accounts[fromAccountId];
+  if (!fromAccount) {
+    throw new LedgerError(`Account ${fromAccountId} not found`);
+  }
+
+  const toAccount = state.accounts[toAccountId];
+  if (!toAccount) {
+    throw new LedgerError(`Account ${toAccountId} not found`);
+  }
+
+  if (toAccount.accountType !== 'credit') {
+    throw new LedgerError(`Target account ${toAccountId} is not a credit account`);
+  }
+
+  const newFromBalance = fromAccount.balanceCents - amountCents;
+  const newToBalance = toAccount.balanceCents + amountCents;
+
+  const updatedCategories: Record<string, Category> = { ...state.categories };
+  if (toAccount.creditPaymentCategoryId && updatedCategories[toAccount.creditPaymentCategoryId]) {
+    const paymentCat = updatedCategories[toAccount.creditPaymentCategoryId];
+    updatedCategories[toAccount.creditPaymentCategoryId] = {
+      ...paymentCat,
+      availableCents: paymentCat.availableCents - amountCents,
+    };
+  }
+
+  const transaction: Transaction = {
+    id,
+    accountId: fromAccountId,
+    categoryId: toAccount.creditPaymentCategoryId,
+    payee,
+    amountCents,
+    direction: 'outflow',
+    occurredAt,
+    syncStatus: 'pending',
+  };
+
+  const nextState: BudgetState = {
+    ...state,
+    accounts: {
+      ...state.accounts,
+      [fromAccountId]: {
+        ...fromAccount,
+        balanceCents: newFromBalance,
+      },
+      [toAccountId]: {
+        ...toAccount,
+        balanceCents: newToBalance,
+      },
+    },
+    categories: updatedCategories,
+    transactions: [transaction, ...state.transactions],
+  };
+
+  return {
+    state: nextState,
+    transaction,
+  };
+}
+

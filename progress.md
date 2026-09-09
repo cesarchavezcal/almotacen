@@ -2,8 +2,8 @@
 
 ## Current State
 
-**Last Updated:** 2026-09-08 18:05
-**Active Feature:** feat-002 - Cash Flow Tracking & Transaction Logging (Core Engine)
+**Last Updated:** 2026-09-09 16:04
+**Active Feature:** ALM-001 - Core Dual-Ledger with Credit Payment Reserve
 
 ## Status
 
@@ -15,25 +15,24 @@
 - [x] Executed Step 4: `/spec-to-tests` (`openspec/changes/dual-cashflow-budgeting/spec-tests.md`)
 - [x] Executed Step 5: `/ia` & `/ooux` (`docs/product-design/ia.md`, `ooux.md`, `design.md`)
 - [x] Executed Step 6: `/to-tickets` (`openspec/changes/dual-cashflow-budgeting/tasks.md`)
-- [x] Executed Step 7 (TDD Implementation):
-  - Created `src/domain/ledger/types.ts`
-  - Created `src/domain/ledger/errors.ts`
-  - Created `src/domain/ledger/ledgerEngine.ts`
-  - Created `src/domain/ledger/ledgerEngine.test.ts`
-  - Configured `jest.config.js` and test runner
+- [x] Executed Step 7 (TDD Implementation - ALM-001):
+  - Updated `src/domain/ledger/types.ts` with `creditPaymentCategoryId`, `isCreditPayment`, `unfundedDebtCents`, `transferredToReserveCents`
+  - Implemented credit card outflow automatic cash transfer to payment reserve envelope in `src/domain/ledger/ledgerEngine.ts`
+  - Implemented unfunded credit debt calculation and category tracking without errors
+  - Implemented `postCreditCardPayment` for balance settlement and envelope deduction
+  - Expanded `src/domain/ledger/ledgerEngine.test.ts` with `SCEN-008` through `SCEN-011`
 - [x] Executed Step 8 (Verification):
-  - `./init.sh` runs with `set -e`: `tsc --noEmit` clean, Jest 6/6 tests passing.
+  - `./init.sh` runs with `set -e`: `tsc --noEmit` clean, Jest 10/10 tests passing.
 
 ### What's In Progress
 
-- [ ] Open feature PR and deliver `dual-cashflow-budgeting` core domain engine.
+- [ ] ALM-002: SQLite Local-First Store & Seed Data (`openspec/changes/dual-cashflow-budgeting/tickets/02-sqlite-store-seed.md`)
 
 ### What's Next
 
-1. Commit all files on branch `feature/CCH/ALM-001-core-ledger-engine`
-2. Push to origin and open PR with `/unslop` description
-3. Merge to `main`
+1. Commit ALM-001 changes to `feature/CCH/ALM-001-core-dual-ledger`
+2. Implement ALM-002: SQLite schema, repository, and reactive hook
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 6/6 Jest unit tests pass (`SCEN-001` through `SCEN-006`), `tsc --noEmit` 0 errors.
+- [x] `./init.sh`: 10/10 Jest unit tests pass (`SCEN-001` through `SCEN-011`), `tsc --noEmit` 0 errors.

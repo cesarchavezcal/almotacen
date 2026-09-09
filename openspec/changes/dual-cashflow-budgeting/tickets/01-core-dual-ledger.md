@@ -4,10 +4,10 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Update domain models (`Account`, `Category`, `Transaction`) to support credit payment envelopes and debt tracking.
-- [ ] Implement automated cash transfer from expense category to credit payment envelope on credit card outflow.
-- [ ] Calculate and flag unfunded credit debt when an envelope does not have enough cash to cover the credit charge.
-- [ ] Maintain full support for standard checking/cash outflows and inflows.
-- [ ] Unit test suite verifying double-entry arithmetic, credit reserve funding, and deficit scenarios.
+- [x] Update domain models (`Account`, `Category`, `Transaction`) to support credit payment envelopes and debt tracking.
+- [x] Implement automated cash transfer from expense category to credit payment envelope on credit card outflow.
+- [x] Calculate and flag unfunded credit debt when an envelope does not have enough cash to cover the credit charge.
+- [x] Maintain full support for standard checking/cash outflows and inflows.
+- [x] Unit test suite verifying double-entry arithmetic, credit reserve funding, and deficit scenarios.
