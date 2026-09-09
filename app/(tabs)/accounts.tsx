@@ -154,6 +154,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'transparent',
     paddingHorizontal: 4,
+    paddingTop: 8,
   },
   groupTitle: {
     fontSize: 14,
