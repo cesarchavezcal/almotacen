@@ -42,19 +42,27 @@
   - Refactored `app/(tabs)/budget.tsx` with container/presentational architecture (`BudgetScreen` + `BudgetView`)
   - Connected `Ready to Assign` header banner and obligation-grouped categories to live `useLedgerStore`
   - Two-Axis Review: Behavioral contracts + GGA standards review (`PROVIDER="gemini"`) PASSED
-  - PR opened: [PR #19](https://github.com/cesarchavezcal/almotacen/pull/19)
+  - PR opened & merged: [PR #19](https://github.com/cesarchavezcal/almotacen/pull/19)
+- [x] Executed Step 7 & 8 (TDD Implementation & Review - ALM-005):
+  - Created `src/domain/cashflow/cashflowCalculations.ts` & `cashflowCalculations.test.ts` (14/14 tests passing)
+  - Created `src/components/CashflowTrajectoryChart.tsx` with responsive SVG trajectory curve, linear budget pace line, dashed EOM forecast, and horizontal Income Ceiling warning line
+  - Created `src/hooks/useCashflow.ts` connecting SQLite store to reactive cash flow model
+  - Added `calculateDailyCashRewardCents` with integer basis points in `src/domain/ledger/currency.ts`
+  - Refactored `app/(tabs)/index.tsx` into Container-Presentational structure (`CashFlowScreen` + `CashFlowView`), binding live net cash flow, hero card burn rate, and real recent transactions from SQLite
+  - Two-Axis Review: 55/55 Jest tests pass via `./init.sh`, GGA code review PASSED (`PROVIDER="gemini"`)
 
 ### What's In Progress
 
-- [ ] Merge PR #19 ➔ Transition to Ticket 5 (`05-apple-card-daily-cash-ledger.md`)
+- [ ] Transition to `/autonomic review Ticket 5` (Gate 2 PR)
 
 ### What's Next
 
-1. Merge PR #19 into `main`
-2. Run `/autonomic plan Ticket 5` (`ALM-005: Apple Card & Daily Cash Ledger Integration`)
+1. Run `/autonomic review Ticket 5` to inspect diffs and open PR.
+2. Advance to Ticket 6 (`ALM-006: Interactive Chart Scrubbing & Dynamic Day Filter`).
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 39/39 Jest unit/integration tests pass (5 suites), `tsc --noEmit` 0 errors.
-- [x] GGA Review: PASSED with `PROVIDER="gemini"` (container/presentational split, strict integer cents, zero float leaks).
-- [x] GitHub PR: [PR #19](https://github.com/cesarchavezcal/almotacen/pull/19) pushed to `cesarchavezcal/almotacen`.
+- [x] `./init.sh`: 55/55 Jest unit/integration tests pass (6 suites), `tsc --noEmit` 0 errors.
+- [x] GGA Review: PASSED with `PROVIDER="gemini"` (clean container-presentational split, strict integer cents, zero float leaks, contextual error diagnostics).
+- [x] PR #19 Merged: [PR #19](https://github.com/cesarchavezcal/almotacen/pull/19) merged into `main`.
+

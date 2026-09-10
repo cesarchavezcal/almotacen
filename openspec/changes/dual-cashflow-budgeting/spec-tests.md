@@ -21,6 +21,11 @@
 | `SCEN-013` | Req 4.3 | Happy Path | Quick outflow submission with valid amount, payee, account, category | Persists double-sided outflow to SQLite within 50ms |
 | `SCEN-014` | Req 5.2 | Happy Path | Tap quick-fill pills (+$50, +$100, Fill Remaining) on envelope | Allocates chosen amount to envelope, decrements `readyToAssign` |
 | `SCEN-015` | Req 5.3 | Visual/Logic | Render envelope badges with debt or cash overspending | Distinguishes amber `CREDIT DEBT` vs red `CASH OVERSPENT` |
+| `SCEN-016` | Req 6.1 | Happy Path | Compute net cash flow and burn rate pace from monthly transactions | Returns net cashflow cents (inflows - outflows) and percentage of budget burned |
+| `SCEN-017` | Req 6.2 | Happy Path | Generate cumulative daily spend series and linear budget pace | Aggregates daily outflows from day 1 to current day with exact linear pace line |
+| `SCEN-018` | Req 6.3 | Boundary | Blended EOM forecast with discretionary velocity + fixed commitments | Projects end-of-month spend = actual + (daily discretionary rate * remaining days) + fixed |
+| `SCEN-019` | Req 6.4 | Warning | Income ceiling alert when projected spend exceeds total inflows | Flags `EXCEEDS_INCOME` when projected EOM > income, `PACING_HIGH` when above pace |
+
 
 ---
 
@@ -70,6 +75,22 @@ describe('Dual Ledger Engine Contract', () => {
 
   it('SCEN-015: envelope badges differentiate amber credit debt from red cash overspending', () => {
     // RED: Must fail until two-axis overspending badges are rendered
+  });
+
+  it('SCEN-016: computes net monthly cash flow and burn pace percentage from inflows and outflows', () => {
+    // RED: Must fail until cashflow calculations are implemented
+  });
+
+  it('SCEN-017: aggregates daily cumulative spend and linear budget pace curve points', () => {
+    // RED: Must fail until daily trajectory points calculation is implemented
+  });
+
+  it('SCEN-018: calculates blended EOM velocity projection combining discretionary burn rate and fixed obligations', () => {
+    // RED: Must fail until blended EOM forecasting is implemented
+  });
+
+  it('SCEN-019: evaluates income ceiling thresholds and flags EXCEEDS_INCOME or PACING_HIGH', () => {
+    // RED: Must fail until income ceiling evaluation is implemented
   });
 });
 ```

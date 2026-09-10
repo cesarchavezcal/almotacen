@@ -40,7 +40,8 @@
       "name": "Proactive Zero-Based Budgeting & Envelope Allocator",
       "description": "Live Ready to Assign banner, category groups, quick-fill pills, and distinct visual badges for credit debt vs cash overspending",
       "dependencies": ["ALM-002"],
-      "status": "ready-for-agent",
+      "status": "done",
+      "evidence": "PR #19 merged, 39/39 tests passing, gga pass",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/04-proactive-budgeting-screen.md"
     },
     {
@@ -48,7 +49,8 @@
       "name": "Reactive Cash Flow Trajectory Curve & Income Ceiling",
       "description": "Cumulative spending curve, linear budget pace, blended EOM velocity, and horizontal Income Ceiling marker",
       "dependencies": ["ALM-002"],
-      "status": "ready-for-agent",
+      "status": "ready-for-review",
+      "evidence": "./init.sh clean pass (55/55 tests), gga review passed",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/05-reactive-cashflow-trajectory.md"
     },
     {

@@ -4,10 +4,15 @@
 
 **Blocked by:** 02 — SQLite Local-First Store & Seed Data
 
-**Status:** ready-for-agent
+**Status:** ready-for-review
+**Contract Binding:** `SCEN-016`, `SCEN-017`, `SCEN-018`, `SCEN-019`
 
-- [ ] Implement `useCashflow` hook aggregating cumulative daily spend and blended EOM velocity.
-- [ ] Render interactive SVG trajectory curve plotting actual spend through today with dashed EOM forecast.
-- [ ] Render linear planned budget pace line for daily comparison.
-- [ ] Render horizontal Income Ceiling line with amber/red warning when projected spend exceeds income.
-- [ ] Connect Titanium Hero Card to live net cash flow (`Inflows - Outflows`) and burn pace percentage.
+- [x] Implement `src/domain/cashflow/cashflowCalculations.ts` with strict integer cents arithmetic and test suite (`SCEN-016`..`SCEN-019`).
+- [x] Connect Titanium Hero Card to live net cash flow (`Inflows - Outflows`) and burn pace percentage (`SCEN-016`).
+- [x] Render trajectory curve plotting actual spend through today with linear planned budget pace line (`SCEN-017`).
+- [x] Render dashed EOM forecast curve using blended fixed + discretionary velocity (`SCEN-018`).
+- [x] Render horizontal Income Ceiling line with amber/red status when projected spend exceeds income (`SCEN-019`).
+- [x] Implement `useCashflow` hook aggregating cumulative daily spend and connecting `useLedgerStore` to `app/(tabs)/index.tsx`.
+- [x] Refactor `app/(tabs)/index.tsx` into Container-Presentational architecture with live SQLite state and real recent transactions.
+
+
