@@ -122,5 +122,34 @@ The cash flow dashboard MUST compute net cash flow from recorded transactions, c
   - **When** projected EOM spend is at or below linear pace.
   - **Then** the status evaluates as `ON_TRACK`.
 
+### Requirement 7: Interactive Chart Scrubbing & Dynamic Day Filter
+The cash flow chart MUST support horizontal touch dragging with parent scroll lock, snap directly to calendar days with micro-haptics, render a floating HUD tooltip with cumulative spend and pace delta, and dynamically filter the recent outflows list to the scrubbed date.
+
+- **Scenario 7.1 (Touch to Calendar Day Clamping - `SCEN-020`)**:
+  - **Given** a 30-day month and inner chart width of 300px.
+  - **When** the user drags to touch coordinate $x = 150px$.
+  - **Then** the scrubbed calendar day resolves to day 15.
+  - **And** touch coordinates outside the chart boundaries clamp strictly to day 1 and day 30.
+
+- **Scenario 7.2 (Pace Delta & Tooltip Formatting - `SCEN-021`)**:
+  - **Given** a scrubbed day with actual cumulative spend of $1,380.00 and linear budget pace of $1,500.00.
+  - **When** computing pace delta.
+  - **Then** the delta equals -$120.00.
+  - **And** the HUD tooltip displays `-$120.00 ahead of pace` with emerald styling.
+  - **And** if cumulative spend exceeds linear pace ($1,620.00), the delta displays `+$120.00 behind pace` with amber warning styling.
+
+- **Scenario 7.3 (Dynamic Day Outflow Feed Filtering - `SCEN-022`)**:
+  - **Given** multiple transactions across the month.
+  - **When** scrubbing over calendar date `2026-09-12`.
+  - **Then** the transaction feed filters to only display outflows where `occurredAt` matches `2026-09-12`.
+  - **And** if no outflows occurred on that day, it displays an empty day indicator.
+  - **And** releasing the touch restores the full recent transactions feed.
+
+- **Scenario 7.4 (Micro-Haptic Tick Emission - `SCEN-023`)**:
+  - **Given** active scrubbing across chart days.
+  - **When** the touch position crosses from day $N$ to day $N+1$.
+  - **Then** a single selection haptic feedback tick is triggered.
+
+
 
 
