@@ -49,20 +49,21 @@
   - Created `src/hooks/useCashflow.ts` connecting SQLite store to reactive cash flow model
   - Added `calculateDailyCashRewardCents` with integer basis points in `src/domain/ledger/currency.ts`
   - Refactored `app/(tabs)/index.tsx` into Container-Presentational structure (`CashFlowScreen` + `CashFlowView`), binding live net cash flow, hero card burn rate, and real recent transactions from SQLite
-  - Two-Axis Review: 55/55 Jest tests pass via `./init.sh`, GGA code review PASSED (`PROVIDER="gemini"`)
+  - PR opened & merged: [PR #20](https://github.com/cesarchavezcal/almotacen/pull/20)
 
 ### What's In Progress
 
-- [ ] Transition to `/autonomic review Ticket 5` (Gate 2 PR)
+- [ ] Transition to Ticket 6 (`ALM-006: Interactive Chart Scrubbing & Dynamic Day Filter`)
 
 ### What's Next
 
-1. Run `/autonomic review Ticket 5` to inspect diffs and open PR.
-2. Advance to Ticket 6 (`ALM-006: Interactive Chart Scrubbing & Dynamic Day Filter`).
+1. Run `/autonomic plan Ticket 6` (`06-interactive-chart-scrubbing.md`)
+2. Run `/autonomic work Ticket 6`
 
 ## Evidence of Completion
 
 - [x] `./init.sh`: 55/55 Jest unit/integration tests pass (6 suites), `tsc --noEmit` 0 errors.
 - [x] GGA Review: PASSED with `PROVIDER="gemini"` (clean container-presentational split, strict integer cents, zero float leaks, contextual error diagnostics).
-- [x] PR #19 Merged: [PR #19](https://github.com/cesarchavezcal/almotacen/pull/19) merged into `main`.
+- [x] PR #20 Merged: [PR #20](https://github.com/cesarchavezcal/almotacen/pull/20) merged into `main` (`63e58ef`).
+
 
