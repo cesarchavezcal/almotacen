@@ -49,20 +49,25 @@
   - Created `src/hooks/useCashflow.ts` connecting SQLite store to reactive cash flow model
   - Added `calculateDailyCashRewardCents` with integer basis points in `src/domain/ledger/currency.ts`
   - Refactored `app/(tabs)/index.tsx` into Container-Presentational structure (`CashFlowScreen` + `CashFlowView`), binding live net cash flow, hero card burn rate, and real recent transactions from SQLite
-  - Two-Axis Review: 55/55 Jest tests pass via `./init.sh`, GGA code review PASSED (`PROVIDER="gemini"`)
+  - PR opened & merged: [PR #20](https://github.com/cesarchavezcal/almotacen/pull/20)
+- [x] Executed Step 7 & 8 (TDD Implementation & Review - ALM-006):
+  - Created `src/domain/cashflow/scrubbingMath.ts` & `scrubbingMath.test.ts` (11/11 tests passing)
+  - Enhanced `src/components/CashflowTrajectoryChart.tsx` with direct-manipulation `PanResponder` scrubbing, vertical tracker line, scrub point indicator dot, micro-haptics (`Haptics.selectionAsync()`), and floating HUD tooltip
+  - Enhanced `app/(tabs)/index.tsx` to handle scrub events, lock parent `ScrollView` during horizontal scrubbing, and dynamically filter Recent Outflows to the scrubbed calendar date
+  - Verification: 66/66 Jest tests pass via `./init.sh` across 7 test suites, 0 TypeScript errors
 
 ### What's In Progress
 
-- [ ] Transition to `/autonomic review Ticket 5` (Gate 2 PR)
+- [ ] Transition to `/autonomic review Ticket 6` (Gate 2 PR)
 
 ### What's Next
 
-1. Run `/autonomic review Ticket 5` to inspect diffs and open PR.
-2. Advance to Ticket 6 (`ALM-006: Interactive Chart Scrubbing & Dynamic Day Filter`).
+1. Run `/autonomic review Ticket 6` to inspect diffs and open PR.
+2. Advance to Ticket 7 (`ALM-007: Month Cycle Paging & Rollover`).
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 55/55 Jest unit/integration tests pass (6 suites), `tsc --noEmit` 0 errors.
-- [x] GGA Review: PASSED with `PROVIDER="gemini"` (clean container-presentational split, strict integer cents, zero float leaks, contextual error diagnostics).
-- [x] PR #19 Merged: [PR #19](https://github.com/cesarchavezcal/almotacen/pull/19) merged into `main`.
+- [x] `./init.sh`: 66/66 Jest unit/integration tests pass (7 suites), `tsc --noEmit` 0 errors.
+- [x] PR #20 Merged: [PR #20](https://github.com/cesarchavezcal/almotacen/pull/20) merged into `main` (`63e58ef`).
+
 

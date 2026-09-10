@@ -17,7 +17,8 @@ import {
   formatSignedCents,
   calculateDailyCashRewardCents,
 } from '@/src/domain/ledger/currency';
-import { CashflowMetrics } from '@/src/domain/cashflow/cashflowCalculations';
+import { CashflowMetrics, DailyTrajectoryPoint } from '@/src/domain/cashflow/cashflowCalculations';
+import { filterTransactionsByDate } from '@/src/domain/cashflow/scrubbingMath';
 import { Category, Transaction } from '@/src/domain/ledger/types';
 
 interface CashFlowViewProps {
@@ -27,6 +28,10 @@ interface CashFlowViewProps {
   monthLabel: string;
   currentDay: number;
   totalDaysInMonth: number;
+  isScrollLocked: boolean;
+  activeScrubDate: string | null;
+  onScrubChange: (day: number | null, point: DailyTrajectoryPoint | null) => void;
+  onScrollLockChange: (isLocked: boolean) => void;
   onLogPress: () => void;
 }
 
@@ -74,6 +79,10 @@ export function CashFlowView({
   monthLabel,
   currentDay,
   totalDaysInMonth,
+  isScrollLocked,
+  activeScrubDate,
+  onScrubChange,
+  onScrollLockChange,
   onLogPress,
 }: CashFlowViewProps): React.JSX.Element {
   const heroStatusText =
@@ -101,6 +110,7 @@ export function CashFlowView({
       style={styles.container}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
+      scrollEnabled={!isScrollLocked}
     >
       {/* Apple Card Titanium Hero Card (SCEN-016) */}
       <View style={styles.heroShadow}>
@@ -159,11 +169,13 @@ export function CashFlowView({
         </View>
       </View>
 
-      {/* Reactive Cash Flow Trajectory Curve & Income Ceiling (SCEN-017, SCEN-018, SCEN-019) */}
+      {/* Reactive Cash Flow Trajectory Curve & Income Ceiling (SCEN-017, SCEN-018, SCEN-019, SCEN-020..023) */}
       <CashflowTrajectoryChart
         metrics={metrics}
         currentDay={currentDay}
         totalDaysInMonth={totalDaysInMonth}
+        onScrubChange={onScrubChange}
+        onScrollLockChange={onScrollLockChange}
       />
 
       {/* Burn Velocity Indicator */}
@@ -195,16 +207,18 @@ export function CashFlowView({
         </View>
       </View>
 
-      {/* Recent Outflows Transaction List */}
+      {/* Recent Outflows Transaction List with Dynamic Day Filter (SCEN-022) */}
       <View style={styles.transactionsSection}>
         <Text style={[typography.sectionHdr, styles.sectionHeader]}>
-          RECENT OUTFLOWS
+          {activeScrubDate ? `OUTFLOWS ON ${activeScrubDate}` : 'RECENT OUTFLOWS'}
         </Text>
         <View style={styles.groupedList}>
           {recentOutflows.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Text style={[typography.footnote, styles.emptyText]}>
-                No outflows recorded yet this month.
+                {activeScrubDate
+                  ? `No outflows recorded on ${activeScrubDate}.`
+                  : 'No outflows recorded yet this month.'}
               </Text>
             </View>
           ) : (
@@ -247,6 +261,23 @@ export function CashFlowView({
 export default function CashFlowScreen(): React.JSX.Element {
   const { metrics, recentOutflows, monthLabel, currentDay, totalDaysInMonth } = useCashflow();
   const { state } = useLedgerStore();
+  const [isScrollLocked, setIsScrollLocked] = React.useState<boolean>(false);
+  const [activeScrubDate, setActiveScrubDate] = React.useState<string | null>(null);
+
+  const handleScrubChange = useCallback((_day: number | null, point: DailyTrajectoryPoint | null) => {
+    setActiveScrubDate(point ? point.dateStr : null);
+  }, []);
+
+  const handleScrollLockChange = useCallback((isLocked: boolean) => {
+    setIsScrollLocked(isLocked);
+  }, []);
+
+  const displayedOutflows = React.useMemo(() => {
+    if (!activeScrubDate) {
+      return recentOutflows;
+    }
+    return filterTransactionsByDate(state?.transactions ?? [], activeScrubDate);
+  }, [activeScrubDate, recentOutflows, state?.transactions]);
 
   const handleLogPress = useCallback(() => {
     try {
@@ -259,11 +290,15 @@ export default function CashFlowScreen(): React.JSX.Element {
   return (
     <CashFlowView
       metrics={metrics}
-      recentOutflows={recentOutflows}
+      recentOutflows={displayedOutflows}
       categories={state?.categories ?? {}}
       monthLabel={monthLabel}
       currentDay={currentDay}
       totalDaysInMonth={totalDaysInMonth}
+      isScrollLocked={isScrollLocked}
+      activeScrubDate={activeScrubDate}
+      onScrubChange={handleScrubChange}
+      onScrollLockChange={handleScrollLockChange}
       onLogPress={handleLogPress}
     />
   );

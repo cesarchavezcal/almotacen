@@ -25,6 +25,11 @@
 | `SCEN-017` | Req 6.2 | Happy Path | Generate cumulative daily spend series and linear budget pace | Aggregates daily outflows from day 1 to current day with exact linear pace line |
 | `SCEN-018` | Req 6.3 | Boundary | Blended EOM forecast with discretionary velocity + fixed commitments | Projects end-of-month spend = actual + (daily discretionary rate * remaining days) + fixed |
 | `SCEN-019` | Req 6.4 | Warning | Income ceiling alert when projected spend exceeds total inflows | Flags `EXCEEDS_INCOME` when projected EOM > income, `PACING_HIGH` when above pace |
+| `SCEN-020` | Req 7.1 | Happy Path | Horizontal touch coordinate maps to calendar day | Resolves day 1..totalDaysInMonth and clamps boundaries strictly |
+| `SCEN-021` | Req 7.2 | Visual/Logic | Compute pace delta for scrubbed day and format HUD tooltip | Computes signed difference; formats ahead of pace or behind pace |
+| `SCEN-022` | Req 7.3 | Happy Path | Dynamic filtering of transactions by scrubbed calendar date | Filters transaction feed to matching dateStr or returns empty list |
+| `SCEN-023` | Req 7.4 | Sensory | Emit micro-haptic tick on calendar day transition | Triggers selection haptic feedback when scrubbedDay changes |
+
 
 
 ---
@@ -91,6 +96,22 @@ describe('Dual Ledger Engine Contract', () => {
 
   it('SCEN-019: evaluates income ceiling thresholds and flags EXCEEDS_INCOME or PACING_HIGH', () => {
     // RED: Must fail until income ceiling evaluation is implemented
+  });
+
+  it('SCEN-020: maps horizontal touch position to calendar day and clamps boundaries', () => {
+    // RED: Must fail until touch-to-day scrubbing math is implemented
+  });
+
+  it('SCEN-021: calculates pace delta in integer cents and formats HUD tooltip badge', () => {
+    // RED: Must fail until pace delta computation is implemented
+  });
+
+  it('SCEN-022: dynamically filters transactions by scrubbed calendar date', () => {
+    // RED: Must fail until day-filtered transactions helper is implemented
+  });
+
+  it('SCEN-023: triggers micro-haptic selection feedback on calendar day boundary change', () => {
+    // RED: Must fail until haptic gesture feedback is connected
   });
 });
 ```

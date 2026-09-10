@@ -49,8 +49,8 @@
       "name": "Reactive Cash Flow Trajectory Curve & Income Ceiling",
       "description": "Cumulative spending curve, linear budget pace, blended EOM velocity, and horizontal Income Ceiling marker",
       "dependencies": ["ALM-002"],
-      "status": "ready-for-review",
-      "evidence": "./init.sh clean pass (55/55 tests), gga review passed",
+      "status": "done",
+      "evidence": "PR #20 merged (63e58ef), 55/55 tests passing, gga pass",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/05-reactive-cashflow-trajectory.md"
     },
     {
@@ -58,7 +58,8 @@
       "name": "Interactive Chart Scrubbing & Dynamic Day Filter",
       "description": "Horizontal thumb drag gesture, micro-haptics on day ticks, HUD tooltip, and live day-filtered transaction feed",
       "dependencies": ["ALM-005"],
-      "status": "blocked",
+      "status": "ready-for-review",
+      "evidence": "./init.sh clean pass (66/66 tests), gga review passed",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/06-interactive-chart-scrubbing.md"
     },
     {

@@ -1,5 +1,11 @@
-import React from 'react';
-import { StyleSheet, View, Text, LayoutChangeEvent } from 'react-native';
+import React, { useState, useRef, useMemo } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  LayoutChangeEvent,
+  PanResponder,
+} from 'react-native';
 import Svg, {
   Path,
   Line,
@@ -9,25 +15,37 @@ import Svg, {
   Stop,
   Text as SvgText,
 } from 'react-native-svg';
+import * as Haptics from 'expo-haptics';
 import { colors } from '@/src/theme/colors';
 import { typography } from '@/src/theme/typography';
 import { radius } from '@/src/theme/radius';
 import { spacing } from '@/src/theme/spacing';
 import { CashflowMetrics, DailyTrajectoryPoint } from '../domain/cashflow/cashflowCalculations';
+import {
+  calculateScrubbedDay,
+  calculatePaceDeltaCents,
+  formatPaceDelta,
+} from '../domain/cashflow/scrubbingMath';
 import { formatCentsToCurrency } from '../domain/ledger/currency';
 
 export interface CashflowTrajectoryChartProps {
   metrics: CashflowMetrics;
   currentDay: number;
   totalDaysInMonth: number;
+  onScrubChange?: (day: number | null, point: DailyTrajectoryPoint | null) => void;
+  onScrollLockChange?: (isLocked: boolean) => void;
 }
 
 export function CashflowTrajectoryChart({
   metrics,
   currentDay,
   totalDaysInMonth,
+  onScrubChange,
+  onScrollLockChange,
 }: CashflowTrajectoryChartProps): React.JSX.Element {
-  const [chartWidth, setChartWidth] = React.useState<number>(330);
+  const [chartWidth, setChartWidth] = useState<number>(330);
+  const [scrubbedDay, setScrubbedDay] = useState<number | null>(null);
+  const lastHapticDayRef = useRef<number | null>(null);
   const chartHeight = 170;
 
   const handleLayout = (e: LayoutChangeEvent) => {
@@ -66,6 +84,71 @@ export function CashflowTrajectoryChart({
     const fraction = clampedCents / yDomainMax;
     return paddingTop + innerHeight - fraction * innerHeight;
   };
+
+  // PanResponder for direct-manipulation horizontal scrubbing (SCEN-020..SCEN-023)
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 3,
+        onPanResponderGrant: (evt) => {
+          onScrollLockChange?.(true);
+          const day = calculateScrubbedDay(
+            evt.nativeEvent.locationX,
+            chartWidth,
+            paddingLeft,
+            paddingRight,
+            totalDaysInMonth
+          );
+          setScrubbedDay(day);
+          const point = metrics.dailyPoints[day - 1] ?? null;
+          onScrubChange?.(day, point);
+
+          if (day !== lastHapticDayRef.current) {
+            lastHapticDayRef.current = day;
+            try {
+              Haptics.selectionAsync();
+            } catch (error) {
+              console.warn('Failed to emit haptic feedback on scrub grant:', error);
+            }
+          }
+        },
+        onPanResponderMove: (evt) => {
+          const day = calculateScrubbedDay(
+            evt.nativeEvent.locationX,
+            chartWidth,
+            paddingLeft,
+            paddingRight,
+            totalDaysInMonth
+          );
+          setScrubbedDay(day);
+          const point = metrics.dailyPoints[day - 1] ?? null;
+          onScrubChange?.(day, point);
+
+          if (day !== lastHapticDayRef.current) {
+            lastHapticDayRef.current = day;
+            try {
+              Haptics.selectionAsync();
+            } catch (error) {
+              console.warn('Failed to emit haptic feedback on scrub move:', error);
+            }
+          }
+        },
+        onPanResponderRelease: () => {
+          setScrubbedDay(null);
+          lastHapticDayRef.current = null;
+          onScrollLockChange?.(false);
+          onScrubChange?.(null, null);
+        },
+        onPanResponderTerminate: () => {
+          setScrubbedDay(null);
+          lastHapticDayRef.current = null;
+          onScrollLockChange?.(false);
+          onScrubChange?.(null, null);
+        },
+      }),
+    [chartWidth, totalDaysInMonth, metrics.dailyPoints, onScrollLockChange, onScrubChange]
+  );
 
   // 1. Build Actual Spend Path (Day 1..currentDay)
   const actualPoints: DailyTrajectoryPoint[] = metrics.dailyPoints.filter(
@@ -137,30 +220,81 @@ export function CashflowTrajectoryChart({
   const lastActualPoint =
     actualPoints.length > 0 ? actualPoints[actualPoints.length - 1] : null;
 
+  // Active Scrub Details (SCEN-021)
+  const activeScrubPoint =
+    scrubbedDay !== null ? metrics.dailyPoints[scrubbedDay - 1] ?? null : null;
+
+  const activeSpendCents = activeScrubPoint
+    ? (activeScrubPoint.actualOutflowCents ?? activeScrubPoint.projectedOutflowCents ?? 0)
+    : 0;
+
+  const activePaceDeltaCents = activeScrubPoint
+    ? calculatePaceDeltaCents(activeSpendCents, activeScrubPoint.linearBudgetPaceCents)
+    : 0;
+
+  const activePaceFormatted = formatPaceDelta(activePaceDeltaCents);
+
+  const scrubX = activeScrubPoint ? getX(activeScrubPoint.day) : 0;
+  const scrubY = getY(activeSpendCents);
+
   return (
     <View style={styles.container} onLayout={handleLayout}>
-      {/* Header Row */}
-      <View style={styles.headerRow}>
-        <View>
-          <Text style={typography.sectionHdr}>MONTH TRAJECTORY</Text>
-          <Text style={styles.headerSubtitle}>
-            Day {currentDay} of {totalDaysInMonth} • Projected EOM:{' '}
-            <Text style={styles.boldWhite}>
-              {formatCentsToCurrency(metrics.projectedEomSpendCents)}
+      {/* Header Row / HUD Tooltip (SCEN-021) */}
+      {activeScrubPoint ? (
+        <View style={styles.hudContainer}>
+          <View>
+            <Text style={styles.hudDateLabel}>
+              Day {activeScrubPoint.day} • {activeScrubPoint.dateStr}
             </Text>
-          </Text>
-        </View>
+            <Text style={styles.hudAmountText}>
+              {formatCentsToCurrency(activeSpendCents)}
+            </Text>
+          </View>
 
-        <View style={[styles.statusBadge, { borderColor: statusColor }]}>
-          <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-          <Text style={[styles.statusBadgeText, { color: statusColor }]}>
-            {statusLabel}
-          </Text>
+          <View
+            style={[
+              styles.hudDeltaBadge,
+              {
+                backgroundColor: activePaceFormatted.isAhead
+                  ? 'rgba(48, 209, 88, 0.15)'
+                  : 'rgba(255, 159, 10, 0.15)',
+                borderColor: activePaceFormatted.isAhead ? colors.success : colors.warning,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.hudDeltaText,
+                { color: activePaceFormatted.isAhead ? colors.success : colors.warning },
+              ]}
+            >
+              {activePaceFormatted.text}
+            </Text>
+          </View>
         </View>
-      </View>
+      ) : (
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={typography.sectionHdr}>MONTH TRAJECTORY</Text>
+            <Text style={styles.headerSubtitle}>
+              Day {currentDay} of {totalDaysInMonth} • Projected EOM:{' '}
+              <Text style={styles.boldWhite}>
+                {formatCentsToCurrency(metrics.projectedEomSpendCents)}
+              </Text>
+            </Text>
+          </View>
 
-      {/* SVG Trajectory Chart */}
-      <View style={styles.chartWrapper}>
+          <View style={[styles.statusBadge, { borderColor: statusColor }]}>
+            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+            <Text style={[styles.statusBadgeText, { color: statusColor }]}>
+              {statusLabel}
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {/* Interactive SVG Trajectory Chart with PanResponder */}
+      <View style={styles.chartWrapper} {...panResponder.panHandlers}>
         <Svg width={chartWidth} height={chartHeight}>
           <Defs>
             <LinearGradient id="actualGradient" x1="0" y1="0" x2="0" y2="1">
@@ -229,8 +363,8 @@ export function CashflowTrajectoryChart({
             />
           ) : null}
 
-          {/* Current Day Pointer Dot */}
-          {lastActualPoint ? (
+          {/* Default Current Day Pointer Dot */}
+          {lastActualPoint && !activeScrubPoint ? (
             <Circle
               cx={getX(lastActualPoint.day)}
               cy={getY(lastActualPoint.actualOutflowCents!)}
@@ -239,6 +373,29 @@ export function CashflowTrajectoryChart({
               stroke={colors.systemBlue}
               strokeWidth={2.5}
             />
+          ) : null}
+
+          {/* Active Vertical Tracker Line (SCEN-020) */}
+          {activeScrubPoint ? (
+            <>
+              <Line
+                x1={scrubX}
+                y1={paddingTop}
+                x2={scrubX}
+                y2={paddingTop + innerHeight}
+                stroke="#FFFFFF"
+                strokeWidth={1.5}
+                strokeDasharray="3, 3"
+              />
+              <Circle
+                cx={scrubX}
+                cy={scrubY}
+                r={6}
+                fill={colors.textPrimary}
+                stroke={colors.systemBlue}
+                strokeWidth={3}
+              />
+            </>
           ) : null}
         </Svg>
       </View>
@@ -312,6 +469,39 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5,
+  },
+  hudContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+    paddingBottom: spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  hudDateLabel: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  hudAmountText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginTop: 2,
+    fontVariant: ['tabular-nums'],
+  },
+  hudDeltaBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    borderWidth: 1,
+  },
+  hudDeltaText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
   chartWrapper: {
     alignItems: 'center',

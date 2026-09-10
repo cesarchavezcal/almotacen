@@ -4,10 +4,14 @@
 
 **Blocked by:** 05 — Reactive Cash Flow Trajectory Curve & Income Ceiling
 
-**Status:** ready-for-agent
+**Status:** ready-for-review
+**Contract Binding:** `SCEN-020`, `SCEN-021`, `SCEN-022`, `SCEN-023`
 
-- [ ] Implement pan gesture handler that tracks horizontal touch coordinates and locks vertical scroll.
-- [ ] Emit micro-haptic feedback as touch crosses calendar day boundary ticks.
-- [ ] Render floating HUD tooltip with scrubbed date, cumulative outflow, and pace delta.
-- [ ] Dynamically filter the Recent Outflows list below to the scrubbed date during drag.
-- [ ] Smoothly restore recent transactions list and summary metrics upon touch release.
+- [x] Implement `src/domain/cashflow/scrubbingMath.ts` and unit test suite (`SCEN-020`..`SCEN-023`).
+- [x] Implement touch coordinate to calendar day mapping with boundary clamping (`SCEN-020`).
+- [x] Implement pace delta calculation and HUD tooltip badge formatting (`SCEN-021`).
+- [x] Render interactive PanResponder with vertical tracker line and floating HUD card on `CashflowTrajectoryChart.tsx`.
+- [x] Connect micro-haptic clicks on day tick boundary transitions with `Haptics.selectionAsync()` (`SCEN-023`).
+- [x] Implement dynamic day filtering for transaction feed and parent `ScrollView` scroll lock in `app/(tabs)/index.tsx` (`SCEN-022`).
+
+
