@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { StyleSheet, ScrollView, View, Text, Pressable } from 'react-native';
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,13 +9,92 @@ import { typography } from '@/src/theme/typography';
 import { radius } from '@/src/theme/radius';
 import { spacing } from '@/src/theme/spacing';
 import { TransactionRow } from '@/src/components/TransactionRow';
+import { CashflowTrajectoryChart } from '@/src/components/CashflowTrajectoryChart';
+import { useCashflow } from '@/src/hooks/useCashflow';
+import { useLedgerStore } from '@/src/storage/useLedgerStore';
+import {
+  formatCentsToCurrency,
+  formatSignedCents,
+  calculateDailyCashRewardCents,
+} from '@/src/domain/ledger/currency';
+import { CashflowMetrics } from '@/src/domain/cashflow/cashflowCalculations';
+import { Category, Transaction } from '@/src/domain/ledger/types';
 
-export default function CashFlowScreen() {
-  const handleLogPress = () => {
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    } catch {}
-  };
+interface CashFlowViewProps {
+  metrics: CashflowMetrics;
+  recentOutflows: Transaction[];
+  categories: Record<string, Category>;
+  monthLabel: string;
+  currentDay: number;
+  totalDaysInMonth: number;
+  onLogPress: () => void;
+}
+
+function formatTransactionDate(isoString: string): string {
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) {
+      return isoString;
+    }
+    const now = new Date();
+    if (d.toDateString() === now.toDateString()) {
+      const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      return `Today, ${timeStr}`;
+    }
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (d.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    }
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } catch (error) {
+    console.warn(`Failed to format transaction date for "${isoString}":`, error);
+    return isoString;
+  }
+}
+
+function getCategoryIcon(categoryName?: string): keyof typeof Ionicons.glyphMap {
+  const lower = categoryName?.toLowerCase() || '';
+  if (lower.includes('groc') || lower.includes('market') || lower.includes('food')) return 'cart';
+  if (lower.includes('elec') || lower.includes('tech') || lower.includes('apple'))
+    return 'phone-portrait';
+  if (lower.includes('din') || lower.includes('cafe') || lower.includes('coffee') || lower.includes('rest'))
+    return 'cafe';
+  if (lower.includes('uber') || lower.includes('trans') || lower.includes('gas') || lower.includes('car'))
+    return 'car';
+  if (lower.includes('rent') || lower.includes('mortgage') || lower.includes('home')) return 'home';
+  if (lower.includes('util') || lower.includes('bill')) return 'flash';
+  return 'card-outline';
+}
+
+export function CashFlowView({
+  metrics,
+  recentOutflows,
+  categories,
+  monthLabel,
+  currentDay,
+  totalDaysInMonth,
+  onLogPress,
+}: CashFlowViewProps): React.JSX.Element {
+  const heroStatusText =
+    metrics.burnStatus === 'EXCEEDS_INCOME'
+      ? `Over income • Burn rate: ${metrics.burnRatePercent}% of budget`
+      : metrics.burnStatus === 'PACING_HIGH'
+        ? `Pacing high • Burn rate: ${metrics.burnRatePercent}% of budget`
+        : `On track • Burn rate: ${metrics.burnRatePercent}% of budget`;
+
+  const heroStatusColor =
+    metrics.burnStatus === 'EXCEEDS_INCOME'
+      ? '#991B1B'
+      : metrics.burnStatus === 'PACING_HIGH'
+        ? '#92400E'
+        : '#166534';
+
+  const remainingBudgetCents = Math.max(
+    0,
+    metrics.totalBudgetPlannedCents - metrics.totalOutflowCents
+  );
+  const progressBarWidthPercent = Math.min(100, Math.max(0, metrics.burnRatePercent));
 
   return (
     <ScrollView
@@ -23,7 +102,7 @@ export default function CashFlowScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* Apple Card Titanium Hero Card */}
+      {/* Apple Card Titanium Hero Card (SCEN-016) */}
       <View style={styles.heroShadow}>
         <View style={styles.heroFrame}>
           <LinearGradient
@@ -39,12 +118,12 @@ export default function CashFlowScreen() {
             </View>
 
             <View style={styles.heroCenter}>
-              <Text style={styles.heroSubtitle}>September Cash Flow</Text>
+              <Text style={styles.heroSubtitle}>{monthLabel}</Text>
               <Text style={[typography.balanceHero, styles.heroAmount]}>
-                +$1,425.50
+                {formatSignedCents(metrics.netCashflowCents)}
               </Text>
-              <Text style={styles.heroStatus}>
-                On track • Burn rate: 42% of budget
+              <Text style={[styles.heroStatus, { color: heroStatusColor }]}>
+                {heroStatusText}
               </Text>
             </View>
 
@@ -66,7 +145,7 @@ export default function CashFlowScreen() {
         <View style={[styles.statCard, { marginRight: spacing.xs + 2 }]}>
           <Text style={styles.statLabel}>TOTAL INFLOW</Text>
           <Text style={[typography.title, styles.statValue, { color: colors.inflow }]}>
-            +$4,850.00
+            {formatSignedCents(metrics.totalInflowCents)}
           </Text>
           <Text style={styles.statSub}>Paycheck & Transfers</Text>
         </View>
@@ -74,24 +153,44 @@ export default function CashFlowScreen() {
         <View style={[styles.statCard, { marginLeft: spacing.xs + 2 }]}>
           <Text style={styles.statLabel}>TOTAL OUTFLOW</Text>
           <Text style={[typography.title, styles.statValue, { color: colors.outflow }]}>
-            -$3,424.50
+            {formatSignedCents(-metrics.totalOutflowCents)}
           </Text>
           <Text style={styles.statSub}>Spent this cycle</Text>
         </View>
       </View>
 
+      {/* Reactive Cash Flow Trajectory Curve & Income Ceiling (SCEN-017, SCEN-018, SCEN-019) */}
+      <CashflowTrajectoryChart
+        metrics={metrics}
+        currentDay={currentDay}
+        totalDaysInMonth={totalDaysInMonth}
+      />
+
       {/* Burn Velocity Indicator */}
       <View style={styles.sectionCard}>
-        <Text style={typography.sectionHdr}>MONTH TRAJECTORY</Text>
+        <Text style={typography.sectionHdr}>MONTHLY BURN PACING</Text>
         <View style={styles.progressBarBackground}>
-          <View style={[styles.progressBarFill, { width: '42%' }]} />
+          <View
+            style={[
+              styles.progressBarFill,
+              {
+                width: `${progressBarWidthPercent}%`,
+                backgroundColor:
+                  metrics.burnStatus === 'EXCEEDS_INCOME'
+                    ? colors.error
+                    : metrics.burnStatus === 'PACING_HIGH'
+                      ? colors.warning
+                      : colors.systemBlue,
+              },
+            ]}
+          />
         </View>
         <View style={styles.progressLabels}>
           <Text style={[typography.footnote, styles.progressText]}>
-            Spent: <Text style={styles.boldText}>$3,424.50</Text>
+            Spent: <Text style={styles.boldText}>{formatCentsToCurrency(metrics.totalOutflowCents)}</Text>
           </Text>
           <Text style={[typography.footnote, styles.progressText]}>
-            Remaining: <Text style={styles.boldText}>$1,425.50</Text>
+            Remaining: <Text style={styles.boldText}>{formatCentsToCurrency(remainingBudgetCents)}</Text>
           </Text>
         </View>
       </View>
@@ -102,51 +201,71 @@ export default function CashFlowScreen() {
           RECENT OUTFLOWS
         </Text>
         <View style={styles.groupedList}>
-          <TransactionRow
-            merchant="Trader Joe's"
-            date="Today, 1:45 PM"
-            amount="-$84.20"
-            category="Groceries"
-            dailyCash="+$1.68"
-            iconName="cart"
-          />
-          <TransactionRow
-            merchant="Apple Store"
-            date="Yesterday"
-            amount="-$129.00"
-            category="Electronics"
-            dailyCash="+$3.87"
-            iconName="phone-portrait"
-          />
-          <TransactionRow
-            merchant="Blue Bottle Coffee"
-            date="Sep 6"
-            amount="-$6.50"
-            category="Dining"
-            dailyCash="+$0.13"
-            iconName="cafe"
-          />
-          <TransactionRow
-            merchant="Uber"
-            date="Sep 5"
-            amount="-$24.80"
-            category="Transportation"
-            dailyCash="+$0.50"
-            iconName="car"
-            isLast
-          />
+          {recentOutflows.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={[typography.footnote, styles.emptyText]}>
+                No outflows recorded yet this month.
+              </Text>
+            </View>
+          ) : (
+            recentOutflows.map((tx, index) => {
+              const cat = tx.categoryId ? categories[tx.categoryId] : undefined;
+              const catName = cat?.name ?? 'Uncategorized';
+              const dailyCashCents = calculateDailyCashRewardCents(tx.amountCents, 200);
+              const dailyCashStr =
+                dailyCashCents > 0 ? `+${formatCentsToCurrency(dailyCashCents)}` : undefined;
+
+              return (
+                <TransactionRow
+                  key={tx.id}
+                  merchant={tx.payee}
+                  date={formatTransactionDate(tx.occurredAt)}
+                  amount={formatSignedCents(-tx.amountCents)}
+                  category={catName}
+                  dailyCash={dailyCashStr}
+                  iconName={getCategoryIcon(catName)}
+                  isLast={index === recentOutflows.length - 1}
+                />
+              );
+            })
+          )}
         </View>
       </View>
 
       {/* Quick Action Button */}
       <Link href="/modal" asChild>
-        <Pressable style={styles.actionButton} onPress={handleLogPress}>
+        <Pressable style={styles.actionButton} onPress={onLogPress}>
           <Text style={[typography.action, styles.actionButtonText]}>
             + Log Quick Expense
           </Text>
         </Pressable>
       </Link>
     </ScrollView>
+  );
+}
+
+export default function CashFlowScreen(): React.JSX.Element {
+  const { metrics, recentOutflows, monthLabel, currentDay, totalDaysInMonth } = useCashflow();
+  const { state } = useLedgerStore();
+
+  const handleLogPress = useCallback(() => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch (error) {
+      console.warn('Failed to trigger haptic feedback on quick log press:', error);
+    }
+  }, []);
+
+  return (
+    <CashFlowView
+      metrics={metrics}
+      recentOutflows={recentOutflows}
+      categories={state?.categories ?? {}}
+      monthLabel={monthLabel}
+      currentDay={currentDay}
+      totalDaysInMonth={totalDaysInMonth}
+      onLogPress={handleLogPress}
+    />
   );
 }
 
@@ -203,7 +322,6 @@ const styles = StyleSheet.create({
   },
   heroStatus: {
     fontSize: 13,
-    color: '#166534',
     fontWeight: '600',
   },
   heroBottomRow: {
@@ -290,7 +408,6 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: colors.systemBlue,
     borderRadius: 4,
   },
   progressLabels: {
@@ -318,6 +435,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface1,
     borderWidth: 0.5,
     borderColor: colors.hairline,
+  },
+  emptyContainer: {
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    color: colors.textSecondary,
   },
   actionButton: {
     height: 52,

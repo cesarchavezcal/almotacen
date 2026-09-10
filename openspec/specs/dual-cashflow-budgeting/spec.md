@@ -92,4 +92,35 @@ The budgeting tab MUST display a dynamic `Ready to Assign` header banner reflect
   - **When** a category has negative available cash.
   - **Then** a red `CASH OVERSPENT` badge is displayed.
 
+### Requirement 6: Reactive Cash Flow Trajectory & Income Ceiling
+The cash flow dashboard MUST compute net cash flow from recorded transactions, calculate daily cumulative spend and linear planned budget pace, project end-of-month (EOM) spending using a blended velocity model, and warn when projected spending breaches the monthly income ceiling.
+
+- **Scenario 6.1 (Net Cash Flow & Titanium Hero Card - `SCEN-016`)**:
+  - **Given** recorded inflows of $4,850.00 and outflows of $3,424.50.
+  - **When** the dashboard computes net cash flow and burn rate.
+  - **Then** net cash flow equals +$1,425.50 (inflows minus outflows).
+  - **And** burn rate pace displays the spent percentage relative to monthly budget.
+
+- **Scenario 6.2 (Cumulative Daily Spend & Linear Budget Pace - `SCEN-017`)**:
+  - **Given** calendar day 15 in a 30-day month and a planned monthly budget of $3,000.00.
+  - **When** generating trajectory series points.
+  - **Then** linear budget pace for day 15 equals $1,500.00 (`(totalBudget / 30) * 15`).
+  - **And** actual cumulative spend plots aggregated daily outflows from day 1 through day 15.
+
+- **Scenario 6.3 (Blended EOM Velocity Forecasting - `SCEN-018`)**:
+  - **Given** day 10 in a 30-day month with $600.00 spent on discretionary categories ($60.00/day velocity) and $1,200.00 in remaining committed fixed expenses.
+  - **When** calculating projected EOM spend.
+  - **Then** projected discretionary spend for remaining 20 days is $1,200.00 (`$60.00 * 20`).
+  - **And** total projected EOM spend is actual spend ($600.00) + projected discretionary ($1,200.00) + committed fixed ($1,200.00) = $3,000.00.
+
+- **Scenario 6.4 (Horizontal Income Ceiling Warning - `SCEN-019`)**:
+  - **Given** total monthly income inflows of $3,200.00 (income ceiling).
+  - **When** projected EOM spend reaches $3,400.00.
+  - **Then** the ceiling status triggers an `EXCEEDS_INCOME` warning flag.
+  - **When** projected EOM spend is within 100% of income but exceeds linear pace.
+  - **Then** the status triggers a `PACING_HIGH` warning flag.
+  - **When** projected EOM spend is at or below linear pace.
+  - **Then** the status evaluates as `ON_TRACK`.
+
+
 

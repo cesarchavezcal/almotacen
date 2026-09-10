@@ -28,3 +28,24 @@ export function formatCentsToCurrency(cents: number): string {
     currency: 'USD',
   });
 }
+
+/**
+ * Formats integer cents with an explicit leading +/- sign (+$X.XX or -$X.XX).
+ */
+export function formatSignedCents(cents: number): string {
+  const absFormatted = formatCentsToCurrency(Math.abs(cents));
+  if (cents > 0) return `+${absFormatted}`;
+  if (cents < 0) return `-${absFormatted}`;
+  return absFormatted;
+}
+
+/**
+ * Calculates standard Daily Cash reward in integer cents using integer basis points (200 bps = 2%).
+ * Strictly uses integer division to eliminate floating-point rounding.
+ */
+export function calculateDailyCashRewardCents(amountCents: number, basisPoints: number = 200): number {
+  if (amountCents <= 0 || basisPoints <= 0) return 0;
+  return Math.floor((amountCents * basisPoints) / 10000);
+}
+
+
