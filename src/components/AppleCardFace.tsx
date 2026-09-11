@@ -2,23 +2,33 @@ import React from 'react';
 import { View, Text, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
-import { typography } from '../theme/typography';
-import { radius } from '../theme/radius';
+import { colors, typography, radius, shadows, spacing } from '@/src/theme';
 
 export interface AppleCardFaceProps {
   cardholder?: string;
   balance?: string;
   style?: StyleProp<ViewStyle>;
+  accessible?: boolean;
+  accessibilityLabel?: string;
 }
 
 export function AppleCardFace({
   cardholder = 'CESAR CHAVEZ',
   balance,
   style,
+  accessible = true,
+  accessibilityLabel,
 }: AppleCardFaceProps) {
+  const defaultLabel = `Apple Card, Cardholder ${cardholder}${
+    balance ? `, Current Balance ${balance}` : ''
+  }`;
+
   return (
-    <View style={[styles.shadow, style]}>
+    <View
+      accessible={accessible}
+      accessibilityLabel={accessibilityLabel || defaultLabel}
+      style={[styles.shadow, style]}
+    >
       <View style={styles.frame}>
         <LinearGradient
           colors={[colors.titaniumHi, colors.titaniumMid, colors.titaniumLo]}
@@ -54,23 +64,19 @@ export function AppleCardFace({
 
 const styles = StyleSheet.create({
   shadow: {
-    shadowColor: '#000',
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 12,
-    marginHorizontal: 16,
+    ...shadows.hero,
+    marginHorizontal: spacing.md,
   },
   frame: {
     height: 220,
     borderRadius: radius.card,
     borderCurve: 'continuous',
     overflow: 'hidden',
-    backgroundColor: '#000',
+    backgroundColor: colors.canvas,
   },
   content: {
     flex: 1,
-    padding: 18,
+    padding: spacing.md + 2,
     justifyContent: 'space-between',
   },
   topRow: {
@@ -80,7 +86,7 @@ const styles = StyleSheet.create({
   },
   balanceContainer: {
     alignItems: 'flex-start',
-    marginVertical: 4,
+    marginVertical: spacing.xs,
   },
   balanceLabel: {
     fontSize: 12,
@@ -110,14 +116,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dailyCash,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
+    ...shadows.card,
   },
   dailyCashText: {
-    color: '#FFFFFF',
+    color: colors.textPrimary,
     fontWeight: '700',
     fontSize: 16,
     lineHeight: 18,
