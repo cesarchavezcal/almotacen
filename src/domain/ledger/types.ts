@@ -8,15 +8,31 @@ export interface Account {
   creditPaymentCategoryId?: string;
 }
 
+export type TargetType = 'NEEDED_FOR_SPENDING' | 'MONTHLY_SET_ASIDE';
+
+export function isTargetType(value: unknown): value is TargetType {
+  return value === 'NEEDED_FOR_SPENDING' || value === 'MONTHLY_SET_ASIDE';
+}
+
 export interface Category {
   id: string;
   groupId: string;
   name: string;
   targetCents: number;
+  targetType?: TargetType;
+  targetDueDay?: number;
   assignedCents: number;
   availableCents: number;
   isCreditPayment?: boolean;
   unfundedDebtCents?: number;
+}
+
+export interface CategoryUnderfundedInfo {
+  categoryId: string;
+  targetCents: number;
+  targetType: TargetType;
+  underfundedCents: number;
+  isFunded: boolean;
 }
 
 export type TransactionDirection = 'inflow' | 'outflow';

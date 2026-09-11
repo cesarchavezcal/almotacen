@@ -1,5 +1,5 @@
 import { DatabaseAdapter, LedgerRepository, CategoryGroup } from './types';
-import { BudgetState, Account, Category, Transaction } from '../domain/ledger/types';
+import { BudgetState, Account, Category, Transaction, isTargetType } from '../domain/ledger/types';
 import {
   postOutflowTransaction,
   postInflowTransaction,
@@ -29,6 +29,8 @@ interface CategoryRow {
   group_id: string;
   name: string;
   target_cents: number;
+  target_type: string | null;
+  target_due_day: number | null;
   assigned_cents: number;
   available_cents: number;
   is_credit_payment: number;
@@ -53,13 +55,13 @@ export class SQLiteLedgerRepository implements LedgerRepository {
   constructor(private db: DatabaseAdapter) {}
 
   getCategoryGroups(): CategoryGroup[] {
-    const rows = this.db.getAllSync<CategoryGroupRow>(
+    const groupRows = this.db.getAllSync<CategoryGroupRow>(
       'SELECT id, name, sort_order FROM category_groups ORDER BY sort_order ASC'
     );
-    return rows.map((r) => ({
-      id: r.id,
-      name: r.name,
-      sortOrder: Number(r.sort_order),
+    return groupRows.map((groupRow) => ({
+      id: groupRow.id,
+      name: groupRow.name,
+      sortOrder: Number(groupRow.sort_order),
     }));
   }
 
@@ -72,13 +74,13 @@ export class SQLiteLedgerRepository implements LedgerRepository {
 
     const accountRows = this.db.getAllSync<AccountRow>('SELECT * FROM accounts');
     const accounts: Record<string, Account> = {};
-    for (const r of accountRows) {
-      accounts[r.id] = {
-        id: r.id,
-        name: r.name,
-        accountType: r.account_type,
-        balanceCents: Number(r.balance_cents),
-        creditPaymentCategoryId: r.credit_payment_category_id || undefined,
+    for (const accountRow of accountRows) {
+      accounts[accountRow.id] = {
+        id: accountRow.id,
+        name: accountRow.name,
+        accountType: accountRow.account_type,
+        balanceCents: Number(accountRow.balance_cents),
+        creditPaymentCategoryId: accountRow.credit_payment_category_id || undefined,
       };
     }
 
@@ -86,43 +88,51 @@ export class SQLiteLedgerRepository implements LedgerRepository {
       'SELECT * FROM categories ORDER BY sort_order ASC'
     );
     const categories: Record<string, Category> = {};
-    for (const r of categoryRows) {
-      categories[r.id] = {
-        id: r.id,
-        groupId: r.group_id,
-        name: r.name,
-        targetCents: Number(r.target_cents),
-        assignedCents: Number(r.assigned_cents),
-        availableCents: Number(r.available_cents),
-        isCreditPayment: Boolean(r.is_credit_payment),
-        unfundedDebtCents: Number(r.unfunded_debt_cents || 0),
+    for (const categoryRow of categoryRows) {
+      const targetType = isTargetType(categoryRow.target_type)
+        ? categoryRow.target_type
+        : 'NEEDED_FOR_SPENDING';
+
+      categories[categoryRow.id] = {
+        id: categoryRow.id,
+        groupId: categoryRow.group_id,
+        name: categoryRow.name,
+        targetCents: Number(categoryRow.target_cents),
+        targetType,
+        targetDueDay:
+          categoryRow.target_due_day !== null && categoryRow.target_due_day !== undefined
+            ? Number(categoryRow.target_due_day)
+            : undefined,
+        assignedCents: Number(categoryRow.assigned_cents),
+        availableCents: Number(categoryRow.available_cents),
+        isCreditPayment: Boolean(categoryRow.is_credit_payment),
+        unfundedDebtCents: Number(categoryRow.unfunded_debt_cents || 0),
       };
     }
 
-    const txRows = this.db.getAllSync<TransactionRow>(
+    const transactionRows = this.db.getAllSync<TransactionRow>(
       'SELECT * FROM transactions ORDER BY occurred_at DESC'
     );
-    const transactions: Transaction[] = txRows.map((r) => ({
-      id: r.id,
-      accountId: r.account_id,
-      categoryId: r.category_id || undefined,
-      payee: r.payee,
-      amountCents: Number(r.amount_cents),
-      direction: r.direction,
-      occurredAt: r.occurred_at,
-      syncStatus: r.sync_status,
-      unfundedDebtCents: Number(r.unfunded_debt_cents || 0),
-      transferredToReserveCents: Number(r.transferred_to_reserve_cents || 0),
+    const transactions: Transaction[] = transactionRows.map((transactionRow) => ({
+      id: transactionRow.id,
+      accountId: transactionRow.account_id,
+      categoryId: transactionRow.category_id || undefined,
+      payee: transactionRow.payee,
+      amountCents: Number(transactionRow.amount_cents),
+      direction: transactionRow.direction,
+      occurredAt: transactionRow.occurred_at,
+      syncStatus: transactionRow.sync_status,
+      unfundedDebtCents: Number(transactionRow.unfunded_debt_cents || 0),
+      transferredToReserveCents: Number(transactionRow.transferred_to_reserve_cents || 0),
     }));
-
 
     let totalOutflowCents = 0;
     let totalInflowCents = 0;
-    for (const tx of transactions) {
-      if (tx.direction === 'outflow') {
-        totalOutflowCents += tx.amountCents;
+    for (const transaction of transactions) {
+      if (transaction.direction === 'outflow') {
+        totalOutflowCents += transaction.amountCents;
       } else {
-        totalInflowCents += tx.amountCents;
+        totalInflowCents += transaction.amountCents;
       }
     }
 
@@ -157,30 +167,30 @@ export class SQLiteLedgerRepository implements LedgerRepository {
 
     this.db.withTransactionSync(() => {
       // 1. Update account balance
-      const acc = result.state.accounts[params.accountId];
+      const account = result.state.accounts[params.accountId];
       this.db.runSync(
         'UPDATE accounts SET balance_cents = ? WHERE id = ?',
-        acc.balanceCents,
-        acc.id
+        account.balanceCents,
+        account.id
       );
 
       // 2. Update category available balance & unfunded debt
-      const cat = result.state.categories[params.categoryId];
+      const category = result.state.categories[params.categoryId];
       this.db.runSync(
         'UPDATE categories SET available_cents = ?, unfunded_debt_cents = ? WHERE id = ?',
-        cat.availableCents,
-        cat.unfundedDebtCents || 0,
-        cat.id
+        category.availableCents,
+        category.unfundedDebtCents || 0,
+        category.id
       );
 
       // 3. If credit payment reserve category was updated, persist it
-      if (acc.accountType === 'credit' && acc.creditPaymentCategoryId) {
-        const paymentCat = result.state.categories[acc.creditPaymentCategoryId];
-        if (paymentCat) {
+      if (account.accountType === 'credit' && account.creditPaymentCategoryId) {
+        const paymentCategory = result.state.categories[account.creditPaymentCategoryId];
+        if (paymentCategory) {
           this.db.runSync(
             'UPDATE categories SET available_cents = ? WHERE id = ?',
-            paymentCat.availableCents,
-            paymentCat.id
+            paymentCategory.availableCents,
+            paymentCategory.id
           );
         }
       }
@@ -226,11 +236,11 @@ export class SQLiteLedgerRepository implements LedgerRepository {
 
     this.db.withTransactionSync(() => {
       // 1. Update account balance
-      const acc = result.state.accounts[params.accountId];
+      const account = result.state.accounts[params.accountId];
       this.db.runSync(
         'UPDATE accounts SET balance_cents = ? WHERE id = ?',
-        acc.balanceCents,
-        acc.id
+        account.balanceCents,
+        account.id
       );
 
       // 2. Update ready_to_assign in metadata
@@ -311,29 +321,29 @@ export class SQLiteLedgerRepository implements LedgerRepository {
 
     this.db.withTransactionSync(() => {
       // 1. Update fromAccount
-      const fromAcc = result.state.accounts[params.fromAccountId];
+      const fromAccount = result.state.accounts[params.fromAccountId];
       this.db.runSync(
         'UPDATE accounts SET balance_cents = ? WHERE id = ?',
-        fromAcc.balanceCents,
-        fromAcc.id
+        fromAccount.balanceCents,
+        fromAccount.id
       );
 
       // 2. Update toAccount
-      const toAcc = result.state.accounts[params.toAccountId];
+      const toAccount = result.state.accounts[params.toAccountId];
       this.db.runSync(
         'UPDATE accounts SET balance_cents = ? WHERE id = ?',
-        toAcc.balanceCents,
-        toAcc.id
+        toAccount.balanceCents,
+        toAccount.id
       );
 
       // 3. Update payment category
-      if (toAcc.creditPaymentCategoryId) {
-        const paymentCat = result.state.categories[toAcc.creditPaymentCategoryId];
-        if (paymentCat) {
+      if (toAccount.creditPaymentCategoryId) {
+        const paymentCategory = result.state.categories[toAccount.creditPaymentCategoryId];
+        if (paymentCategory) {
           this.db.runSync(
             'UPDATE categories SET available_cents = ? WHERE id = ?',
-            paymentCat.availableCents,
-            paymentCat.id
+            paymentCategory.availableCents,
+            paymentCategory.id
           );
         }
       }

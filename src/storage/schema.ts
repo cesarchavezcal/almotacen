@@ -1,7 +1,7 @@
 import { DatabaseAdapter, CategoryGroup } from './types';
 import { Account, Category } from '../domain/ledger/types';
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const CREATE_TABLES_SQL = `
 CREATE TABLE IF NOT EXISTS metadata (
@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS categories (
   group_id TEXT NOT NULL,
   name TEXT NOT NULL,
   target_cents INTEGER NOT NULL DEFAULT 0,
+  target_type TEXT NOT NULL DEFAULT 'NEEDED_FOR_SPENDING',
+  target_due_day INTEGER,
   assigned_cents INTEGER NOT NULL DEFAULT 0,
   available_cents INTEGER NOT NULL DEFAULT 0,
   is_credit_payment INTEGER NOT NULL DEFAULT 0,
@@ -98,6 +100,8 @@ export const DEFAULT_SEED_DATA: SeedData = {
       groupId: 'grp-immediate',
       name: 'Rent & Housing',
       targetCents: 120000, // $1,200.00
+      targetType: 'MONTHLY_SET_ASIDE',
+      targetDueDay: 1,
       assignedCents: 120000,
       availableCents: 120000,
       isCreditPayment: false,
@@ -108,6 +112,8 @@ export const DEFAULT_SEED_DATA: SeedData = {
       groupId: 'grp-immediate',
       name: 'Groceries & Household',
       targetCents: 40000, // $400.00
+      targetType: 'NEEDED_FOR_SPENDING',
+      targetDueDay: 15,
       assignedCents: 40000,
       availableCents: 40000,
       isCreditPayment: false,
@@ -118,6 +124,8 @@ export const DEFAULT_SEED_DATA: SeedData = {
       groupId: 'grp-immediate',
       name: 'Utilities & Internet',
       targetCents: 15000, // $150.00
+      targetType: 'MONTHLY_SET_ASIDE',
+      targetDueDay: 20,
       assignedCents: 15000,
       availableCents: 15000,
       isCreditPayment: false,
@@ -128,6 +136,7 @@ export const DEFAULT_SEED_DATA: SeedData = {
       groupId: 'grp-true',
       name: 'Auto Maintenance',
       targetCents: 10000, // $100.00
+      targetType: 'NEEDED_FOR_SPENDING',
       assignedCents: 10000,
       availableCents: 10000,
       isCreditPayment: false,
@@ -138,6 +147,7 @@ export const DEFAULT_SEED_DATA: SeedData = {
       groupId: 'grp-qol',
       name: 'Dining & Coffee',
       targetCents: 15000, // $150.00
+      targetType: 'NEEDED_FOR_SPENDING',
       assignedCents: 15000,
       availableCents: 15000,
       isCreditPayment: false,
@@ -157,6 +167,23 @@ export function initializeDatabase(db: DatabaseAdapter, seed: SeedData = DEFAULT
 
   if (!versionRow) {
     seedDatabase(db, seed);
+    return;
+  }
+
+  const currentVersion = parseInt(versionRow.value, 10);
+  if (currentVersion < 2) {
+    // Migration v1 -> v2: Add target_type and target_due_day
+    db.withTransactionSync(() => {
+      db.runSync(
+        "ALTER TABLE categories ADD COLUMN target_type TEXT NOT NULL DEFAULT 'NEEDED_FOR_SPENDING'"
+      );
+      db.runSync(
+        'ALTER TABLE categories ADD COLUMN target_due_day INTEGER'
+      );
+      db.runSync(
+        "UPDATE metadata SET value = '2' WHERE key = 'schema_version'"
+      );
+    });
   }
 }
 
@@ -196,11 +223,13 @@ export function seedDatabase(db: DatabaseAdapter, seed: SeedData = DEFAULT_SEED_
     let sortOrder = 0;
     for (const cat of seed.categories) {
       db.runSync(
-        'INSERT INTO categories (id, group_id, name, target_cents, assigned_cents, available_cents, is_credit_payment, unfunded_debt_cents, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO categories (id, group_id, name, target_cents, target_type, target_due_day, assigned_cents, available_cents, is_credit_payment, unfunded_debt_cents, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         cat.id,
         cat.groupId,
         cat.name,
         cat.targetCents,
+        cat.targetType ?? 'NEEDED_FOR_SPENDING',
+        cat.targetDueDay ?? null,
         cat.assignedCents,
         cat.availableCents,
         cat.isCreditPayment ? 1 : 0,

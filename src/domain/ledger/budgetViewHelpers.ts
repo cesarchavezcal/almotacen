@@ -109,6 +109,10 @@ export function getEnvelopeBadge(category: {
 export interface BudgetCategoryGroupItem {
   id: string;
   name: string;
+  targetCents: number;
+  targetType?: Category['targetType'];
+  targetDueDay?: number;
+  underfundedCents: number;
   assignedCents: number;
   activityCents: number;
   availableCents: number;
@@ -124,7 +128,8 @@ export interface BudgetDisplayGroup {
 
 export function buildBudgetDisplayGroups(
   categoriesRecord: Record<string, Category>,
-  groupsList: { id: string; name: string }[]
+  groupsList: { id: string; name: string }[],
+  rolloversByCategoryId: Record<string, number> = {}
 ): BudgetDisplayGroup[] {
   const allCategories = Object.values(categoriesRecord);
   const standardCategories = allCategories.filter((c) => !c.isCreditPayment);
@@ -134,15 +139,32 @@ export function buildBudgetDisplayGroups(
     .map((g) => {
       const items: BudgetCategoryGroupItem[] = standardCategories
         .filter((c) => c.groupId === g.id)
-        .map((c) => ({
-          id: c.id,
-          name: c.name,
-          assignedCents: c.assignedCents,
-          activityCents: c.availableCents - c.assignedCents,
-          availableCents: c.availableCents,
-          unfundedDebtCents: c.unfundedDebtCents,
-          isCreditPayment: false,
-        }));
+        .map((c) => {
+          const rollover = rolloversByCategoryId[c.id] ?? 0;
+          let underfundedCents = 0;
+          if (c.targetCents > 0) {
+            if (c.targetType === 'MONTHLY_SET_ASIDE') {
+              underfundedCents = Math.max(0, c.targetCents - c.assignedCents);
+            } else {
+              const effectiveTotal = Math.max(0, rollover) + c.assignedCents;
+              underfundedCents = Math.max(0, c.targetCents - effectiveTotal);
+            }
+          }
+
+          return {
+            id: c.id,
+            name: c.name,
+            targetCents: c.targetCents,
+            targetType: c.targetType,
+            targetDueDay: c.targetDueDay,
+            underfundedCents,
+            assignedCents: c.assignedCents,
+            activityCents: c.availableCents - c.assignedCents,
+            availableCents: c.availableCents,
+            unfundedDebtCents: c.unfundedDebtCents,
+            isCreditPayment: false,
+          };
+        });
 
       return {
         id: g.id,
@@ -159,6 +181,10 @@ export function buildBudgetDisplayGroups(
       items: creditCategories.map((c) => ({
         id: c.id,
         name: c.name,
+        targetCents: c.targetCents,
+        targetType: c.targetType,
+        targetDueDay: c.targetDueDay,
+        underfundedCents: 0,
         assignedCents: c.assignedCents,
         activityCents: c.availableCents - c.assignedCents,
         availableCents: c.availableCents,
