@@ -150,6 +150,33 @@ The cash flow chart MUST support horizontal touch dragging with parent scroll lo
   - **When** the touch position crosses from day $N$ to day $N+1$.
   - **Then** a single selection haptic feedback tick is triggered.
 
+### Requirement 8: Month Cycle Paging & Rollover (ALM-007)
+The system must allow paging between calendar months, rendering historical trajectories and executing dual-ledger month rollover (carrying forward positive envelope balances, absorbing cash deficits into next month's Ready to Assign, and retaining unfunded credit debt on card account balances).
 
+- **Scenario 8.1 (Month Paging Navigation - `SCEN-024`)**:
+  - **Given** the cash flow screen.
+  - **When** the user taps the previous month chevron (`<`) or swipes forward.
+  - **Then** the active cycle shifts to the prior calendar month.
+  - **And** the month paging header updates the displayed month and year.
+  - **And** when on a non-current month, a "Current" quick indicator is rendered.
 
+- **Scenario 8.2 (Historical Trajectory & Full-Month Curve - `SCEN-025`)**:
+  - **Given** an elapsed historical month with recorded transactions.
+  - **When** navigating to that past month cycle.
+  - **Then** the trajectory curve displays actual cumulative spend across all days of that month (1..totalDays).
+  - **And** no future dashed projection steps are rendered (`projectedOutflowCents` is null for all points).
+  - **And** inflows, outflows, net cash flow, and final burn pace reflect that historical month's transactions.
 
+- **Scenario 8.3 (Positive Envelope Balance Rollover - `SCEN-026`)**:
+  - **Given** a month boundary rollover from month $M$ to $M+1$.
+  - **When** a category has an unspent positive available balance ($400.00).
+  - **Then** the positive balance rolls over intact into month $M+1$ available balance.
+  - **And** assigned cents for the category resets to $0.00 in the new month.
+
+- **Scenario 8.4 (Dual-Ledger Cash Deficit Absorption & Credit Debt Isolation - `SCEN-027`)**:
+  - **Given** an uncovered cash deficit in category A (-$50.00 cash overspending) and an unfunded credit overspending in category B (-$80.00 credit overspending).
+  - **When** performing month rollover into month $M+1$.
+  - **Then** the $50.00 cash deficit is deducted directly from month $M+1$'s `Ready to Assign` pool.
+  - **And** category A available balance resets to $0.00.
+  - **And** category B credit overspending does NOT deduct from `Ready to Assign`.
+  - **And** category B available balance and category unfunded debt reset to $0.00, with the $80.00 debt retained solely on the credit card account balance.

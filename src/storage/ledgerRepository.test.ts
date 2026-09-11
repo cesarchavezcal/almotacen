@@ -144,4 +144,50 @@ describe('SQLite Local-First Ledger Store (Ticket 2 / ALM-002)', () => {
     expect(state.accounts['acc-credit'].balanceCents).toBe(0); // $0 balance
     expect(state.categories['cat-cc-payment'].availableCents).toBe(0); // Payment envelope consumed
   });
+
+  it('SCEN-026 & SCEN-027: atomically persists month rollover in SQLite', () => {
+    // 1. Create unspent balance in Groceries: spend $100 of $400 => $300 remains
+    repo.postOutflow({
+      id: 'tx-rollover-1',
+      accountId: 'acc-checking',
+      categoryId: 'cat-groceries',
+      amountCents: 10000,
+      payee: 'Grocery Store',
+    });
+
+    // 2. Create cash deficit in Dining: spend $200 of $150 => -$50 cash deficit
+    repo.postOutflow({
+      id: 'tx-rollover-2',
+      accountId: 'acc-checking',
+      categoryId: 'cat-dining',
+      amountCents: 20000,
+      payee: 'Fancy Restaurant',
+    });
+
+    // Pre-rollover check
+    const preState = repo.getBudgetState();
+    expect(preState.categories['cat-groceries'].availableCents).toBe(30000);
+    expect(preState.categories['cat-dining'].availableCents).toBe(-5000);
+    expect(preState.readyToAssignCents).toBe(50000); // $500.00
+
+    // 3. Perform rollover into next cycle
+    const result = repo.performMonthRollover('2026-10');
+    expect(result.totalCashDeficitDeductedCents).toBe(5000);
+
+    // 4. Reload from fresh repository instance to verify SQLite persistence
+    const reloadedRepo = new SQLiteLedgerRepository(db);
+    const postState = reloadedRepo.getBudgetState();
+
+    // Groceries carried over positive balance intact, assigned reset to 0
+    expect(postState.categories['cat-groceries'].availableCents).toBe(30000);
+    expect(postState.categories['cat-groceries'].assignedCents).toBe(0);
+
+    // Dining cash deficit absorbed: available reset to 0, assigned reset to 0
+    expect(postState.categories['cat-dining'].availableCents).toBe(0);
+    expect(postState.categories['cat-dining'].assignedCents).toBe(0);
+
+    // Ready to assign was reduced by the $50.00 cash deficit
+    expect(postState.readyToAssignCents).toBe(45000);
+  });
 });
+

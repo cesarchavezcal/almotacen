@@ -58,8 +58,8 @@
       "name": "Interactive Chart Scrubbing & Dynamic Day Filter",
       "description": "Horizontal thumb drag gesture, micro-haptics on day ticks, HUD tooltip, and live day-filtered transaction feed",
       "dependencies": ["ALM-005"],
-      "status": "ready-for-review",
-      "evidence": "./init.sh clean pass (66/66 tests), gga review passed",
+      "status": "done",
+      "evidence": "PR #21 merged (bea7479), 66/66 tests passing, gga pass",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/06-interactive-chart-scrubbing.md"
     },
     {
@@ -67,8 +67,10 @@
       "name": "Month Cycle Paging & Rollover",
       "description": "Month selector header with curve animations, historical cycle loading, and month-end envelope/deficit rollover",
       "dependencies": ["ALM-005"],
-      "status": "blocked",
+      "status": "ready-for-review",
+      "evidence": "./init.sh clean pass (77/77 tests), 0 TS errors",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/07-month-cycle-paging.md"
     }
   ]
 }
+

@@ -113,5 +113,22 @@ describe('Dual Ledger Engine Contract', () => {
   it('SCEN-023: triggers micro-haptic selection feedback on calendar day boundary change', () => {
     // RED: Must fail until haptic gesture feedback is connected
   });
+
+  it('SCEN-024: navigates between months and updates cycle date state', () => {
+    // RED: Must fail until month paging navigation is implemented
+  });
+
+  it('SCEN-025: displays completed historical actuals without future projections when viewing past month', () => {
+    // RED: Must fail until historical trajectory calculations are implemented
+  });
+
+  it('SCEN-026: carries forward positive envelope balances to the next month available amount', () => {
+    // RED: Must fail until rollover engine carries positive balances
+  });
+
+  it('SCEN-027: absorbs cash deficits into next month Ready to Assign while retaining credit debt on card balance', () => {
+    // RED: Must fail until dual-ledger rollover deficit handling is implemented
+  });
 });
 ```
+

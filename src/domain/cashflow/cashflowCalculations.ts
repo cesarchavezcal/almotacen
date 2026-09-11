@@ -169,14 +169,17 @@ export function buildDailyTrajectorySeries(params: {
     totalDaysInMonth
   );
 
-  // 5. Blended EOM Projection
-  const projectedEomSpendCents = calculateBlendedEomProjection({
-    actualDiscretionarySpendCents:
-      actualDiscretionarySpendCents > 0 ? actualDiscretionarySpendCents : totalOutflowCents,
-    committedFixedCents,
-    currentDay,
-    totalDaysInMonth,
-  });
+  // 5. Blended EOM Projection (SCEN-018, SCEN-025)
+  const isMonthClosed = currentDay >= totalDaysInMonth;
+  const projectedEomSpendCents = isMonthClosed
+    ? totalOutflowCents
+    : calculateBlendedEomProjection({
+        actualDiscretionarySpendCents:
+          actualDiscretionarySpendCents > 0 ? actualDiscretionarySpendCents : totalOutflowCents,
+        committedFixedCents,
+        currentDay,
+        totalDaysInMonth,
+      });
 
   const burnStatus = evaluateIncomeCeilingStatus(
     projectedEomSpendCents,

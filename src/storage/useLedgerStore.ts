@@ -1,8 +1,9 @@
 import { useSyncExternalStore, useCallback } from 'react';
 import { getDatabase } from './database';
 import { SQLiteLedgerRepository } from './ledgerRepository';
-import { BudgetState } from '../domain/ledger/types';
+import { BudgetState, Transaction } from '../domain/ledger/types';
 import { CategoryGroup, LedgerRepository } from './types';
+import { MonthRolloverResult } from '../domain/ledger/rollover';
 
 let repositoryInstance: LedgerRepository | null = null;
 let currentBudgetState: BudgetState | null = null;
@@ -10,7 +11,40 @@ let currentGroups: CategoryGroup[] | null = null;
 let currentSnapshot: { budgetState: BudgetState; groups: CategoryGroup[] } | null = null;
 const listeners = new Set<() => void>();
 
+export interface UseLedgerStoreResult {
+  state: BudgetState;
+  groups: CategoryGroup[];
+  postOutflow: (params: {
+    id?: string;
+    accountId: string;
+    categoryId: string;
+    amountCents: number;
+    payee: string;
+    occurredAt?: string;
+  }) => { transaction: Transaction; isOverspent: boolean };
+  postInflow: (params: {
+    id?: string;
+    accountId: string;
+    amountCents: number;
+    payee: string;
+    occurredAt?: string;
+  }) => { transaction: Transaction };
+  allocateEnvelope: (params: { categoryId: string; amountCents: number }) => { isOverAssigned: boolean };
+  postCreditCardPayment: (params: {
+    id?: string;
+    fromAccountId: string;
+    toAccountId: string;
+    amountCents: number;
+    payee?: string;
+    occurredAt?: string;
+  }) => { transaction: Transaction };
+  performMonthRollover: (targetMonth?: string) => MonthRolloverResult;
+  reload: () => void;
+  resetDatabase: () => void;
+}
+
 function getRepository(): LedgerRepository {
+
   if (!repositoryInstance) {
     const db = getDatabase();
     repositoryInstance = new SQLiteLedgerRepository(db);
@@ -51,7 +85,7 @@ function getSnapshot(): { budgetState: BudgetState; groups: CategoryGroup[] } {
   return currentSnapshot;
 }
 
-export function useLedgerStore() {
+export function useLedgerStore(): UseLedgerStoreResult {
   const store = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
   const repo = getRepository();
 
@@ -127,6 +161,15 @@ export function useLedgerStore() {
     notifyListeners();
   }, []);
 
+  const performRollover = useCallback(
+    (targetMonth?: string) => {
+      const result = repo.performMonthRollover(targetMonth);
+      notifyListeners();
+      return result;
+    },
+    [repo]
+  );
+
   const reset = useCallback(() => {
     repo.resetDatabase();
     notifyListeners();
@@ -139,9 +182,11 @@ export function useLedgerStore() {
     postInflow,
     allocateEnvelope: allocate,
     postCreditCardPayment: payCreditCard,
+    performMonthRollover: performRollover,
     reload,
     resetDatabase: reset,
   };
+
 }
 
 export function setCustomLedgerRepository(customRepo: LedgerRepository | null): void {

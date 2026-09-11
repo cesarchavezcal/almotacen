@@ -1,13 +1,15 @@
 import { BudgetState, Account, Category, Transaction } from '../domain/ledger/types';
+import { MonthRolloverResult } from '../domain/ledger/rollover';
 
 export interface DatabaseAdapter {
   execSync(sql: string): void;
-  runSync(sql: string, ...params: any[]): { lastInsertRowId: number; changes: number };
-  getAllSync<T = any>(sql: string, ...params: any[]): T[];
-  getFirstSync<T = any>(sql: string, ...params: any[]): T | null;
+  runSync(sql: string, ...params: unknown[]): { lastInsertRowId: number; changes: number };
+  getAllSync<T = unknown>(sql: string, ...params: unknown[]): T[];
+  getFirstSync<T = unknown>(sql: string, ...params: unknown[]): T | null;
   withTransactionSync<T>(task: () => T): T;
   closeSync?(): void;
 }
+
 
 export interface CategoryGroup {
   id: string;
@@ -45,5 +47,7 @@ export interface LedgerRepository {
     payee?: string;
     occurredAt?: string;
   }): { transaction: Transaction };
+  performMonthRollover(targetMonth?: string): MonthRolloverResult;
   resetDatabase(): void;
 }
+
