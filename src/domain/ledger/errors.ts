@@ -11,3 +11,10 @@ export class LedgerError extends Error {
     this.name = 'LedgerError';
   }
 }
+
+export class LedgerDomainError extends LedgerError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'LedgerDomainError';
+  }
+}

@@ -225,5 +225,32 @@ describe('SQLite Local-First Ledger Store (Ticket 2 / ALM-002)', () => {
     expect(postState.categories['cat-rent'].assignedCents).toBe(100000);
     expect(postState.categories['cat-rent'].availableCents).toBe(100000);
   });
+
+  it('SCEN-034 & SCEN-035 in SQLite: rebalanceCategoryFunds persists envelope transfers', () => {
+    // 1. Create deficit in dining: -$30.00
+    db.runSync('UPDATE categories SET available_cents = -3000 WHERE id = ?', 'cat-dining');
+    // Groceries has $400 available in seed
+    const preState = repo.getBudgetState();
+    expect(preState.categories['cat-dining'].availableCents).toBe(-3000);
+    expect(preState.categories['cat-groceries'].availableCents).toBe(40000);
+
+    // 2. Cover $30 from groceries
+    const result = repo.rebalanceCategoryFunds({
+      targetCategoryId: 'cat-dining',
+      sourceCategoryId: 'cat-groceries',
+      amountCents: 3000,
+    });
+
+    expect(result.coveredCents).toBe(3000);
+    expect(result.isCreditDebtCovered).toBe(false);
+
+    // 3. Reload from fresh repository instance
+    const reloadedRepo = new SQLiteLedgerRepository(db);
+    const postState = reloadedRepo.getBudgetState();
+
+    expect(postState.categories['cat-dining'].availableCents).toBe(0);
+    expect(postState.categories['cat-groceries'].availableCents).toBe(37000); // $400 - $30 = $370
+    expect(postState.readyToAssignCents).toBe(50000); // Invariant: RTA untouched
+  });
 });
 

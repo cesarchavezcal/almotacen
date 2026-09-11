@@ -44,6 +44,11 @@ export interface LedgerRepository {
   }): { transaction: Transaction };
   performMonthRollover(targetMonth?: string): MonthRolloverResult;
   applyAutoAssign(): { totalAllocatedCents: number; assignedCount: number };
+  rebalanceCategoryFunds(params: {
+    targetCategoryId: string;
+    sourceCategoryId: string;
+    amountCents: number;
+  }): { coveredCents: number; isCreditDebtCovered: boolean };
   resetDatabase(): void;
 }
 
