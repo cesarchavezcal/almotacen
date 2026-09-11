@@ -1,50 +1,60 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
-import { colors, spacing, radius } from '@/src/theme';
+import { colors, spacing, radius, shadows } from '@/src/theme';
 
 export interface CardProps {
   children: React.ReactNode;
   variant?: 'elevated' | 'outline' | 'hero';
   style?: StyleProp<ViewStyle>;
+  accessible?: boolean;
+  accessibilityLabel?: string;
 }
 
-export function Card({ children, variant = 'outline', style }: CardProps) {
-  return <View style={[styles.base, variantStyles[variant], style]}>{children}</View>;
+export function Card({
+  children,
+  variant = 'outline',
+  style,
+  accessible = true,
+  accessibilityLabel,
+}: CardProps): React.JSX.Element {
+  return (
+    <View
+      accessible={accessible}
+      accessibilityLabel={accessibilityLabel}
+      style={[styles.base, variantStyles[variant], style]}
+    >
+      {children}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     padding: spacing.md,
   },
 });
 
-const variantStyles = {
+const variantStyles: Record<'elevated' | 'outline' | 'hero', ViewStyle> = {
   hero: {
     backgroundColor: colors.surfaceCard,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     padding: spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 3,
+    borderWidth: 0.5,
+    borderColor: colors.hairline,
+    ...shadows.hero,
   },
   outline: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
+    backgroundColor: colors.surfaceCard,
+    borderWidth: 0.5,
     borderColor: colors.border,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
   },
   elevated: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
+    backgroundColor: colors.surfaceCard,
+    borderRadius: radius.card,
+    borderWidth: 0.5,
+    borderColor: colors.hairline,
+    ...shadows.card,
   },
 };

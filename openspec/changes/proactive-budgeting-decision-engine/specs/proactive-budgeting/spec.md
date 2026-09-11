@@ -84,3 +84,21 @@ When a category is overspent (cash overspent or credit debt), the system MUST al
 - THEN "Electronics" `unfundedDebtCents` becomes $0.00
 - AND credit card payment category available balance increments by $45.00
 - AND "Emergency Fund" `availableCents` decrements by $45.00.
+
+---
+
+### Requirement: Tactile UI Modal Bottom Sheets & Budget Tab Integration
+The system MUST provide dedicated, accessible modal bottom sheets in the Budget screen to inspect allocations and cover overspending without leaving the envelope workflow.
+
+#### Scenario: Payday Auto-Assign Modal Preview & Execution (SCEN-036)
+- GIVEN `readyToAssignCents > 0`
+- WHEN the user taps the "Auto-Assign" action trigger on the Ready to Assign banner
+- THEN `AutoAssignModal` opens displaying a breakdown of planned allocations
+- AND tapping "Confirm Allocation" applies the allocations, updates the ledger, and triggers success haptic feedback.
+
+#### Scenario: Interactive Overspending Modal Coverage Flow (SCEN-037)
+- GIVEN a category has `availableCents < 0` or `unfundedDebtCents > 0`
+- WHEN the user taps the overspent/credit debt badge on `EnvelopePassFace`
+- THEN `CoverOverspendingModal` opens displaying the category deficit and donor categories with `availableCents > 0`
+- AND selecting a donor category and confirming transfer atomically rebalances funds, resolves the deficit, and triggers haptic feedback.
+

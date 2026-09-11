@@ -1,8 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, StyleProp, ViewStyle, Pressable } from 'react-native';
-import { colors } from '../theme/colors';
-import { typography } from '../theme/typography';
-import { radius } from '../theme/radius';
+import { colors, typography, radius, shadows, spacing } from '@/src/theme';
 
 import { formatCentsToCurrency } from '../domain/ledger/currency';
 import { QuickFillAction, getEnvelopeBadge } from '../domain/ledger/budgetViewHelpers';
@@ -17,8 +15,11 @@ export interface EnvelopePassFaceProps {
   accentColor?: string;
   style?: StyleProp<ViewStyle>;
   isExpanded?: boolean;
+  accessible?: boolean;
+  accessibilityLabel?: string;
   onToggleExpand?: () => void;
   onAllocateQuickFill?: (action: QuickFillAction) => void;
+  onCoverOverspending?: () => void;
 }
 
 export function EnvelopePassFace({
@@ -31,8 +32,11 @@ export function EnvelopePassFace({
   accentColor = colors.systemBlue,
   style,
   isExpanded,
+  accessible = true,
+  accessibilityLabel,
   onToggleExpand,
   onAllocateQuickFill,
+  onCoverOverspending,
 }: EnvelopePassFaceProps): React.JSX.Element {
   const badge = getEnvelopeBadge({
     availableCents,
@@ -41,6 +45,7 @@ export function EnvelopePassFace({
 
   const isOverspent = availableCents < 0;
   const isDepleted = availableCents === 0 && !unfundedDebtCents;
+  const hasDeficit = isOverspent || (unfundedDebtCents !== undefined && unfundedDebtCents > 0);
   const spentPercent = assignedCents > 0
     ? Math.min(100, Math.round((Math.abs(activityCents) / assignedCents) * 100))
     : 0;
@@ -59,8 +64,16 @@ export function EnvelopePassFace({
     statusColor = colors.textTertiary;
   }
 
+  const defaultLabel = `Envelope ${name}${group ? `, ${group}` : ''}, Available Balance ${formatCentsToCurrency(
+    availableCents
+  )}, Status ${badge.label}`;
+
   return (
-    <View style={[styles.shadow, style]}>
+    <View
+      accessible={accessible}
+      accessibilityLabel={accessibilityLabel || defaultLabel}
+      style={[styles.shadow, style]}
+    >
       <View style={[styles.frame, isExpanded && styles.frameExpanded]}>
         {/* Top Section */}
         <Pressable
@@ -74,9 +87,22 @@ export function EnvelopePassFace({
               {name}
             </Text>
           </View>
-          <View style={[styles.statusPill, { backgroundColor: statusBg }]}>
-            <Text style={[styles.statusText, { color: statusColor }]}>{badge.label}</Text>
-          </View>
+          {hasDeficit && onCoverOverspending ? (
+            <Pressable
+              onPress={() => onCoverOverspending()}
+              style={[styles.statusPill, { backgroundColor: statusBg }]}
+              accessibilityRole="button"
+              accessibilityLabel={`Cover ${badge.label}`}
+            >
+              <Text style={[styles.statusText, { color: statusColor }]}>
+                {badge.label} ↗
+              </Text>
+            </Pressable>
+          ) : (
+            <View style={[styles.statusPill, { backgroundColor: statusBg }]}>
+              <Text style={[styles.statusText, { color: statusColor }]}>{badge.label}</Text>
+            </View>
+          )}
         </Pressable>
 
         {/* Perforated Divider with Cutout Notches */}
@@ -172,12 +198,8 @@ export function EnvelopePassFace({
 
 const styles = StyleSheet.create({
   shadow: {
-    shadowColor: '#000',
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 12,
-    marginHorizontal: 16,
+    ...shadows.hero,
+    marginHorizontal: spacing.md,
   },
   frame: {
     height: 220,

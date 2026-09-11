@@ -5,6 +5,9 @@ import {
   calculateQuickFillAllocation,
   buildBudgetDisplayGroups,
   calculateBudgetTotals,
+  buildAutoAssignPreview,
+  getDonorCategories,
+  getCategoryDeficit,
 } from './budgetViewHelpers';
 
 describe('Budget View & Envelope Allocation Helpers (SCEN-005, SCEN-006, SCEN-014, SCEN-015)', () => {
@@ -147,4 +150,114 @@ describe('Budget View & Envelope Allocation Helpers (SCEN-005, SCEN-006, SCEN-01
       expect(groups[1].items[0].activityCents).toBe(-15000); // 35000 - 50000 = -15000
     });
   });
+
+  describe('buildAutoAssignPreview', () => {
+    const mockCategories = {
+      'cat-1': {
+        id: 'cat-1',
+        groupId: 'grp-1',
+        name: 'Groceries',
+        targetCents: 50000,
+        assignedCents: 0,
+        availableCents: 0,
+        targetType: 'MONTHLY_SET_ASIDE' as const,
+        targetDueDay: 5,
+      },
+      'cat-2': {
+        id: 'cat-2',
+        groupId: 'grp-1',
+        name: 'Rent',
+        targetCents: 150000,
+        assignedCents: 0,
+        availableCents: 0,
+        targetType: 'MONTHLY_SET_ASIDE' as const,
+        targetDueDay: 1,
+      },
+    };
+
+    const mockGroups = [
+      { id: 'grp-1', name: 'Immediate Obligations', sortOrder: 1 },
+    ];
+
+    it('generates preview items sorted by priority with new available balances', () => {
+      const preview = buildAutoAssignPreview(100000, mockCategories, mockGroups);
+      expect(preview.totalAllocatedCents).toBe(100000);
+      expect(preview.remainingReadyToAssignCents).toBe(0);
+      expect(preview.items.length).toBe(1);
+      expect(preview.items[0].categoryName).toBe('Rent'); // earlier due day (1 < 5)
+      expect(preview.items[0].allocatedCents).toBe(100000);
+      expect(preview.items[0].newAvailableCents).toBe(100000);
+    });
+
+    it('returns empty items when readyToAssign is 0', () => {
+      const preview = buildAutoAssignPreview(0, mockCategories, mockGroups);
+      expect(preview.items).toHaveLength(0);
+      expect(preview.totalAllocatedCents).toBe(0);
+      expect(preview.remainingReadyToAssignCents).toBe(0);
+    });
+  });
+
+  describe('getDonorCategories & getCategoryDeficit', () => {
+    const mockCategories = {
+      'cat-overspent': {
+        id: 'cat-overspent',
+        groupId: 'grp-1',
+        name: 'Dining Out',
+        targetCents: 10000,
+        assignedCents: 10000,
+        availableCents: -2500, // -$25.00 cash overspent
+      },
+      'cat-debt': {
+        id: 'cat-debt',
+        groupId: 'grp-1',
+        name: 'Electronics',
+        targetCents: 20000,
+        assignedCents: 0,
+        availableCents: 0,
+        unfundedDebtCents: 5000, // $50.00 credit debt
+      },
+      'cat-donor-1': {
+        id: 'cat-donor-1',
+        groupId: 'grp-1',
+        name: 'Groceries',
+        targetCents: 50000,
+        assignedCents: 50000,
+        availableCents: 15000, // $150.00 positive
+      },
+      'cat-empty': {
+        id: 'cat-empty',
+        groupId: 'grp-1',
+        name: 'Subscriptions',
+        targetCents: 1500,
+        assignedCents: 1500,
+        availableCents: 0, // $0.00 depleted
+      },
+    };
+
+    const mockGroups = [
+      { id: 'grp-1', name: 'Daily Living', sortOrder: 1 },
+    ];
+
+    it('identifies cash overspending deficit correctly', () => {
+      const deficit = getCategoryDeficit(mockCategories['cat-overspent']);
+      expect(deficit.deficitCents).toBe(2500);
+      expect(deficit.isCreditDebt).toBe(false);
+    });
+
+    it('identifies credit card unfunded debt deficit correctly', () => {
+      const deficit = getCategoryDeficit(mockCategories['cat-debt']);
+      expect(deficit.deficitCents).toBe(5000);
+      expect(deficit.isCreditDebt).toBe(true);
+    });
+
+    it('filters donor categories with positive available balances excluding target', () => {
+      const donors = getDonorCategories('cat-overspent', mockCategories, mockGroups);
+      expect(donors).toHaveLength(1);
+      expect(donors[0].id).toBe('cat-donor-1');
+      expect(donors[0].name).toBe('Groceries');
+      expect(donors[0].groupName).toBe('Daily Living');
+      expect(donors[0].availableCents).toBe(15000);
+    });
+  });
 });
+

@@ -3,7 +3,8 @@
  *
  * Implements SCEN-005, SCEN-006, SCEN-014, and SCEN-015 with strict integer cents.
  */
-import { Category } from './types';
+import { Category, CategoryGroup } from './types';
+import { calculateAutoAssignAllocations } from './autoAssign';
 
 export interface ReadyToAssignBannerState {
   status: 'positive' | 'zero' | 'overassigned';
@@ -218,3 +219,128 @@ export function calculateBudgetTotals(
     totalAvailableCents: available,
   };
 }
+
+export interface AutoAssignPreviewItem {
+  categoryId: string;
+  categoryName: string;
+  groupName: string;
+  targetType?: Category['targetType'];
+  targetDueDay?: number;
+  allocatedCents: number;
+  currentAvailableCents: number;
+  newAvailableCents: number;
+}
+
+export interface AutoAssignPreview {
+  items: AutoAssignPreviewItem[];
+  totalAllocatedCents: number;
+  remainingReadyToAssignCents: number;
+}
+
+export function buildAutoAssignPreview(
+  readyToAssignCents: number,
+  categoriesRecord: Record<string, Category>,
+  groupsList: CategoryGroup[],
+  rolloversByCategoryId: Record<string, number> = {}
+): AutoAssignPreview {
+  const categoriesList = Object.values(categoriesRecord);
+  const result = calculateAutoAssignAllocations({
+    readyToAssignCents,
+    categories: categoriesList,
+    groups: groupsList,
+    rolloversByCategoryId,
+  });
+
+  const groupNameMap: Record<string, string> = {};
+  for (const group of groupsList) {
+    groupNameMap[group.id] = group.name;
+  }
+
+  const items: AutoAssignPreviewItem[] = [];
+  for (const [categoryId, allocatedCents] of Object.entries(result.allocations)) {
+    if (allocatedCents <= 0) continue;
+    const category = categoriesRecord[categoryId];
+    if (!category) continue;
+
+    items.push({
+      categoryId: category.id,
+      categoryName: category.name,
+      groupName: groupNameMap[category.groupId] ?? 'Uncategorized',
+      targetType: category.targetType,
+      targetDueDay: category.targetDueDay,
+      allocatedCents,
+      currentAvailableCents: category.availableCents,
+      newAvailableCents: category.availableCents + allocatedCents,
+    });
+  }
+
+  return {
+    items,
+    totalAllocatedCents: result.totalAllocatedCents,
+    remainingReadyToAssignCents: result.remainingReadyToAssignCents,
+  };
+}
+
+export interface CategoryDeficit {
+  deficitCents: number;
+  isCreditDebt: boolean;
+}
+
+export function getCategoryDeficit(category: {
+  availableCents: number;
+  unfundedDebtCents?: number;
+}): CategoryDeficit {
+  if (category.unfundedDebtCents && category.unfundedDebtCents > 0) {
+    return {
+      deficitCents: category.unfundedDebtCents,
+      isCreditDebt: true,
+    };
+  }
+
+  if (category.availableCents < 0) {
+    return {
+      deficitCents: Math.abs(category.availableCents),
+      isCreditDebt: false,
+    };
+  }
+
+  return {
+    deficitCents: 0,
+    isCreditDebt: false,
+  };
+}
+
+export interface DonorCategoryItem {
+  id: string;
+  name: string;
+  groupName: string;
+  availableCents: number;
+}
+
+export function getDonorCategories(
+  targetCategoryId: string,
+  categoriesRecord: Record<string, Category>,
+  groupsList: CategoryGroup[]
+): DonorCategoryItem[] {
+  const groupNameMap: Record<string, string> = {};
+  for (const group of groupsList) {
+    groupNameMap[group.id] = group.name;
+  }
+
+  const donorCategories: DonorCategoryItem[] = [];
+  for (const category of Object.values(categoriesRecord)) {
+    if (category.id === targetCategoryId) continue;
+    if (category.isCreditPayment) continue;
+    if (category.availableCents <= 0) continue;
+
+    donorCategories.push({
+      id: category.id,
+      name: category.name,
+      groupName: groupNameMap[category.groupId] ?? 'Uncategorized',
+      availableCents: category.availableCents,
+    });
+  }
+
+  return donorCategories;
+}
+

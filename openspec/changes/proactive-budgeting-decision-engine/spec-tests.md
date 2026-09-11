@@ -51,3 +51,16 @@ Defines test contracts for `SCEN-028` through `SCEN-035` without implementation 
 - **Given**: Category with `unfundedDebtCents = 4500`, source category with `availableCents = 10000`.
 - **When**: `coverCreditDebt(categoryId, sourceId, 4500, ccPaymentCategoryId)` is executed.
 - **Then**: Category `unfundedDebtCents` becomes `0`, CC payment available increases by `4500`, source available decreases by `4500`.
+
+### SCEN-036: Auto-Assign Modal Preview & Allocation Confirmation
+- **Target**: `src/domain/ledger/budgetViewHelpers.test.ts`, `src/components/AutoAssignModal.tsx`
+- **Given**: `readyToAssignCents > 0`, multiple underfunded categories.
+- **When**: `buildAutoAssignPreview(...)` is computed and confirmed via `AutoAssignModal`.
+- **Then**: Preview lists targeted categories with positive allocations, leaving no excess unassigned funds if underfunded exceeds ready to assign.
+
+### SCEN-037: Interactive Overspending Modal Coverage Flow
+- **Target**: `src/domain/ledger/budgetViewHelpers.test.ts`, `src/components/CoverOverspendingModal.tsx`
+- **Given**: Overspent category with negative balance or unfunded debt.
+- **When**: `getDonorCategories(...)` filters candidate envelopes and user confirms coverage.
+- **Then**: Only categories with positive available balance are presented as donors, excluding the overspent category itself.
+
