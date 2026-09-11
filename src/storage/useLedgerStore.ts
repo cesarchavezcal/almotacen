@@ -39,6 +39,7 @@ export interface UseLedgerStoreResult {
     occurredAt?: string;
   }) => { transaction: Transaction };
   performMonthRollover: (targetMonth?: string) => MonthRolloverResult;
+  applyAutoAssign: () => { totalAllocatedCents: number; assignedCount: number };
   reload: () => void;
   resetDatabase: () => void;
 }
@@ -170,6 +171,12 @@ export function useLedgerStore(): UseLedgerStoreResult {
     [repo]
   );
 
+  const autoAssign = useCallback(() => {
+    const result = repo.applyAutoAssign();
+    notifyListeners();
+    return result;
+  }, [repo]);
+
   const reset = useCallback(() => {
     repo.resetDatabase();
     notifyListeners();
@@ -183,6 +190,7 @@ export function useLedgerStore(): UseLedgerStoreResult {
     allocateEnvelope: allocate,
     postCreditCardPayment: payCreditCard,
     performMonthRollover: performRollover,
+    applyAutoAssign: autoAssign,
     reload,
     resetDatabase: reset,
   };
