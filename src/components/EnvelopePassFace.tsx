@@ -1,8 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, StyleProp, ViewStyle, Pressable } from 'react-native';
-import { colors } from '../theme/colors';
-import { typography } from '../theme/typography';
-import { radius } from '../theme/radius';
+import { colors, typography, radius, shadows, spacing } from '@/src/theme';
 
 import { formatCentsToCurrency } from '../domain/ledger/currency';
 import { QuickFillAction, getEnvelopeBadge } from '../domain/ledger/budgetViewHelpers';
@@ -17,6 +15,8 @@ export interface EnvelopePassFaceProps {
   accentColor?: string;
   style?: StyleProp<ViewStyle>;
   isExpanded?: boolean;
+  accessible?: boolean;
+  accessibilityLabel?: string;
   onToggleExpand?: () => void;
   onAllocateQuickFill?: (action: QuickFillAction) => void;
   onCoverOverspending?: () => void;
@@ -32,6 +32,8 @@ export function EnvelopePassFace({
   accentColor = colors.systemBlue,
   style,
   isExpanded,
+  accessible = true,
+  accessibilityLabel,
   onToggleExpand,
   onAllocateQuickFill,
   onCoverOverspending,
@@ -62,8 +64,16 @@ export function EnvelopePassFace({
     statusColor = colors.textTertiary;
   }
 
+  const defaultLabel = `Envelope ${name}${group ? `, ${group}` : ''}, Available Balance ${formatCentsToCurrency(
+    availableCents
+  )}, Status ${badge.label}`;
+
   return (
-    <View style={[styles.shadow, style]}>
+    <View
+      accessible={accessible}
+      accessibilityLabel={accessibilityLabel || defaultLabel}
+      style={[styles.shadow, style]}
+    >
       <View style={[styles.frame, isExpanded && styles.frameExpanded]}>
         {/* Top Section */}
         <Pressable
@@ -188,12 +198,8 @@ export function EnvelopePassFace({
 
 const styles = StyleSheet.create({
   shadow: {
-    shadowColor: '#000',
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 12,
-    marginHorizontal: 16,
+    ...shadows.hero,
+    marginHorizontal: spacing.md,
   },
   frame: {
     height: 220,

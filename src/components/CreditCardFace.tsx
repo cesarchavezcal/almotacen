@@ -1,19 +1,19 @@
 import React from 'react';
 import { View, Text, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '../theme/colors';
-import { typography } from '../theme/typography';
-import { radius } from '../theme/radius';
+import { colors, typography, radius, shadows, spacing } from '@/src/theme';
 
 export interface CreditCardFaceProps {
   issuer: string;
   last4: string;
   cardholder?: string;
   network?: 'visa' | 'mastercard' | 'amex' | 'discover';
-  gradient: readonly [string, string, ...string[]] | [string, string];
+  gradient: [string, string, ...string[]];
   balance?: string;
   accountType?: string;
   style?: StyleProp<ViewStyle>;
+  accessible?: boolean;
+  accessibilityLabel?: string;
 }
 
 export function CreditCardFace({
@@ -25,7 +25,13 @@ export function CreditCardFace({
   balance,
   accountType,
   style,
-}: CreditCardFaceProps) {
+  accessible = true,
+  accessibilityLabel,
+}: CreditCardFaceProps): React.JSX.Element {
+  const defaultLabel = `${issuer} ending in ${last4}${accountType ? `, ${accountType}` : ''}${
+    balance ? `, Balance ${balance}` : ''
+  }`;
+
   const renderNetworkBadge = () => {
     switch (network) {
       case 'mastercard':
@@ -46,10 +52,14 @@ export function CreditCardFace({
   };
 
   return (
-    <View style={[styles.shadow, style]}>
+    <View
+      accessible={accessible}
+      accessibilityLabel={accessibilityLabel || defaultLabel}
+      style={[styles.shadow, style]}
+    >
       <View style={styles.frame}>
         <LinearGradient
-          colors={gradient as [string, string, ...string[]]}
+          colors={gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
@@ -57,7 +67,7 @@ export function CreditCardFace({
         <View style={styles.content}>
           <View style={styles.topRow}>
             <View>
-              <Text style={[typography.cardIssuer, { color: '#FFFFFF' }]}>{issuer}</Text>
+              <Text style={[typography.cardIssuer, { color: colors.textPrimary }]}>{issuer}</Text>
               {accountType ? (
                 <Text style={[typography.caption, { color: 'rgba(255,255,255,0.7)', marginTop: 2 }]}>
                   {accountType}
@@ -72,7 +82,7 @@ export function CreditCardFace({
           {balance ? (
             <View style={styles.balanceContainer}>
               <Text style={styles.balanceLabel}>Balance</Text>
-              <Text style={[typography.balanceHero, { color: '#FFFFFF' }]}>{balance}</Text>
+              <Text style={[typography.balanceHero, { color: colors.textPrimary }]}>{balance}</Text>
             </View>
           ) : null}
 
@@ -80,7 +90,7 @@ export function CreditCardFace({
             <Text style={[typography.cardHolder, { color: 'rgba(255,255,255,0.85)' }]}>
               {cardholder.toUpperCase()}
             </Text>
-            <Text style={[typography.cardLast4, { color: '#FFFFFF' }]}>•••• {last4}</Text>
+            <Text style={[typography.cardLast4, { color: colors.textPrimary }]}>•••• {last4}</Text>
           </View>
         </View>
         <View style={styles.innerHighlight} pointerEvents="none" />
@@ -91,23 +101,19 @@ export function CreditCardFace({
 
 const styles = StyleSheet.create({
   shadow: {
-    shadowColor: '#000',
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 12,
-    marginHorizontal: 16,
+    ...shadows.hero,
+    marginHorizontal: spacing.md,
   },
   frame: {
     height: 220,
     borderRadius: radius.card,
     borderCurve: 'continuous',
     overflow: 'hidden',
-    backgroundColor: '#000',
+    backgroundColor: colors.canvas,
   },
   content: {
     flex: 1,
-    padding: 18,
+    padding: spacing.md + 2,
     justifyContent: 'space-between',
   },
   topRow: {
@@ -122,7 +128,7 @@ const styles = StyleSheet.create({
   },
   balanceContainer: {
     alignItems: 'flex-start',
-    marginVertical: 4,
+    marginVertical: spacing.xs,
   },
   balanceLabel: {
     fontSize: 11,
@@ -138,14 +144,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   visaText: {
-    color: '#FFFFFF',
+    color: colors.textPrimary,
     fontStyle: 'italic',
     fontWeight: '900',
     fontSize: 18,
     letterSpacing: 1,
   },
   amexText: {
-    color: '#FFFFFF',
+    color: colors.textPrimary,
     fontWeight: '800',
     fontSize: 14,
     letterSpacing: 1.5,
