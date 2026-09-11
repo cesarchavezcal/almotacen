@@ -4,7 +4,7 @@
 
 **Blocked by:** 02 — SQLite Local-First Store & Seed Data (Completed)
 
-**Status:** planned (ready for /autonomic work)
+**Status:** done (merged in PR #19)
 
 ## Bound Behavioral Scenarios
 - `SCEN-005` (Req 2.2): Transfer funds from `readyToAssign` into envelope (`allocateEnvelope`).
@@ -13,9 +13,10 @@
 - `SCEN-015` (Req 5.3): Visual badges differentiating amber credit debt (`unfundedDebtCents > 0`) vs red cash overspending (`availableCents < 0`).
 
 ## Acceptance Checklist
-- [ ] Connect `Ready to Assign` header banner to `useLedgerStore.state.readyToAssignCents` (green for > 0, slate for == 0, red for < 0).
-- [ ] Render envelope categories dynamically grouped by obligation using `useLedgerStore.groups` and `useLedgerStore.state.categories`.
-- [ ] Implement interactive allocation drawer or inline quick-fill pills (+$50, +$100, Fill Remaining, -$50).
-- [ ] Render two-axis visual badges: Amber `CREDIT DEBT` for unfunded credit card debt vs Red `CASH OVERSPENT` for negative available cash.
-- [ ] Maintain container-presentational separation and zero-swallowed-exceptions discipline.
+- [x] Connect `Ready to Assign` header banner to `useLedgerStore.state.readyToAssignCents` (green for > 0, slate for == 0, red for < 0).
+- [x] Render envelope categories dynamically grouped by obligation using `useLedgerStore.groups` and `useLedgerStore.state.categories`.
+- [x] Implement interactive allocation drawer or inline quick-fill pills (+$50, +$100, Fill Remaining, -$50).
+- [x] Render two-axis visual badges: Amber `CREDIT DEBT` for unfunded credit card debt vs Red `CASH OVERSPENT` for negative available cash.
+- [x] Maintain container-presentational separation and zero-swallowed-exceptions discipline.
+
 

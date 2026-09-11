@@ -61,23 +61,26 @@
   - Updated `src/hooks/useCashflow.ts` and `useCashflow.test.ts` (4/4 tests passing) to support month paging state, title labels, and boundary shifting (`SCEN-024`)
   - Created `src/components/MonthPagingHeader.tsx` with chevron controls, "Current" jump badge, selection haptics, and accessible 44x44 targets
   - Integrated `performMonthRollover` in `SQLiteLedgerRepository` & `useLedgerStore` with atomic SQLite transaction persistence
-  - Mounted `MonthPagingHeader` in `CashFlowScreen` and `CashFlowView` in `app/(tabs)/index.tsx`
+  - Mounted `MonthPagingHeader` in `CashFlowScreen` and extracted `CashFlowView` in `src/components/CashFlowView.tsx`
   - Verification: 77/77 Jest tests pass via `./init.sh` across 9 test suites, 0 TypeScript errors
+  - PR opened & merged: [PR #22](https://github.com/cesarchavezcal/almotacen/pull/22)
 
 ### What's In Progress
 
-- [ ] Transition to `/autonomic review Ticket 7` (Two-Axis Review, GGA Audit & PR)
+- [ ] Complete SDD lifecycle archive for change `dual-cashflow-budgeting` (all 7 tickets delivered & merged)
 
 ### What's Next
 
-1. Run `/autonomic review Ticket 7` (Axis 1: Spec audit, Axis 2: .gga standards audit, open PR #22).
-2. Merge PR #22 into `main`.
+1. Run `/sdd-archive` to archive change `dual-cashflow-budgeting` to `openspec/changes/archive/`.
+2. Review next epics or feature priorities.
 
 ## Evidence of Completion
 
 - [x] `./init.sh`: 77/77 Jest unit/integration tests pass (9 suites), `tsc --noEmit` 0 errors.
 - [x] PR #20 Merged: [PR #20](https://github.com/cesarchavezcal/almotacen/pull/20) merged into `main` (`63e58ef`).
 - [x] PR #21 Merged: [PR #21](https://github.com/cesarchavezcal/almotacen/pull/21) merged into `main` (`bea7479`).
+- [x] PR #22 Merged: [PR #22](https://github.com/cesarchavezcal/almotacen/pull/22) merged into `main` (`e5596a3`).
+
 
 
 

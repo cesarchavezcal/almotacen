@@ -67,10 +67,11 @@
       "name": "Month Cycle Paging & Rollover",
       "description": "Month selector header with curve animations, historical cycle loading, and month-end envelope/deficit rollover",
       "dependencies": ["ALM-005"],
-      "status": "ready-for-review",
-      "evidence": "./init.sh clean pass (77/77 tests), 0 TS errors",
+      "status": "done",
+      "evidence": "PR #22 merged (e5596a3), 77/77 tests passing, gga pass",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/07-month-cycle-paging.md"
     }
   ]
 }
+
 
