@@ -201,5 +201,29 @@ describe('SQLite Local-First Ledger Store (Ticket 2 / ALM-002)', () => {
     expect(groceries.targetType).toBe('NEEDED_FOR_SPENDING');
     expect(groceries.targetDueDay).toBe(15);
   });
+
+  it('atomically executes applyAutoAssign and updates SQLite categories and Ready to Assign', () => {
+    // In default seed: readyToAssignCents = 50000 ($500.00).
+    // Categories are funded according to seed targets. Let's create an underfunded state in rent by reducing assigned
+    db.runSync('UPDATE categories SET assigned_cents = 0, available_cents = 0 WHERE id = ?', 'cat-rent');
+    db.runSync("UPDATE metadata SET value = '100000' WHERE key = 'ready_to_assign_cents'"); // $1,000.00 unassigned
+
+    const preState = repo.getBudgetState();
+    expect(preState.readyToAssignCents).toBe(100000);
+    expect(preState.categories['cat-rent'].assignedCents).toBe(0);
+
+    // Apply auto assign
+    const result = repo.applyAutoAssign();
+    expect(result.totalAllocatedCents).toBe(100000); // Full $1,000.00 allocated to rent ($1,200 target)
+    expect(result.assignedCount).toBe(1);
+
+    // Reload from fresh repository instance
+    const reloadedRepo = new SQLiteLedgerRepository(db);
+    const postState = reloadedRepo.getBudgetState();
+
+    expect(postState.readyToAssignCents).toBe(0);
+    expect(postState.categories['cat-rent'].assignedCents).toBe(100000);
+    expect(postState.categories['cat-rent'].availableCents).toBe(100000);
+  });
 });
 

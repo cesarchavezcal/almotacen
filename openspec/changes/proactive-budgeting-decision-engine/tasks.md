@@ -12,12 +12,12 @@ Tracks implementation of the 4 tracer-bullet tickets for the Proactive Budgeting
 - [x] TDD: Implement `src/domain/ledger/targets.ts` & `targets.test.ts`.
 - [x] Update `src/storage/schema.ts` & `ledgerRepository.ts`.
 
-### [ ] 2. Ticket ALM-009: Auto-Assign Payday Prioritization Engine
+### [x] 2. Ticket ALM-009: Auto-Assign Payday Prioritization Engine
 - **Spec Scenario**: `SCEN-031`, `SCEN-032`, `SCEN-033`
 - **Dependencies**: ALM-008
-- [ ] TDD: Implement `src/domain/ledger/autoAssign.ts` & `autoAssign.test.ts`.
-- [ ] Implement multi-tier priority queue (overspent -> immediate -> commitments -> variable).
-- [ ] Enforce non-negative Ready to Assign exhaustion invariant.
+- [x] TDD: Implement `src/domain/ledger/autoAssign.ts` & `autoAssign.test.ts`.
+- [x] Implement multi-tier priority queue (overspent -> immediate -> commitments -> variable).
+- [x] Enforce non-negative Ready to Assign exhaustion invariant.
 
 ### [ ] 3. Ticket ALM-010: Interactive Overspending Coverage ("Roll with the Punches")
 - **Spec Scenario**: `SCEN-034`, `SCEN-035`

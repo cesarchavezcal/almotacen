@@ -7,6 +7,7 @@ import {
   postCreditCardPayment,
 } from '../domain/ledger/ledgerEngine';
 import { performMonthRollover, MonthRolloverResult } from '../domain/ledger/rollover';
+import { calculateAutoAssignAllocations } from '../domain/ledger/autoAssign';
 import { seedDatabase } from './schema';
 
 interface CategoryGroupRow {
@@ -401,6 +402,52 @@ export class SQLiteLedgerRepository implements LedgerRepository {
     });
 
     return result;
+  }
+
+  applyAutoAssign(): { totalAllocatedCents: number; assignedCount: number } {
+    const currentState = this.getBudgetState();
+    const groups = this.getCategoryGroups();
+
+    const autoAssignResult = calculateAutoAssignAllocations({
+      readyToAssignCents: currentState.readyToAssignCents,
+      categories: Object.values(currentState.categories),
+      groups,
+    });
+
+    if (autoAssignResult.totalAllocatedCents === 0) {
+      return { totalAllocatedCents: 0, assignedCount: 0 };
+    }
+
+    let assignedCount = 0;
+    this.db.withTransactionSync(() => {
+      for (const [categoryId, allocatedCents] of Object.entries(autoAssignResult.allocations)) {
+        if (allocatedCents > 0) {
+          const category = currentState.categories[categoryId];
+          if (category) {
+            const newAssignedCents = category.assignedCents + allocatedCents;
+            const newAvailableCents = category.availableCents + allocatedCents;
+            this.db.runSync(
+              'UPDATE categories SET assigned_cents = ?, available_cents = ? WHERE id = ?',
+              newAssignedCents,
+              newAvailableCents,
+              category.id
+            );
+            assignedCount++;
+          }
+        }
+      }
+
+      this.db.runSync(
+        'INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)',
+        'ready_to_assign_cents',
+        String(autoAssignResult.remainingReadyToAssignCents)
+      );
+    });
+
+    return {
+      totalAllocatedCents: autoAssignResult.totalAllocatedCents,
+      assignedCount,
+    };
   }
 
   resetDatabase(): void {

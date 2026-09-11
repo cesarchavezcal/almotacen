@@ -8,6 +8,12 @@ export interface Account {
   creditPaymentCategoryId?: string;
 }
 
+export interface CategoryGroup {
+  id: string;
+  name: string;
+  sortOrder: number;
+}
+
 export type TargetType = 'NEEDED_FOR_SPENDING' | 'MONTHLY_SET_ASIDE';
 
 export function isTargetType(value: unknown): value is TargetType {

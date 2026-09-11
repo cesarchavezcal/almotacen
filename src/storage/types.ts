@@ -1,4 +1,4 @@
-import { BudgetState, Account, Category, Transaction } from '../domain/ledger/types';
+import { BudgetState, Transaction, CategoryGroup } from '../domain/ledger/types';
 import { MonthRolloverResult } from '../domain/ledger/rollover';
 
 export interface DatabaseAdapter {
@@ -10,12 +10,7 @@ export interface DatabaseAdapter {
   closeSync?(): void;
 }
 
-
-export interface CategoryGroup {
-  id: string;
-  name: string;
-  sortOrder: number;
-}
+export { CategoryGroup };
 
 export interface LedgerRepository {
   getBudgetState(): BudgetState;
@@ -48,6 +43,7 @@ export interface LedgerRepository {
     occurredAt?: string;
   }): { transaction: Transaction };
   performMonthRollover(targetMonth?: string): MonthRolloverResult;
+  applyAutoAssign(): { totalAllocatedCents: number; assignedCount: number };
   resetDatabase(): void;
 }
 
