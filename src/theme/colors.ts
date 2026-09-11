@@ -48,6 +48,10 @@ export const colors = {
   chaseBlue: '#1A2D4F',
   amexSilver: '#A7B0B7',
   visaNavy: '#1A1F71',
+
+  // Interactive alpha overlays
+  pressedOverlay: 'rgba(255, 255, 255, 0.08)',
+  pressedOverlayDark: 'rgba(0, 0, 0, 0.2)',
 } as const;
 
 export type WalletColor = keyof typeof colors;

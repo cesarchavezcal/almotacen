@@ -8,3 +8,5 @@ export * from './Card';
 export * from './CashflowTrajectoryChart';
 export * from './MonthPagingHeader';
 export * from './CashFlowView';
+export * from './AutoAssignModal';
+export * from './CoverOverspendingModal';

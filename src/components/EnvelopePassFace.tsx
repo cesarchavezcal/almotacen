@@ -19,6 +19,7 @@ export interface EnvelopePassFaceProps {
   isExpanded?: boolean;
   onToggleExpand?: () => void;
   onAllocateQuickFill?: (action: QuickFillAction) => void;
+  onCoverOverspending?: () => void;
 }
 
 export function EnvelopePassFace({
@@ -33,6 +34,7 @@ export function EnvelopePassFace({
   isExpanded,
   onToggleExpand,
   onAllocateQuickFill,
+  onCoverOverspending,
 }: EnvelopePassFaceProps): React.JSX.Element {
   const badge = getEnvelopeBadge({
     availableCents,
@@ -41,6 +43,7 @@ export function EnvelopePassFace({
 
   const isOverspent = availableCents < 0;
   const isDepleted = availableCents === 0 && !unfundedDebtCents;
+  const hasDeficit = isOverspent || (unfundedDebtCents !== undefined && unfundedDebtCents > 0);
   const spentPercent = assignedCents > 0
     ? Math.min(100, Math.round((Math.abs(activityCents) / assignedCents) * 100))
     : 0;
@@ -74,9 +77,22 @@ export function EnvelopePassFace({
               {name}
             </Text>
           </View>
-          <View style={[styles.statusPill, { backgroundColor: statusBg }]}>
-            <Text style={[styles.statusText, { color: statusColor }]}>{badge.label}</Text>
-          </View>
+          {hasDeficit && onCoverOverspending ? (
+            <Pressable
+              onPress={() => onCoverOverspending()}
+              style={[styles.statusPill, { backgroundColor: statusBg }]}
+              accessibilityRole="button"
+              accessibilityLabel={`Cover ${badge.label}`}
+            >
+              <Text style={[styles.statusText, { color: statusColor }]}>
+                {badge.label} ↗
+              </Text>
+            </Pressable>
+          ) : (
+            <View style={[styles.statusPill, { backgroundColor: statusBg }]}>
+              <Text style={[styles.statusText, { color: statusColor }]}>{badge.label}</Text>
+            </View>
+          )}
         </Pressable>
 
         {/* Perforated Divider with Cutout Notches */}

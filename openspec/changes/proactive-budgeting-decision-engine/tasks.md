@@ -26,10 +26,12 @@ Tracks implementation of the 4 tracer-bullet tickets for the Proactive Budgeting
 - [x] Add `rebalanceCategoryFunds` to `ledgerRepository.ts`.
 - [x] Support both cash overspending and credit card debt reserve transfers.
 
-### [ ] 4. Ticket ALM-011: UI Bottom Sheets & Budget Tab Integration
-- **Spec Scenario**: E2E User Flow
+### [x] 4. Ticket ALM-011: UI Bottom Sheets & Budget Tab Integration
+- **Spec Scenario**: SCEN-036, SCEN-037
 - **Dependencies**: ALM-009, ALM-010
-- [ ] Build `src/components/AutoAssignModal.tsx`.
-- [ ] Build `src/components/CoverOverspendingModal.tsx`.
-- [ ] Integrate tactile triggers into `app/(tabs)/budget.tsx`.
-- [ ] Verify `./init.sh` and native iOS Simulator flow.
+- [x] Build `src/components/AutoAssignModal.tsx`.
+- [x] Build `src/components/CoverOverspendingModal.tsx`.
+- [x] Integrate tactile triggers into `app/(tabs)/budget.tsx`.
+- [x] Verify `./init.sh` and native iOS Simulator flow.
+
+

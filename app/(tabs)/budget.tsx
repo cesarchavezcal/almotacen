@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { StyleSheet, ScrollView, View, Text } from 'react-native';
+import { StyleSheet, ScrollView, View, Text, Pressable } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { colors } from '@/src/theme/colors';
 import { typography } from '@/src/theme/typography';
 import { radius } from '@/src/theme/radius';
 import { EnvelopePassFace } from '@/src/components/EnvelopePassFace';
+import { AutoAssignModal } from '@/src/components/AutoAssignModal';
+import { CoverOverspendingModal } from '@/src/components/CoverOverspendingModal';
 import { useLedgerStore } from '@/src/storage/useLedgerStore';
 import { formatCentsToCurrency } from '@/src/domain/ledger/currency';
 import {
@@ -38,6 +40,8 @@ export interface BudgetViewProps {
   expandedCategoryId: string | null;
   onToggleExpand: (id: string) => void;
   onAllocateQuickFill: (categoryId: string, action: QuickFillAction) => void;
+  onOpenAutoAssign?: () => void;
+  onCoverOverspending?: (categoryId: string) => void;
 }
 
 export function BudgetView({
@@ -49,6 +53,8 @@ export function BudgetView({
   expandedCategoryId,
   onToggleExpand,
   onAllocateQuickFill,
+  onOpenAutoAssign,
+  onCoverOverspending,
 }: BudgetViewProps): React.JSX.Element {
   const isOverAssigned = bannerState.isOverAssigned;
   const isPositive = bannerState.status === 'positive';
@@ -81,10 +87,22 @@ export function BudgetView({
       <View style={[styles.readyToAssignCard, isOverAssigned && styles.readyToAssignCardWarning]}>
         <View style={styles.readyToAssignTopRow}>
           <Text style={styles.readyToAssignSubtitle}>{bannerState.badgeText}</Text>
-          <View style={[styles.zeroPill, { backgroundColor: pillBg, borderColor: pillBorder }]}>
-            <Text style={[styles.zeroPillText, { color: bannerColor }]}>
-              {bannerState.badgeText}
-            </Text>
+          <View style={styles.headerPillsRow}>
+            {isPositive && onOpenAutoAssign ? (
+              <Pressable
+                style={styles.autoAssignPill}
+                onPress={onOpenAutoAssign}
+                accessibilityRole="button"
+                accessibilityLabel="Open Auto-Assign Payday"
+              >
+                <Text style={styles.autoAssignPillText}>⚡ Auto-Assign</Text>
+              </Pressable>
+            ) : null}
+            <View style={[styles.zeroPill, { backgroundColor: pillBg, borderColor: pillBorder }]}>
+              <Text style={[styles.zeroPillText, { color: bannerColor }]}>
+                {bannerState.badgeText}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -135,6 +153,7 @@ export function BudgetView({
                 isExpanded={expandedCategoryId === item.id}
                 onToggleExpand={() => onToggleExpand(item.id)}
                 onAllocateQuickFill={(action) => onAllocateQuickFill(item.id, action)}
+                onCoverOverspending={() => onCoverOverspending?.(item.id)}
                 style={styles.envelopePass}
               />
             ))}
@@ -147,8 +166,16 @@ export function BudgetView({
 
 // Container Component
 export default function BudgetScreen(): React.JSX.Element {
-  const { state, groups, allocateEnvelope } = useLedgerStore();
+  const {
+    state,
+    groups,
+    allocateEnvelope,
+    applyAutoAssign,
+    rebalanceCategoryFunds,
+  } = useLedgerStore();
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+  const [autoAssignVisible, setAutoAssignVisible] = useState(false);
+  const [coveringCategoryId, setCoveringCategoryId] = useState<string | null>(null);
 
   const bannerState = useMemo(
     () => getReadyToAssignBannerState(state.readyToAssignCents),
@@ -167,10 +194,43 @@ export default function BudgetScreen(): React.JSX.Element {
     [state.categories]
   );
 
+  const coveringCategory = useMemo(() => {
+    if (!coveringCategoryId) return null;
+    return state.categories[coveringCategoryId] ?? null;
+  }, [coveringCategoryId, state.categories]);
+
   const handleToggleExpand = useCallback((id: string) => {
     void safeHaptic(() => Haptics.selectionAsync());
     setExpandedCategoryId((prev) => (prev === id ? null : id));
   }, []);
+
+  const handleOpenAutoAssign = useCallback(() => {
+    void safeHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
+    setAutoAssignVisible(true);
+  }, []);
+
+  const handleConfirmAutoAssign = useCallback(() => {
+    applyAutoAssign();
+    setAutoAssignVisible(false);
+  }, [applyAutoAssign]);
+
+  const handleOpenCoverOverspending = useCallback((categoryId: string) => {
+    void safeHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
+    setCoveringCategoryId(categoryId);
+  }, []);
+
+  const handleConfirmCoverOverspending = useCallback(
+    (sourceCategoryId: string, amountCents: number) => {
+      if (!coveringCategoryId) return;
+      rebalanceCategoryFunds({
+        targetCategoryId: coveringCategoryId,
+        sourceCategoryId,
+        amountCents,
+      });
+      setCoveringCategoryId(null);
+    },
+    [coveringCategoryId, rebalanceCategoryFunds]
+  );
 
   const handleAllocateQuickFill = useCallback(
     (categoryId: string, action: QuickFillAction) => {
@@ -194,16 +254,36 @@ export default function BudgetScreen(): React.JSX.Element {
   );
 
   return (
-    <BudgetView
-      readyToAssignCents={state.readyToAssignCents}
-      bannerState={bannerState}
-      totalAssignedCents={totalAssignedCents}
-      totalAvailableCents={totalAvailableCents}
-      displayGroups={displayGroups}
-      expandedCategoryId={expandedCategoryId}
-      onToggleExpand={handleToggleExpand}
-      onAllocateQuickFill={handleAllocateQuickFill}
-    />
+    <>
+      <BudgetView
+        readyToAssignCents={state.readyToAssignCents}
+        bannerState={bannerState}
+        totalAssignedCents={totalAssignedCents}
+        totalAvailableCents={totalAvailableCents}
+        displayGroups={displayGroups}
+        expandedCategoryId={expandedCategoryId}
+        onToggleExpand={handleToggleExpand}
+        onAllocateQuickFill={handleAllocateQuickFill}
+        onOpenAutoAssign={handleOpenAutoAssign}
+        onCoverOverspending={handleOpenCoverOverspending}
+      />
+      <AutoAssignModal
+        visible={autoAssignVisible}
+        readyToAssignCents={state.readyToAssignCents}
+        categories={state.categories}
+        groups={groups}
+        onConfirm={handleConfirmAutoAssign}
+        onClose={() => setAutoAssignVisible(false)}
+      />
+      <CoverOverspendingModal
+        visible={coveringCategoryId !== null}
+        targetCategory={coveringCategory}
+        categories={state.categories}
+        groups={groups}
+        onConfirm={handleConfirmCoverOverspending}
+        onClose={() => setCoveringCategoryId(null)}
+      />
+    </>
   );
 }
 
@@ -242,6 +322,25 @@ const styles = StyleSheet.create({
     ...typography.sectionHdr,
     color: colors.textSecondary,
     letterSpacing: 0.8,
+  },
+  headerPillsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  autoAssignPill: {
+    backgroundColor: 'rgba(10, 132, 255, 0.18)',
+    borderColor: 'rgba(10, 132, 255, 0.4)',
+    borderWidth: 0.5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+  },
+  autoAssignPillText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    color: colors.systemBlue,
   },
   zeroPill: {
     paddingHorizontal: 10,
