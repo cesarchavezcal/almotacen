@@ -6,13 +6,56 @@ import {
   allocateEnvelope,
   postCreditCardPayment,
 } from '../domain/ledger/ledgerEngine';
+import { performMonthRollover, MonthRolloverResult } from '../domain/ledger/rollover';
 import { seedDatabase } from './schema';
+
+interface CategoryGroupRow {
+  id: string;
+  name: string;
+  sort_order: number;
+}
+
+interface AccountRow {
+  id: string;
+  name: string;
+  account_type: Account['accountType'];
+  balance_cents: number;
+  credit_payment_category_id: string | null;
+  created_at: string;
+}
+
+interface CategoryRow {
+  id: string;
+  group_id: string;
+  name: string;
+  target_cents: number;
+  assigned_cents: number;
+  available_cents: number;
+  is_credit_payment: number;
+  unfunded_debt_cents: number | null;
+  sort_order: number;
+}
+
+interface TransactionRow {
+  id: string;
+  account_id: string;
+  category_id: string | null;
+  payee: string;
+  amount_cents: number;
+  direction: Transaction['direction'];
+  occurred_at: string;
+  sync_status: Transaction['syncStatus'];
+  unfunded_debt_cents: number | null;
+  transferred_to_reserve_cents: number | null;
+}
 
 export class SQLiteLedgerRepository implements LedgerRepository {
   constructor(private db: DatabaseAdapter) {}
 
   getCategoryGroups(): CategoryGroup[] {
-    const rows = this.db.getAllSync<any>('SELECT id, name, sort_order FROM category_groups ORDER BY sort_order ASC');
+    const rows = this.db.getAllSync<CategoryGroupRow>(
+      'SELECT id, name, sort_order FROM category_groups ORDER BY sort_order ASC'
+    );
     return rows.map((r) => ({
       id: r.id,
       name: r.name,
@@ -27,7 +70,7 @@ export class SQLiteLedgerRepository implements LedgerRepository {
     );
     const readyToAssignCents = metaRow ? parseInt(metaRow.value, 10) : 0;
 
-    const accountRows = this.db.getAllSync<any>('SELECT * FROM accounts');
+    const accountRows = this.db.getAllSync<AccountRow>('SELECT * FROM accounts');
     const accounts: Record<string, Account> = {};
     for (const r of accountRows) {
       accounts[r.id] = {
@@ -39,7 +82,9 @@ export class SQLiteLedgerRepository implements LedgerRepository {
       };
     }
 
-    const categoryRows = this.db.getAllSync<any>('SELECT * FROM categories ORDER BY sort_order ASC');
+    const categoryRows = this.db.getAllSync<CategoryRow>(
+      'SELECT * FROM categories ORDER BY sort_order ASC'
+    );
     const categories: Record<string, Category> = {};
     for (const r of categoryRows) {
       categories[r.id] = {
@@ -54,7 +99,9 @@ export class SQLiteLedgerRepository implements LedgerRepository {
       };
     }
 
-    const txRows = this.db.getAllSync<any>('SELECT * FROM transactions ORDER BY occurred_at DESC');
+    const txRows = this.db.getAllSync<TransactionRow>(
+      'SELECT * FROM transactions ORDER BY occurred_at DESC'
+    );
     const transactions: Transaction[] = txRows.map((r) => ({
       id: r.id,
       accountId: r.account_id,
@@ -67,6 +114,7 @@ export class SQLiteLedgerRepository implements LedgerRepository {
       unfundedDebtCents: Number(r.unfunded_debt_cents || 0),
       transferredToReserveCents: Number(r.transferred_to_reserve_cents || 0),
     }));
+
 
     let totalOutflowCents = 0;
     let totalInflowCents = 0;
@@ -309,7 +357,44 @@ export class SQLiteLedgerRepository implements LedgerRepository {
     };
   }
 
+  performMonthRollover(targetMonth?: string): MonthRolloverResult {
+    const currentState = this.getBudgetState();
+    const result = performMonthRollover({ state: currentState, targetMonth });
+
+    this.db.withTransactionSync(() => {
+      // 1. Update Ready to Assign in metadata
+      this.db.runSync(
+        'INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)',
+        'ready_to_assign_cents',
+        String(result.state.readyToAssignCents)
+      );
+
+      // 2. Track current cycle month if provided
+      if (targetMonth) {
+        this.db.runSync(
+          'INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)',
+          'current_cycle_month',
+          targetMonth
+        );
+      }
+
+      // 3. Update category envelopes (assigned resets to 0, deficits cleared, unspent rolled over)
+      for (const cat of Object.values(result.state.categories)) {
+        this.db.runSync(
+          'UPDATE categories SET assigned_cents = ?, available_cents = ?, unfunded_debt_cents = ? WHERE id = ?',
+          cat.assignedCents,
+          cat.availableCents,
+          cat.unfundedDebtCents || 0,
+          cat.id
+        );
+      }
+    });
+
+    return result;
+  }
+
   resetDatabase(): void {
     seedDatabase(this.db);
   }
 }
+

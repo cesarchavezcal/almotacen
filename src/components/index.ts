@@ -5,3 +5,6 @@ export * from './CardStack';
 export * from './TransactionRow';
 export * from './Button';
 export * from './Card';
+export * from './CashflowTrajectoryChart';
+export * from './MonthPagingHeader';
+export * from './CashFlowView';

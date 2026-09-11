@@ -4,10 +4,11 @@
 
 **Blocked by:** 05 — Reactive Cash Flow Trajectory Curve & Income Ceiling
 
-**Status:** ready-for-agent
+**Status:** ready-for-review
 
-- [ ] Implement month paging header with chevron controls and swipe gestures.
-- [ ] Load historical monthly ledger records and animate curve transitions between months.
-- [ ] Carry over unspent positive envelope balances to the next month's available amount.
-- [ ] Deduct uncovered cash deficits from next month's `Ready to Assign` pool at rollover.
-- [ ] Retain unfunded credit debt as ongoing card balance across month boundaries.
+- [x] Implement month paging header with chevron controls and swipe gestures.
+- [x] Load historical monthly ledger records and animate curve transitions between months.
+- [x] Carry over unspent positive envelope balances to the next month's available amount.
+- [x] Deduct uncovered cash deficits from next month's `Ready to Assign` pool at rollover.
+- [x] Retain unfunded credit debt as ongoing card balance across month boundaries.
+

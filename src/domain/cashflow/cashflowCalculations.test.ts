@@ -237,5 +237,66 @@ describe('Cash Flow Trajectory Calculations (SCEN-016..SCEN-019)', () => {
       expect(metrics.netCashflowCents).toBe(340000);
       expect(metrics.burnStatus).toBe('ON_TRACK');
     });
+
+    it('SCEN-025: displays completed historical actuals without future projections when viewing past month', () => {
+      // Historical month: August (31 days), currentDay = 31 (closed)
+      const augustTransactions: Transaction[] = [
+        {
+          id: 'tx-aug-1',
+          accountId: 'acc-checking',
+          categoryId: 'cat-groceries',
+          payee: 'Trader Joe',
+          amountCents: 15000,
+          direction: 'outflow',
+          occurredAt: '2026-08-05T12:00:00.000Z',
+          syncStatus: 'synced',
+        },
+        {
+          id: 'tx-aug-2',
+          accountId: 'acc-checking',
+          categoryId: 'cat-rent',
+          payee: 'Apartments',
+          amountCents: 120000,
+          direction: 'outflow',
+          occurredAt: '2026-08-01T08:00:00.000Z',
+          syncStatus: 'synced',
+        },
+        {
+          id: 'tx-aug-inflow',
+          accountId: 'acc-checking',
+          payee: 'Employer',
+          amountCents: 200000,
+          direction: 'inflow',
+          occurredAt: '2026-08-01T09:00:00.000Z',
+          syncStatus: 'synced',
+        },
+      ];
+
+      const metrics = buildDailyTrajectorySeries({
+        transactions: augustTransactions,
+        categories: mockCategories,
+        currentDay: 31,
+        totalDaysInMonth: 31,
+        year: 2026,
+        month: 8,
+        incomeCeilingCents: 200000,
+      });
+
+      expect(metrics.dailyPoints).toHaveLength(31);
+
+      // All points from 1 to 31 must have actualOutflowCents and null projectedOutflowCents
+      for (const pt of metrics.dailyPoints) {
+        expect(pt.actualOutflowCents).not.toBeNull();
+        expect(pt.projectedOutflowCents).toBeNull();
+      }
+
+      // Day 31 cumulative actual equals total outflow ($1,350.00)
+      expect(metrics.dailyPoints[30].actualOutflowCents).toBe(135000);
+      expect(metrics.totalOutflowCents).toBe(135000);
+      expect(metrics.totalInflowCents).toBe(200000);
+      expect(metrics.netCashflowCents).toBe(65000); // +$650.00
+      expect(metrics.projectedEomSpendCents).toBe(135000);
+    });
   });
 });
+
