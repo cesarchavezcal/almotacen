@@ -189,5 +189,17 @@ describe('SQLite Local-First Ledger Store (Ticket 2 / ALM-002)', () => {
     // Ready to assign was reduced by the $50.00 cash deficit
     expect(postState.readyToAssignCents).toBe(45000);
   });
+
+  it('persists and retrieves category targetType and targetDueDay', () => {
+    const state = repo.getBudgetState();
+    const rent = state.categories['cat-rent'];
+    const groceries = state.categories['cat-groceries'];
+
+    expect(rent.targetType).toBe('MONTHLY_SET_ASIDE');
+    expect(rent.targetDueDay).toBe(1);
+
+    expect(groceries.targetType).toBe('NEEDED_FOR_SPENDING');
+    expect(groceries.targetDueDay).toBe(15);
+  });
 });
 
