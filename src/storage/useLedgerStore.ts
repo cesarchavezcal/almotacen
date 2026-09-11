@@ -40,6 +40,11 @@ export interface UseLedgerStoreResult {
   }) => { transaction: Transaction };
   performMonthRollover: (targetMonth?: string) => MonthRolloverResult;
   applyAutoAssign: () => { totalAllocatedCents: number; assignedCount: number };
+  rebalanceCategoryFunds: (params: {
+    targetCategoryId: string;
+    sourceCategoryId: string;
+    amountCents: number;
+  }) => { coveredCents: number; isCreditDebtCovered: boolean };
   reload: () => void;
   resetDatabase: () => void;
 }
@@ -177,6 +182,15 @@ export function useLedgerStore(): UseLedgerStoreResult {
     return result;
   }, [repo]);
 
+  const rebalance = useCallback(
+    (params: { targetCategoryId: string; sourceCategoryId: string; amountCents: number }) => {
+      const result = repo.rebalanceCategoryFunds(params);
+      notifyListeners();
+      return result;
+    },
+    [repo]
+  );
+
   const reset = useCallback(() => {
     repo.resetDatabase();
     notifyListeners();
@@ -191,6 +205,7 @@ export function useLedgerStore(): UseLedgerStoreResult {
     postCreditCardPayment: payCreditCard,
     performMonthRollover: performRollover,
     applyAutoAssign: autoAssign,
+    rebalanceCategoryFunds: rebalance,
     reload,
     resetDatabase: reset,
   };

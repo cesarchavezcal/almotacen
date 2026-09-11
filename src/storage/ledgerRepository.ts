@@ -8,6 +8,7 @@ import {
 } from '../domain/ledger/ledgerEngine';
 import { performMonthRollover, MonthRolloverResult } from '../domain/ledger/rollover';
 import { calculateAutoAssignAllocations } from '../domain/ledger/autoAssign';
+import { coverOverspending } from '../domain/ledger/overspendingCoverage';
 import { seedDatabase } from './schema';
 
 interface CategoryGroupRow {
@@ -447,6 +448,61 @@ export class SQLiteLedgerRepository implements LedgerRepository {
     return {
       totalAllocatedCents: autoAssignResult.totalAllocatedCents,
       assignedCount,
+    };
+  }
+
+  rebalanceCategoryFunds(params: {
+    targetCategoryId: string;
+    sourceCategoryId: string;
+    amountCents: number;
+  }): { coveredCents: number; isCreditDebtCovered: boolean } {
+    const currentState = this.getBudgetState();
+    const result = coverOverspending({
+      state: currentState,
+      targetCategoryId: params.targetCategoryId,
+      sourceCategoryId: params.sourceCategoryId,
+      amountCents: params.amountCents,
+    });
+
+    this.db.withTransactionSync(() => {
+      // 1. Update source category
+      const sourceCategory = result.state.categories[params.sourceCategoryId];
+      this.db.runSync(
+        'UPDATE categories SET assigned_cents = ?, available_cents = ? WHERE id = ?',
+        sourceCategory.assignedCents,
+        sourceCategory.availableCents,
+        sourceCategory.id
+      );
+
+      // 2. Update target category
+      const targetCategory = result.state.categories[params.targetCategoryId];
+      this.db.runSync(
+        'UPDATE categories SET assigned_cents = ?, available_cents = ?, unfunded_debt_cents = ? WHERE id = ?',
+        targetCategory.assignedCents,
+        targetCategory.availableCents,
+        targetCategory.unfundedDebtCents || 0,
+        targetCategory.id
+      );
+
+      // 3. If credit payment category was credited, update it
+      if (result.isCreditDebtCovered) {
+        const paymentCategory = Object.values(result.state.categories).find(
+          (category) => category.isCreditPayment
+        );
+        if (paymentCategory) {
+          this.db.runSync(
+            'UPDATE categories SET assigned_cents = ?, available_cents = ? WHERE id = ?',
+            paymentCategory.assignedCents,
+            paymentCategory.availableCents,
+            paymentCategory.id
+          );
+        }
+      }
+    });
+
+    return {
+      coveredCents: result.coveredCents,
+      isCreditDebtCovered: result.isCreditDebtCovered,
     };
   }
 

@@ -19,12 +19,12 @@ Tracks implementation of the 4 tracer-bullet tickets for the Proactive Budgeting
 - [x] Implement multi-tier priority queue (overspent -> immediate -> commitments -> variable).
 - [x] Enforce non-negative Ready to Assign exhaustion invariant.
 
-### [ ] 3. Ticket ALM-010: Interactive Overspending Coverage ("Roll with the Punches")
+### [x] 3. Ticket ALM-010: Interactive Overspending Coverage ("Roll with the Punches")
 - **Spec Scenario**: `SCEN-034`, `SCEN-035`
 - **Dependencies**: ALM-008
-- [ ] TDD: Implement `src/domain/ledger/overspendingCoverage.ts` & `overspendingCoverage.test.ts`.
-- [ ] Add `rebalanceCategoryFunds` to `ledgerRepository.ts`.
-- [ ] Support both cash overspending and credit card debt reserve transfers.
+- [x] TDD: Implement `src/domain/ledger/overspendingCoverage.ts` & `overspendingCoverage.test.ts`.
+- [x] Add `rebalanceCategoryFunds` to `ledgerRepository.ts`.
+- [x] Support both cash overspending and credit card debt reserve transfers.
 
 ### [ ] 4. Ticket ALM-011: UI Bottom Sheets & Budget Tab Integration
 - **Spec Scenario**: E2E User Flow
