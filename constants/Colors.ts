@@ -1,18 +1,20 @@
-const tintColor = '#0A84FF';
+import { colors } from '@/src/theme/colors';
+
+const tintColor = colors.systemBlue;
 
 export default {
   light: {
-    text: '#FFFFFF',
-    background: '#000000',
+    text: colors.textPrimary,
+    background: colors.canvas,
     tint: tintColor,
-    tabIconDefault: '#636368',
+    tabIconDefault: colors.textTertiary,
     tabIconSelected: tintColor,
   },
   dark: {
-    text: '#FFFFFF',
-    background: '#000000',
+    text: colors.textPrimary,
+    background: colors.canvas,
     tint: tintColor,
-    tabIconDefault: '#636368',
+    tabIconDefault: colors.textTertiary,
     tabIconSelected: tintColor,
   },
 };

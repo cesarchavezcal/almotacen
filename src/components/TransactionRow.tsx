@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, StyleProp, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
-import { typography } from '../theme/typography';
+import { colors, typography, spacing, radius } from '@/src/theme';
 
 export interface TransactionRowProps {
   merchant: string;
@@ -29,10 +28,18 @@ export function TransactionRow({
   isLast = false,
   style,
 }: TransactionRowProps) {
+  const accessibilityLabel = `${merchant}, ${category ? `${category}, ` : ''}${date}, ${
+    isOutflow ? 'Outflow ' : 'Inflow '
+  }${amount}${dailyCash ? `, Daily Cash ${dailyCash}` : ''}`;
+
   const content = (
-    <View style={[styles.row, isLast && styles.lastRow, style]}>
+    <View
+      style={[styles.row, isLast && styles.lastRow, style]}
+      accessible={!onPress}
+      accessibilityLabel={!onPress ? accessibilityLabel : undefined}
+    >
       <View style={styles.logo}>
-        <Ionicons name={iconName} size={16} color="#FFFFFF" />
+        <Ionicons name={iconName} size={16} color={colors.textPrimary} />
       </View>
       <View style={styles.details}>
         <Text style={[typography.body, styles.merchantText]} numberOfLines={1}>
@@ -47,7 +54,7 @@ export function TransactionRow({
           style={[
             typography.bodyMedium,
             styles.amountText,
-            { color: isOutflow ? '#FFFFFF' : colors.success },
+            { color: isOutflow ? colors.textPrimary : colors.success },
           ]}
         >
           {amount}
@@ -65,6 +72,9 @@ export function TransactionRow({
     return (
       <Pressable
         onPress={onPress}
+        accessible={true}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
         style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
       >
         {content}
@@ -85,10 +95,10 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md - 2,
     backgroundColor: colors.surface1,
-    borderBottomWidth: 0.5,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.hairline,
   },
   lastRow: {
@@ -97,19 +107,19 @@ const styles = StyleSheet.create({
   logo: {
     width: 34,
     height: 34,
-    borderRadius: 17,
+    borderRadius: radius.full,
     backgroundColor: colors.surface2,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: spacing.sm + 4,
   },
   details: {
     flex: 1,
     justifyContent: 'center',
-    marginRight: 8,
+    marginRight: spacing.sm,
   },
   merchantText: {
-    color: '#FFFFFF',
+    color: colors.textPrimary,
     fontWeight: '500',
   },
   subText: {
@@ -121,7 +131,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   amountText: {
-    fontSize: 16,
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
