@@ -1,65 +1,38 @@
+import { DatabaseSync, SQLInputValue } from 'node:sqlite';
+import { fromAny } from '@total-typescript/shoehorn';
 import { DatabaseAdapter } from './types';
-import { initializeDatabase } from './schema';
+import { initializeDatabase, seedDemoData } from './schema';
 
-export function createTestDatabase(): DatabaseAdapter {
-  if (typeof (globalThis as any).Bun !== 'undefined') {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { Database } = require('bun:sqlite');
-    const bunDb = new Database(':memory:');
-    const adapter: DatabaseAdapter = {
-      execSync: (sql: string) => {
-        bunDb.exec(sql);
-      },
-      runSync: (sql: string, ...params: any[]) => {
-        const stmt = bunDb.prepare(sql);
-        const res = stmt.run(...params);
-        return {
-          changes: Number(res.changes ?? 0),
-          lastInsertRowId: Number(res.lastInsertRowid ?? 0),
-        };
-      },
-      getAllSync: <T = any>(sql: string, ...params: any[]): T[] => {
-        const stmt = bunDb.prepare(sql);
-        return stmt.all(...params) as T[];
-      },
-      getFirstSync: <T = any>(sql: string, ...params: any[]): T | null => {
-        const stmt = bunDb.prepare(sql);
-        return (stmt.get(...params) ?? null) as T | null;
-      },
-      withTransactionSync: <T>(task: () => T): T => {
-        return bunDb.transaction(task)();
-      },
-      closeSync: () => {
-        bunDb.close();
-      },
-    };
-    initializeDatabase(adapter);
-    return adapter;
-  }
+export interface TestDatabaseOptions {
+  seed?: boolean;
+}
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { DatabaseSync } = require('node:sqlite');
+export function createTestDatabase(options: TestDatabaseOptions = { seed: true }): DatabaseAdapter {
   const nodeDb = new DatabaseSync(':memory:');
   const adapter: DatabaseAdapter = {
-    execSync: (sql: string) => {
+    execSync: (sql: string): void => {
       nodeDb.exec(sql);
     },
-    runSync: (sql: string, ...params: any[]) => {
+    runSync: (sql: string, ...params: unknown[]): { lastInsertRowId: number; changes: number } => {
       const stmt = nodeDb.prepare(sql);
-      const res = stmt.run(...params);
+      const sqlParams = fromAny<SQLInputValue[], unknown>(params);
+      const res = stmt.run(...sqlParams);
       return {
         changes: Number(res.changes ?? 0),
         lastInsertRowId: Number(res.lastInsertRowid ?? 0),
       };
     },
-    getAllSync: <T = any>(sql: string, ...params: any[]): T[] => {
+    getAllSync: <T = unknown>(sql: string, ...params: unknown[]): T[] => {
       const stmt = nodeDb.prepare(sql);
-      return stmt.all(...params) as T[];
+      const sqlParams = fromAny<SQLInputValue[], unknown>(params);
+      const rows = stmt.all(...sqlParams);
+      return fromAny<T[], unknown>(rows);
     },
-    getFirstSync: <T = any>(sql: string, ...params: any[]): T | null => {
+    getFirstSync: <T = unknown>(sql: string, ...params: unknown[]): T | null => {
       const stmt = nodeDb.prepare(sql);
-      const res = stmt.get(...params);
-      return (res ?? null) as T | null;
+      const sqlParams = fromAny<SQLInputValue[], unknown>(params);
+      const row = stmt.get(...sqlParams);
+      return row ? fromAny<T, unknown>(row) : null;
     },
     withTransactionSync: <T>(task: () => T): T => {
       nodeDb.exec('BEGIN');
@@ -72,10 +45,18 @@ export function createTestDatabase(): DatabaseAdapter {
         throw err;
       }
     },
-    closeSync: () => {
+    closeSync: (): void => {
       nodeDb.close();
     },
   };
+
   initializeDatabase(adapter);
+  if (options.seed !== false) {
+    seedDemoData(adapter);
+  }
   return adapter;
+}
+
+export function createCleanTestDatabase(): DatabaseAdapter {
+  return createTestDatabase({ seed: false });
 }
