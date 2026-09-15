@@ -1,35 +1,15 @@
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
-import { colors, spacing, typography } from '@/src/theme';
+import { DatabaseAdapter } from '@/src/storage/types';
+import { useOnboardingWizard } from '@/src/hooks/useOnboardingWizard';
+import { OnboardingWizardView } from '@/src/components/onboarding/OnboardingWizardView';
 
-export default function OnboardingScreen(): React.JSX.Element {
-  return (
-    <View style={styles.container} testID="onboarding-screen">
-      <Text style={styles.title}>Welcome to Almotacen</Text>
-      <Text style={styles.subtitle}>
-        Configure your cash flow and financial envelopes.
-      </Text>
-    </View>
-  );
+export interface OnboardingScreenProps {
+  testDb?: DatabaseAdapter;
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.canvas,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  title: {
-    ...typography.headline,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-    textAlign: 'center',
-  },
-  subtitle: {
-    ...typography.subhead,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-});
+export default function OnboardingScreen({
+  testDb,
+}: OnboardingScreenProps = {}): React.JSX.Element {
+  const wizardProps = useOnboardingWizard(testDb);
+  return <OnboardingWizardView {...wizardProps} />;
+}

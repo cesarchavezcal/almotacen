@@ -77,8 +77,8 @@
       "description": "Onboarding flow with clean database init, archetype template generator, transactional commitment service, route guard, and multi-step UI wizard",
       "dependencies": ["ALM-002"],
       "status": "in_progress",
-      "evidence": "Tickets 01 & 02 merged, Ticket 03 verified (145 tests passing)",
-      "ticketPath": "docs/planning/✅_plan_alm_013_ticket_03_commitment_and_route_guard.md"
+      "evidence": "Tickets 01, 02, 03 merged; Ticket 04 verified (152 tests passing)",
+      "ticketPath": "docs/planning/✅_plan_alm_013_ticket_04_onboarding_ui_wizard.md"
     }
   ]
 }

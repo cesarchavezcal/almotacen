@@ -80,22 +80,30 @@
   - Implemented `useOnboardingGuard` hook with error diagnostics in `src/hooks/useOnboardingGuard.ts`
   - Integrated first-run route redirection guard in `app/_layout.tsx` and scaffolded `app/onboarding.tsx`
   - 145/145 tests passing across 21 test suites, 0 TypeScript errors
+  - PR opened & merged: [PR #32](https://github.com/cesarchavezcal/almotacen/pull/32)
+- [x] Executed ALM-013 Ticket 04 (Interactive Multi-Step Onboarding UI Wizard):
+  - Built pure presentational component `src/components/onboarding/OnboardingWizardView.tsx` with 4 guided steps, design system tokens, and accessibility
+  - Implemented controller and state hook `src/hooks/useOnboardingWizard.ts` for clean Hexagonal separation
+  - Wired container `app/onboarding.tsx` with step progress, account form validation, archetype selection, and zero-based allocation preview
+  - Added unit and interaction test suite `src/screens/__tests__/OnboardingScreen.test.tsx` (7 tests, SCEN-052..054)
+  - 152/152 tests passing across 22 test suites, 0 TypeScript errors
 
 ### What's In Progress
 
-- [ ] ALM-013 Ticket 04: Interactive Multi-Step Onboarding UI Wizard
+- [ ] ALM-013 Review & PR for Ticket 04
 
 ### What's Next
 
-1. Run `/autonomic review ticket 3` to verify Two-Axis standards and create PR.
-2. Proceed to `/autonomic plan ticket 4`.
+1. Run `/autonomic review ticket 4` to verify Two-Axis standards and create PR.
+2. Proceed to next epic or change archive.
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 145/145 Jest unit/integration tests pass (21 suites), `tsc --noEmit` 0 errors.
+- [x] `./init.sh`: 152/152 Jest unit/integration tests pass (22 suites), `tsc --noEmit` 0 errors.
 - [x] PR #30 Merged: [PR #30](https://github.com/cesarchavezcal/almotacen/pull/30) (Ticket 01: Clean DB Initialization).
 - [x] PR #31 Merged: [PR #31](https://github.com/cesarchavezcal/almotacen/pull/31) (Ticket 02: Financial Archetypes).
-- [x] Ticket 03 Verified: 21 suites passing, Hexagonal separation clean.
+- [x] PR #32 Merged: [PR #32](https://github.com/cesarchavezcal/almotacen/pull/32) (Ticket 03: Commitment Service & Route Guard).
+- [x] Ticket 04 Verified: 22 suites passing, Hexagonal separation clean.
 
 
 
