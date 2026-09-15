@@ -31,3 +31,43 @@ export interface InitialAllocationResult {
   totalAssignedCents: number;
   remainingReadyToAssignCents: number;
 }
+
+export interface DepositoryAccountInput {
+  name: string;
+  startingBalanceCents: number;
+  id?: string;
+}
+
+export interface CreditCardAccountInput {
+  name: string;
+  startingDebtCents: number;
+  id?: string;
+}
+
+export interface CommitOnboardingConfigParams {
+  depositoryAccount: DepositoryAccountInput;
+  creditCardAccount?: CreditCardAccountInput;
+  template: ArchetypeTemplate;
+  allocations: Record<string, number>;
+  remainingReadyToAssignCents: number;
+}
+
+export interface ValidatedOnboardingConfig {
+  depositoryAccount: {
+    id: string;
+    name: string;
+    startingBalanceCents: number;
+  };
+  creditCardAccount?: {
+    id: string;
+    name: string;
+    startingDebtCents: number;
+  };
+  template: ArchetypeTemplate;
+  allocations: Record<string, number>;
+  remainingReadyToAssignCents: number;
+}
+
+export interface OnboardingRepository {
+  commitOnboardingConfig(config: ValidatedOnboardingConfig): void;
+}

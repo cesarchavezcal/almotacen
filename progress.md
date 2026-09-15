@@ -64,22 +64,38 @@
   - Mounted `MonthPagingHeader` in `CashFlowScreen` and extracted `CashFlowView` in `src/components/CashFlowView.tsx`
   - Verification: 77/77 Jest tests pass via `./init.sh` across 9 test suites, 0 TypeScript errors
   - PR opened & merged: [PR #22](https://github.com/cesarchavezcal/almotacen/pull/22)
+- [x] Executed ALM-013 Ticket 01 (Clean Database Initialization & Demo Seeder):
+  - Created zero-data initialization in `src/storage/schema.ts` (`createSchemaTables`)
+  - Added explicit demo seeder `seedDemoData` and `resetToCleanState`
+  - Created `cleanInitialization.test.ts` (7/7 tests passing)
+  - PR opened & merged: [PR #30](https://github.com/cesarchavezcal/almotacen/pull/30)
+- [x] Executed ALM-013 Ticket 02 (Financial Archetype Template Generator):
+  - Created `src/domain/onboarding/types.ts` & `archetypes.ts`
+  - Implemented 4 templates (`STANDARD_BALANCED`, `DEBT_SNOWBALL`, `FREELANCER_VARIABLE`, `MINIMALIST_LIVING`)
+  - Created `archetypes.test.ts` (11/11 tests passing)
+  - PR opened & merged: [PR #31](https://github.com/cesarchavezcal/almotacen/pull/31)
+- [x] Executed ALM-013 Ticket 03 (Commitment Service & Route Guard):
+  - Created pure domain service `src/domain/onboarding/onboardingService.ts` and `OnboardingRepository` port
+  - Implemented `SQLiteOnboardingRepository` in `src/storage/onboardingRepository.ts` with atomic transaction commitment
+  - Implemented `useOnboardingGuard` hook with error diagnostics in `src/hooks/useOnboardingGuard.ts`
+  - Integrated first-run route redirection guard in `app/_layout.tsx` and scaffolded `app/onboarding.tsx`
+  - 145/145 tests passing across 21 test suites, 0 TypeScript errors
 
 ### What's In Progress
 
-- [ ] Complete SDD lifecycle archive for change `dual-cashflow-budgeting` (all 7 tickets delivered & merged)
+- [ ] ALM-013 Ticket 04: Interactive Multi-Step Onboarding UI Wizard
 
 ### What's Next
 
-1. Run `/sdd-archive` to archive change `dual-cashflow-budgeting` to `openspec/changes/archive/`.
-2. Review next epics or feature priorities.
+1. Run `/autonomic review ticket 3` to verify Two-Axis standards and create PR.
+2. Proceed to `/autonomic plan ticket 4`.
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 77/77 Jest unit/integration tests pass (9 suites), `tsc --noEmit` 0 errors.
-- [x] PR #20 Merged: [PR #20](https://github.com/cesarchavezcal/almotacen/pull/20) merged into `main` (`63e58ef`).
-- [x] PR #21 Merged: [PR #21](https://github.com/cesarchavezcal/almotacen/pull/21) merged into `main` (`bea7479`).
-- [x] PR #22 Merged: [PR #22](https://github.com/cesarchavezcal/almotacen/pull/22) merged into `main` (`e5596a3`).
+- [x] `./init.sh`: 145/145 Jest unit/integration tests pass (21 suites), `tsc --noEmit` 0 errors.
+- [x] PR #30 Merged: [PR #30](https://github.com/cesarchavezcal/almotacen/pull/30) (Ticket 01: Clean DB Initialization).
+- [x] PR #31 Merged: [PR #31](https://github.com/cesarchavezcal/almotacen/pull/31) (Ticket 02: Financial Archetypes).
+- [x] Ticket 03 Verified: 21 suites passing, Hexagonal separation clean.
 
 
 
