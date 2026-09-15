@@ -1,9 +1,10 @@
 import { useFonts } from 'expo-font';
-import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, Stack, ThemeProvider, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { colors } from '@/src/theme';
+import { useOnboardingGuard } from '@/src/hooks/useOnboardingGuard';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -18,7 +19,7 @@ export const unstable_settings = {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+export default function RootLayout(): React.JSX.Element | null {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
@@ -41,7 +42,27 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
-function RootLayoutNav() {
+function isOnboardingRoute(segments: unknown): boolean {
+  return Array.isArray(segments) && segments.length > 0 && segments[0] === 'onboarding';
+}
+
+function RootLayoutNav(): React.JSX.Element {
+  const router = useRouter();
+  const segments = useSegments();
+  const { isOnboardingCompleted, isLoading } = useOnboardingGuard();
+
+  useEffect(() => {
+    if (isLoading || isOnboardingCompleted === null) return;
+
+    const inOnboarding = isOnboardingRoute(segments);
+
+    if (!isOnboardingCompleted && !inOnboarding) {
+      router.replace('/onboarding');
+    } else if (isOnboardingCompleted && inOnboarding) {
+      router.replace('/(tabs)');
+    }
+  }, [isOnboardingCompleted, isLoading, segments, router]);
+
   return (
     <ThemeProvider value={DarkTheme}>
       <Stack
@@ -52,6 +73,7 @@ function RootLayoutNav() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen
           name="modal"
           options={{

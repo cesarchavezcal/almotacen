@@ -70,6 +70,15 @@
       "status": "done",
       "evidence": "PR #22 merged (e5596a3), 77/77 tests passing, gga pass",
       "ticketPath": "openspec/changes/dual-cashflow-budgeting/tickets/07-month-cycle-paging.md"
+    },
+    {
+      "id": "ALM-013",
+      "name": "User Onboarding Wizard",
+      "description": "Onboarding flow with clean database init, archetype template generator, transactional commitment service, route guard, and multi-step UI wizard",
+      "dependencies": ["ALM-002"],
+      "status": "in_progress",
+      "evidence": "Tickets 01 & 02 merged, Ticket 03 verified (145 tests passing)",
+      "ticketPath": "docs/planning/✅_plan_alm_013_ticket_03_commitment_and_route_guard.md"
     }
   ]
 }
