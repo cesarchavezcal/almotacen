@@ -8,6 +8,7 @@ module.exports = {
     '^expo-linear-gradient$': '<rootDir>/__mocks__/expo-linear-gradient.js',
     '^expo-haptics$': '<rootDir>/__mocks__/expo-haptics.js',
     '^expo-router$': '<rootDir>/__mocks__/expo-router.js',
+    '^react-native-safe-area-context$': '<rootDir>/__mocks__/react-native-safe-area-context.js',
     '^@/(.*)$': '<rootDir>/$1',
   },
 };
