@@ -2,8 +2,8 @@
 
 ## Current State
 
-**Last Updated:** 2026-09-15 14:45
-**Active Feature:** ALM-013 User Onboarding Wizard Completed & Merged (PRs #30, #31, #32, #33)
+**Last Updated:** 2026-09-15 15:55
+**Active Feature:** ALM-014 Onboarding Safe Area Collision Resolved & Merged (PR #35)
 
 ## Status
 
@@ -88,6 +88,12 @@
   - Added unit and interaction test suite `src/screens/__tests__/OnboardingScreen.test.tsx` (7 tests, SCEN-052..054)
   - 152/152 tests passing across 22 test suites, 0 TypeScript errors
   - PR opened & merged: [PR #33](https://github.com/cesarchavezcal/almotacen/pull/33)
+- [x] Executed Step 7 & 8 (Bugfix & Review - ALM-014):
+  - Wrapped `<OnboardingWizardView>` inside `<SafeAreaView edges={['top', 'bottom']}>` in `app/onboarding.tsx`
+  - Created standard test mock in `__mocks__/react-native-safe-area-context.js` and registered in `jest.config.js`
+  - Verified visual layout in iOS Simulator: "STEP 1 OF 4" sits below Dynamic Island / clock
+  - Two-Axis Review: `./init.sh` 152/152 tests passing + GGA code review PASSED
+  - PR opened & merged: [PR #35](https://github.com/cesarchavezcal/almotacen/pull/35)
 
 ### What's In Progress
 
