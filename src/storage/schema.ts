@@ -157,7 +157,7 @@ export const DEFAULT_SEED_DATA: SeedData = {
   readyToAssignCents: 50000, // $500.00 remaining unassigned
 };
 
-export function initializeDatabase(db: DatabaseAdapter, seed: SeedData = DEFAULT_SEED_DATA): void {
+export function initializeDatabase(db: DatabaseAdapter): void {
   db.execSync(CREATE_TABLES_SQL);
 
   const versionRow = db.getFirstSync<{ value: string }>(
@@ -166,7 +166,23 @@ export function initializeDatabase(db: DatabaseAdapter, seed: SeedData = DEFAULT
   );
 
   if (!versionRow) {
-    seedDatabase(db, seed);
+    db.withTransactionSync(() => {
+      db.runSync(
+        'INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)',
+        'schema_version',
+        String(SCHEMA_VERSION)
+      );
+      db.runSync(
+        'INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)',
+        'ready_to_assign_cents',
+        '0'
+      );
+      db.runSync(
+        'INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)',
+        'onboarding_completed',
+        'false'
+      );
+    });
     return;
   }
 
@@ -185,6 +201,44 @@ export function initializeDatabase(db: DatabaseAdapter, seed: SeedData = DEFAULT
       );
     });
   }
+
+  // Ensure onboarding_completed exists for existing migrated databases
+  const onboardingRow = db.getFirstSync<{ value: string }>(
+    'SELECT value FROM metadata WHERE key = ?',
+    'onboarding_completed'
+  );
+  if (!onboardingRow) {
+    const accountCount = db.getFirstSync<{ count: number }>(
+      'SELECT COUNT(*) as count FROM accounts'
+    );
+    const completed = (accountCount?.count ?? 0) > 0 ? 'true' : 'false';
+    db.runSync(
+      'INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)',
+      'onboarding_completed',
+      completed
+    );
+  }
+}
+
+export function isOnboardingCompleted(db: DatabaseAdapter): boolean {
+  const row = db.getFirstSync<{ value: string }>(
+    'SELECT value FROM metadata WHERE key = ?',
+    'onboarding_completed'
+  );
+  return row?.value === 'true';
+}
+
+export function setOnboardingCompleted(db: DatabaseAdapter, completed: boolean): void {
+  db.runSync(
+    'INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)',
+    'onboarding_completed',
+    completed ? 'true' : 'false'
+  );
+}
+
+export function seedDemoData(db: DatabaseAdapter, seed: SeedData = DEFAULT_SEED_DATA): void {
+  seedDatabase(db, seed);
+  setOnboardingCompleted(db, true);
 }
 
 export function seedDatabase(db: DatabaseAdapter, seed: SeedData = DEFAULT_SEED_DATA): void {
@@ -197,6 +251,7 @@ export function seedDatabase(db: DatabaseAdapter, seed: SeedData = DEFAULT_SEED_
 
     db.runSync('INSERT INTO metadata (key, value) VALUES (?, ?)', 'schema_version', String(SCHEMA_VERSION));
     db.runSync('INSERT INTO metadata (key, value) VALUES (?, ?)', 'ready_to_assign_cents', String(seed.readyToAssignCents));
+    db.runSync('INSERT INTO metadata (key, value) VALUES (?, ?)', 'onboarding_completed', 'true');
 
     const now = new Date().toISOString();
     for (const acc of seed.accounts) {
