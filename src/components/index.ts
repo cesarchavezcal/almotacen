@@ -10,3 +10,5 @@ export * from './MonthPagingHeader';
 export * from './CashFlowView';
 export * from './AutoAssignModal';
 export * from './CoverOverspendingModal';
+export * from './AccountsView';
+export * from './settings';

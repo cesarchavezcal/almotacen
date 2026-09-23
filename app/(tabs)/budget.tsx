@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { StyleSheet, ScrollView, View, Text, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { colors } from '@/src/theme/colors';
 import { typography } from '@/src/theme/typography';
@@ -42,6 +43,7 @@ export interface BudgetViewProps {
   onAllocateQuickFill: (categoryId: string, action: QuickFillAction) => void;
   onOpenAutoAssign?: () => void;
   onCoverOverspending?: (categoryId: string) => void;
+  onAddCategory?: () => void;
 }
 
 export function BudgetView({
@@ -55,6 +57,7 @@ export function BudgetView({
   onAllocateQuickFill,
   onOpenAutoAssign,
   onCoverOverspending,
+  onAddCategory,
 }: BudgetViewProps): React.JSX.Element {
   const isOverAssigned = bannerState.isOverAssigned;
   const isPositive = bannerState.status === 'positive';
@@ -134,6 +137,25 @@ export function BudgetView({
         </View>
       </View>
 
+      {/* Category Groups header with + Add Shortcut */}
+      <View style={styles.categoriesHeaderRow}>
+        <Text style={[typography.sectionHdr, styles.categoriesHeaderTitle]}>
+          ENVELOPES
+        </Text>
+        {onAddCategory && (
+          <Pressable
+            testID="btn-add-category-shortcut"
+            onPress={onAddCategory}
+            style={({ pressed }) => [
+              styles.addShortcutPill,
+              pressed && styles.addShortcutPillPressed,
+            ]}
+          >
+            <Text style={styles.addShortcutPillText}>+ Add</Text>
+          </Pressable>
+        )}
+      </View>
+
       {/* Category Groups rendered with EnvelopePassFace cards */}
       {displayGroups.map((group) => (
         <View key={group.id} style={styles.groupSection}>
@@ -166,6 +188,7 @@ export function BudgetView({
 
 // Container Component
 export default function BudgetScreen(): React.JSX.Element {
+  const router = useRouter();
   const {
     state,
     groups,
@@ -176,6 +199,10 @@ export default function BudgetScreen(): React.JSX.Element {
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [autoAssignVisible, setAutoAssignVisible] = useState(false);
   const [coveringCategoryId, setCoveringCategoryId] = useState<string | null>(null);
+
+  const handleAddCategory = useCallback(() => {
+    router.push('/settings/categories' as const);
+  }, [router]);
 
   const bannerState = useMemo(
     () => getReadyToAssignBannerState(state.readyToAssignCents),
@@ -266,6 +293,7 @@ export default function BudgetScreen(): React.JSX.Element {
         onAllocateQuickFill={handleAllocateQuickFill}
         onOpenAutoAssign={handleOpenAutoAssign}
         onCoverOverspending={handleOpenCoverOverspending}
+        onAddCategory={handleAddCategory}
       />
       <AutoAssignModal
         visible={autoAssignVisible}
@@ -395,5 +423,32 @@ const styles = StyleSheet.create({
   },
   envelopePass: {
     marginHorizontal: 0,
+  },
+  categoriesHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    marginTop: 6,
+  },
+  categoriesHeaderTitle: {
+    color: colors.textSecondary,
+  },
+  addShortcutPill: {
+    backgroundColor: 'rgba(10, 132, 255, 0.18)',
+    borderColor: 'rgba(10, 132, 255, 0.4)',
+    borderWidth: 0.5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+  },
+  addShortcutPillPressed: {
+    opacity: 0.7,
+  },
+  addShortcutPillText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    color: colors.systemBlue,
   },
 });

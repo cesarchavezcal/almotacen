@@ -6,6 +6,10 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
 
 # Environment & Secrets
 .env

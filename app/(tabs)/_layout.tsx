@@ -6,7 +6,7 @@ import { colors } from '@/src/theme/colors';
 import { typography } from '@/src/theme/typography';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
-export default function TabLayout() {
+export default function TabLayout(): React.JSX.Element {
   return (
     <Tabs
       screenOptions={{
@@ -89,6 +89,19 @@ export default function TabLayout() {
                 )}
               </Pressable>
             </Link>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'settings' : 'settings-outline'}
+              size={24}
+              color={color}
+            />
           ),
         }}
       />
