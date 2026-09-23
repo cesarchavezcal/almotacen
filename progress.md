@@ -95,22 +95,30 @@
   - Two-Axis Review: `./init.sh` 152/152 tests passing + GGA code review PASSED
   - PR opened & merged: [PR #35](https://github.com/cesarchavezcal/almotacen/pull/35)
 
+- [x] Step 1-6 Plan & Design for Settings & Entity Management (`openspec/changes/settings-entity-management-data-reset/`)
+- [x] Executed Step 7 (TDD Implementation - ALM-015 Ticket 01: Repository Entity CRUD):
+  - Added entity CRUD interfaces & method signatures to `LedgerRepository` in `src/storage/types.ts`
+  - Defined typed domain errors (`EntityNotFoundError`, `EntityIntegrityError`, `ProtectedEntityError`) in `src/domain/ledger/errors.ts`
+  - Extracted pure domain integrity assertions & helpers in `src/domain/ledger/entityOperations.ts`
+  - Implemented atomic CRUD methods in `SQLiteLedgerRepository` (`createAccount`, `updateAccount`, `deleteAccount`, `createCategoryGroup`, `updateCategoryGroup`, `deleteCategoryGroup`, `createCategory`, `updateCategory`, `deleteCategory`)
+  - Created unit & behavioral test suite `src/storage/ledgerRepository.entityCrud.test.ts` covering `SCEN-002` through `SCEN-015` (14/14 tests passing)
+  - 166/166 tests passing across 23 test suites via `./init.sh`, 0 TypeScript errors
+
 ### What's In Progress
 
-- [x] Epic ALM-013 User Onboarding Wizard fully completed (all 4 tickets merged)
+- [ ] ALM-015 Ticket 02: Three-Tier Data Reset & Diagnostics Engine
 
 ### What's Next
 
-1. Select next epic or feature milestone from roadmap.
+1. Verify pre-commit GGA standards review for Ticket 01.
+2. Commit Ticket 01 to `feature/CCH/ALM-015-repository-entity-crud`.
+3. Proceed to Ticket 02 (`openspec/changes/settings-entity-management-data-reset/tickets/02-data-reset-and-diagnostics.md`).
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 152/152 Jest unit/integration tests pass (22 suites), `tsc --noEmit` 0 errors.
-- [x] PR #30 Merged: [PR #30](https://github.com/cesarchavezcal/almotacen/pull/30) (Ticket 01: Clean DB Initialization).
-- [x] PR #31 Merged: [PR #31](https://github.com/cesarchavezcal/almotacen/pull/31) (Ticket 02: Financial Archetypes).
-- [x] PR #32 Merged: [PR #32](https://github.com/cesarchavezcal/almotacen/pull/32) (Ticket 03: Commitment Service & Route Guard).
-- [x] PR #33 Merged: [PR #33](https://github.com/cesarchavezcal/almotacen/pull/33) (Ticket 04: Interactive Multi-Step Onboarding UI Wizard).
-- [x] Feature ALM-013 Complete: 22 test suites passing, Clean Hexagonal Architecture, strict types, 0 regressions.
+- [x] `./init.sh`: 166/166 Jest unit/integration tests pass (23 suites), `tsc --noEmit` 0 errors.
+- [x] ALM-015 Ticket 01: 14 new behavioral tests for `SCEN-002` through `SCEN-015` passing.
+
 
 
 
