@@ -614,7 +614,8 @@ export class SQLiteLedgerRepository implements LedgerRepository {
       }
 
       const updatedName = input.name;
-      const updatedBalance = input.balanceCents !== undefined ? input.balanceCents : Number(existingAccount.balance_cents);
+      const currentBalance = Number(existingAccount.balance_cents);
+      const updatedBalance = input.balanceCents !== undefined ? input.balanceCents : currentBalance;
 
       this.db.runSync(
         'UPDATE accounts SET name = ?, balance_cents = ? WHERE id = ?',
@@ -622,6 +623,23 @@ export class SQLiteLedgerRepository implements LedgerRepository {
         updatedBalance,
         input.id
       );
+
+      // Preserve ledger parity: adjust Ready to Assign for depository accounts if balance changed
+      if (existingAccount.account_type !== 'credit' && input.balanceCents !== undefined) {
+        const delta = updatedBalance - currentBalance;
+        if (delta !== 0) {
+          const currentReadyToAssignRow = this.db.getFirstSync<{ value: string }>(
+            'SELECT value FROM metadata WHERE key = ?',
+            'ready_to_assign_cents'
+          );
+          const currentReadyToAssignCents = currentReadyToAssignRow ? Number(currentReadyToAssignRow.value) : 0;
+          this.db.runSync(
+            'INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)',
+            'ready_to_assign_cents',
+            String(currentReadyToAssignCents + delta)
+          );
+        }
+      }
 
       return {
         id: existingAccount.id,

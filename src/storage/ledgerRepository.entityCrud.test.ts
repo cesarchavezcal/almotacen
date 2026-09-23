@@ -56,6 +56,8 @@ describe('Repository Entity Management CRUD & Integrity Guards (Ticket 01)', () 
     });
 
     it('SCEN-004: updates account name and balance', () => {
+      const initialRta = repo.getBudgetState().readyToAssignCents;
+
       const account = repo.createAccount({
         name: 'Emergency Fund',
         accountType: 'savings',
@@ -74,6 +76,7 @@ describe('Repository Entity Management CRUD & Integrity Guards (Ticket 01)', () 
       const state = repo.getBudgetState();
       expect(state.accounts[account.id].name).toBe('Primary Emergency Fund');
       expect(state.accounts[account.id].balanceCents).toBe(75000);
+      expect(state.readyToAssignCents).toBe(initialRta + 75000);
     });
 
     it('SCEN-005: blocks deletion of account with existing transactions', () => {
