@@ -2,7 +2,7 @@ import { useSyncExternalStore, useCallback } from 'react';
 import { getDatabase } from './database';
 import { SQLiteLedgerRepository } from './ledgerRepository';
 import { BudgetState, Transaction } from '../domain/ledger/types';
-import { CategoryGroup, LedgerRepository } from './types';
+import { CategoryGroup, LedgerRepository, DiagnosticsData } from './types';
 import { MonthRolloverResult } from '../domain/ledger/rollover';
 
 let repositoryInstance: LedgerRepository | null = null;
@@ -47,6 +47,10 @@ export interface UseLedgerStoreResult {
   }) => { coveredCents: number; isCreditDebtCovered: boolean };
   reload: () => void;
   resetDatabase: () => void;
+  factoryReset: () => void;
+  clearTransactionsOnly: () => void;
+  seedDemoData: () => void;
+  getDiagnostics: () => DiagnosticsData;
 }
 
 function getRepository(): LedgerRepository {
@@ -196,6 +200,25 @@ export function useLedgerStore(): UseLedgerStoreResult {
     notifyListeners();
   }, [repo]);
 
+  const handleFactoryReset = useCallback(() => {
+    repo.factoryReset();
+    notifyListeners();
+  }, [repo]);
+
+  const handleClearTransactionsOnly = useCallback(() => {
+    repo.clearTransactionsOnly();
+    notifyListeners();
+  }, [repo]);
+
+  const handleSeedDemoData = useCallback(() => {
+    repo.seedDemoData();
+    notifyListeners();
+  }, [repo]);
+
+  const getDiagnostics = useCallback(() => {
+    return repo.getDiagnostics();
+  }, [repo]);
+
   return {
     state: store.budgetState,
     groups: store.groups,
@@ -208,6 +231,10 @@ export function useLedgerStore(): UseLedgerStoreResult {
     rebalanceCategoryFunds: rebalance,
     reload,
     resetDatabase: reset,
+    factoryReset: handleFactoryReset,
+    clearTransactionsOnly: handleClearTransactionsOnly,
+    seedDemoData: handleSeedDemoData,
+    getDiagnostics,
   };
 
 }
