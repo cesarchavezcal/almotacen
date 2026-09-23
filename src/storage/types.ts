@@ -60,7 +60,6 @@ export interface UpdateCategoryInput {
   targetType?: Category['targetType'];
   targetDueDay?: number;
 }
-
 export interface DiagnosticsData {
   schemaVersion: number;
   accountCount: number;

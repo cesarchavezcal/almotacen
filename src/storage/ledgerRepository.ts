@@ -552,7 +552,6 @@ export class SQLiteLedgerRepository implements LedgerRepository {
   getDiagnostics(): DiagnosticsData {
     return getDiagnostics(this.db);
   }
-
   createAccount(input: CreateAccountInput): Account {
     return this.db.withTransactionSync(() => {
       const id = input.id || `acc-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;

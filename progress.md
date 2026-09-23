@@ -2,8 +2,18 @@
 
 ## Current State
 
+<<<<<<< HEAD
 **Last Updated:** 2026-09-15 15:55
 **Active Feature:** ALM-014 Onboarding Safe Area Collision Resolved & Merged (PR #35)
+=======
+<<<<<<< HEAD
+**Last Updated:** 2026-09-15 15:55
+**Active Feature:** ALM-014 Onboarding Safe Area Collision Resolved & Merged (PR #35)
+=======
+**Last Updated:** 2026-09-15 14:45
+**Active Feature:** ALM-013 User Onboarding Wizard Completed & Merged (PRs #30, #31, #32, #33)
+>>>>>>> origin/main
+>>>>>>> origin/main
 
 ## Status
 
@@ -103,7 +113,6 @@
   - Implemented atomic CRUD methods in `SQLiteLedgerRepository` (`createAccount`, `updateAccount`, `deleteAccount`, `createCategoryGroup`, `updateCategoryGroup`, `deleteCategoryGroup`, `createCategory`, `updateCategory`, `deleteCategory`)
   - Created unit & behavioral test suite `src/storage/ledgerRepository.entityCrud.test.ts` covering `SCEN-002` through `SCEN-015` (14/14 tests passing)
   - 166/166 tests passing across 23 test suites via `./init.sh`, 0 TypeScript errors
-
 - [x] Executed Step 7 (TDD Implementation - ALM-016 Ticket 02: Three-Tier Data Reset & Diagnostics Engine):
   - Added `DiagnosticsData` and reset method signatures in `src/storage/types.ts`
   - Implemented `factoryReset`, `clearTransactionsOnly`, `getDiagnostics` in `src/storage/schema.ts`
@@ -126,7 +135,6 @@
 - [x] `./init.sh`: 170/170 Jest unit/integration tests pass (24 suites), `tsc --noEmit` 0 errors.
 - [x] ALM-015 Ticket 01: 14 behavioral tests passing (`SCEN-002` through `SCEN-015`).
 - [x] ALM-016 Ticket 02: 4 behavioral tests passing (`SCEN-016` through `SCEN-019`).
-
 
 
 
