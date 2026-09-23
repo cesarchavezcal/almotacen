@@ -8,6 +8,7 @@ import {
   UpdateCategoryGroupInput,
   CreateCategoryInput,
   UpdateCategoryInput,
+  DiagnosticsData,
 } from './types';
 import { BudgetState, Account, Category, Transaction, isTargetType } from '../domain/ledger/types';
 import { EntityNotFoundError } from '../domain/ledger/errors';
@@ -28,7 +29,13 @@ import {
 import { performMonthRollover, MonthRolloverResult } from '../domain/ledger/rollover';
 import { calculateAutoAssignAllocations } from '../domain/ledger/autoAssign';
 import { coverOverspending } from '../domain/ledger/overspendingCoverage';
-import { seedDatabase } from './schema';
+import {
+  seedDatabase,
+  seedDemoData,
+  factoryReset,
+  clearTransactionsOnly,
+  getDiagnostics,
+} from './schema';
 
 interface CategoryGroupRow {
   id: string;
@@ -528,6 +535,22 @@ export class SQLiteLedgerRepository implements LedgerRepository {
 
   resetDatabase(): void {
     seedDatabase(this.db);
+  }
+
+  factoryReset(): void {
+    factoryReset(this.db);
+  }
+
+  clearTransactionsOnly(): void {
+    clearTransactionsOnly(this.db);
+  }
+
+  seedDemoData(): void {
+    seedDemoData(this.db);
+  }
+
+  getDiagnostics(): DiagnosticsData {
+    return getDiagnostics(this.db);
   }
 
   createAccount(input: CreateAccountInput): Account {

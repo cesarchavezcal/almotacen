@@ -104,20 +104,28 @@
   - Created unit & behavioral test suite `src/storage/ledgerRepository.entityCrud.test.ts` covering `SCEN-002` through `SCEN-015` (14/14 tests passing)
   - 166/166 tests passing across 23 test suites via `./init.sh`, 0 TypeScript errors
 
+- [x] Executed Step 7 (TDD Implementation - ALM-016 Ticket 02: Three-Tier Data Reset & Diagnostics Engine):
+  - Added `DiagnosticsData` and reset method signatures in `src/storage/types.ts`
+  - Implemented `factoryReset`, `clearTransactionsOnly`, `getDiagnostics` in `src/storage/schema.ts`
+  - Implemented `factoryReset`, `clearTransactionsOnly`, `seedDemoData`, `getDiagnostics` in `SQLiteLedgerRepository` and `useLedgerStore`
+  - Created behavioral test suite `src/storage/__tests__/ledgerRepository.reset.test.ts` covering `SCEN-016` through `SCEN-019` (4/4 tests passing)
+  - 170/170 tests passing across 24 test suites via `./init.sh`, 0 TypeScript errors
+
 ### What's In Progress
 
-- [ ] ALM-015 Ticket 02: Three-Tier Data Reset & Diagnostics Engine
+- [ ] ALM-017 Ticket 03: Settings Navigation, Screen Layout, Diagnostics Cards & Reset Action Triggers
 
 ### What's Next
 
-1. Verify pre-commit GGA standards review for Ticket 01.
-2. Commit Ticket 01 to `feature/CCH/ALM-015-repository-entity-crud`.
-3. Proceed to Ticket 02 (`openspec/changes/settings-entity-management-data-reset/tickets/02-data-reset-and-diagnostics.md`).
+1. Verify pre-commit GGA review for Ticket 02.
+2. Commit Ticket 02 to `feature/CCH/ALM-016-data-reset-and-diagnostics`.
+3. Proceed to Ticket 03 (`openspec/changes/settings-entity-management-data-reset/tickets/03-settings-navigation-and-layout.md`).
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 166/166 Jest unit/integration tests pass (23 suites), `tsc --noEmit` 0 errors.
-- [x] ALM-015 Ticket 01: 14 new behavioral tests for `SCEN-002` through `SCEN-015` passing.
+- [x] `./init.sh`: 170/170 Jest unit/integration tests pass (24 suites), `tsc --noEmit` 0 errors.
+- [x] ALM-015 Ticket 01: 14 behavioral tests passing (`SCEN-002` through `SCEN-015`).
+- [x] ALM-016 Ticket 02: 4 behavioral tests passing (`SCEN-016` through `SCEN-019`).
 
 
 

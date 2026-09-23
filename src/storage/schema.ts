@@ -1,4 +1,4 @@
-import { DatabaseAdapter, CategoryGroup } from './types';
+import { DatabaseAdapter, CategoryGroup, DiagnosticsData } from './types';
 import { Account, Category } from '../domain/ledger/types';
 
 export const SCHEMA_VERSION = 2;
@@ -234,6 +234,75 @@ export function setOnboardingCompleted(db: DatabaseAdapter, completed: boolean):
     'onboarding_completed',
     completed ? 'true' : 'false'
   );
+}
+
+export function factoryReset(db: DatabaseAdapter): void {
+  db.withTransactionSync(() => {
+    db.runSync('DELETE FROM transactions');
+    db.runSync('DELETE FROM categories');
+    db.runSync('DELETE FROM category_groups');
+    db.runSync('DELETE FROM accounts');
+    db.runSync('DELETE FROM metadata');
+
+    db.runSync('INSERT INTO metadata (key, value) VALUES (?, ?)', 'schema_version', String(SCHEMA_VERSION));
+    db.runSync('INSERT INTO metadata (key, value) VALUES (?, ?)', 'ready_to_assign_cents', '0');
+    db.runSync('INSERT INTO metadata (key, value) VALUES (?, ?)', 'onboarding_completed', 'false');
+  });
+}
+
+export function clearTransactionsOnly(db: DatabaseAdapter): void {
+  db.withTransactionSync(() => {
+    // 1. Delete all transactions
+    db.runSync('DELETE FROM transactions');
+
+    // 2. Zero all envelope balances
+    db.runSync(
+      'UPDATE categories SET assigned_cents = 0, available_cents = 0, unfunded_debt_cents = 0'
+    );
+
+    // 3. Compute sum of positive depository accounts (account_type != 'credit' AND balance_cents > 0)
+    const positiveDepositoryRow = db.getFirstSync<{ total: number | null }>(
+      "SELECT SUM(balance_cents) as total FROM accounts WHERE account_type != 'credit' AND balance_cents > 0"
+    );
+    const reanchoredReadyToAssignCents = Number(positiveDepositoryRow?.total ?? 0);
+
+    // 4. Update Ready to Assign
+    db.runSync(
+      'INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)',
+      'ready_to_assign_cents',
+      String(reanchoredReadyToAssignCents)
+    );
+
+    // 5. Ensure onboarding_completed remains true
+    setOnboardingCompleted(db, true);
+  });
+}
+
+export function getDiagnostics(db: DatabaseAdapter): DiagnosticsData {
+  const schemaVersionRow = db.getFirstSync<{ value: string }>(
+    'SELECT value FROM metadata WHERE key = ?',
+    'schema_version'
+  );
+  const accountCountRow = db.getFirstSync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM accounts'
+  );
+  const categoryGroupCountRow = db.getFirstSync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM category_groups'
+  );
+  const categoryCountRow = db.getFirstSync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM categories'
+  );
+  const transactionCountRow = db.getFirstSync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM transactions'
+  );
+
+  return {
+    schemaVersion: schemaVersionRow ? Number(schemaVersionRow.value) : SCHEMA_VERSION,
+    accountCount: accountCountRow?.count ?? 0,
+    categoryGroupCount: categoryGroupCountRow?.count ?? 0,
+    categoryCount: categoryCountRow?.count ?? 0,
+    transactionCount: transactionCountRow?.count ?? 0,
+  };
 }
 
 export function seedDemoData(db: DatabaseAdapter, seed: SeedData = DEFAULT_SEED_DATA): void {

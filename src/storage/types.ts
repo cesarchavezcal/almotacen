@@ -61,6 +61,14 @@ export interface UpdateCategoryInput {
   targetDueDay?: number;
 }
 
+export interface DiagnosticsData {
+  schemaVersion: number;
+  accountCount: number;
+  categoryGroupCount: number;
+  categoryCount: number;
+  transactionCount: number;
+}
+
 export interface LedgerRepository {
   getBudgetState(): BudgetState;
   getCategoryGroups(): CategoryGroup[];
@@ -99,6 +107,10 @@ export interface LedgerRepository {
     amountCents: number;
   }): { coveredCents: number; isCreditDebtCovered: boolean };
   resetDatabase(): void;
+  factoryReset(): void;
+  clearTransactionsOnly(): void;
+  seedDemoData(): void;
+  getDiagnostics(): DiagnosticsData;
   createAccount(input: CreateAccountInput): Account;
   updateAccount(input: UpdateAccountInput): Account;
   deleteAccount(id: string): void;
