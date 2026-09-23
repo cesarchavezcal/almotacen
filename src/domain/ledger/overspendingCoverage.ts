@@ -18,6 +18,7 @@ export interface CoverOverspendingResult {
   state: BudgetState;
   coveredCents: number;
   isCreditDebtCovered: boolean;
+  coveredPaymentCategoryId?: string;
 }
 
 export function coverOverspending(params: CoverOverspendingParams): CoverOverspendingResult {
@@ -57,12 +58,13 @@ export function coverOverspending(params: CoverOverspendingParams): CoverOverspe
   };
 
   const isCreditDebt = (targetCategory.unfundedDebtCents ?? 0) > 0;
+  let resolvedPaymentCategoryId: string | undefined = undefined;
 
   if (isCreditDebt) {
     // SCEN-035: Credit Card Debt Coverage
-    const resolvedPaymentCategoryId =
+    resolvedPaymentCategoryId =
       creditPaymentCategoryId ??
-      Object.values(state.categories).find((cat) => cat.isCreditPayment)?.id;
+      Object.values(state.categories).find((category) => category.isCreditPayment)?.id;
 
     if (!resolvedPaymentCategoryId) {
       throw new LedgerDomainError('Credit card payment category not found to reserve debt coverage funds');
@@ -102,5 +104,6 @@ export function coverOverspending(params: CoverOverspendingParams): CoverOverspe
     },
     coveredCents: amountCents,
     isCreditDebtCovered: isCreditDebt,
+    coveredPaymentCategoryId: isCreditDebt ? resolvedPaymentCategoryId : undefined,
   };
 }

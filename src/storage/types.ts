@@ -1,4 +1,4 @@
-import { BudgetState, Transaction, CategoryGroup } from '../domain/ledger/types';
+import { BudgetState, Transaction, CategoryGroup, Account, Category } from '../domain/ledger/types';
 import { MonthRolloverResult } from '../domain/ledger/rollover';
 
 export interface DatabaseAdapter {
@@ -11,6 +11,55 @@ export interface DatabaseAdapter {
 }
 
 export { CategoryGroup };
+export {
+  ValidationError,
+  LedgerError,
+  LedgerDomainError,
+  EntityNotFoundError,
+  EntityIntegrityError,
+  ProtectedEntityError,
+} from '../domain/ledger/errors';
+
+export interface CreateAccountInput {
+  id?: string;
+  name: string;
+  accountType: Account['accountType'];
+  balanceCents: number;
+}
+
+export interface UpdateAccountInput {
+  id: string;
+  name: string;
+  balanceCents?: number;
+}
+
+export interface CreateCategoryGroupInput {
+  id?: string;
+  name: string;
+}
+
+export interface UpdateCategoryGroupInput {
+  id: string;
+  name: string;
+}
+
+export interface CreateCategoryInput {
+  id?: string;
+  groupId: string;
+  name: string;
+  targetCents?: number;
+  targetType?: Category['targetType'];
+  targetDueDay?: number;
+}
+
+export interface UpdateCategoryInput {
+  id: string;
+  groupId?: string;
+  name?: string;
+  targetCents?: number;
+  targetType?: Category['targetType'];
+  targetDueDay?: number;
+}
 
 export interface LedgerRepository {
   getBudgetState(): BudgetState;
@@ -50,5 +99,14 @@ export interface LedgerRepository {
     amountCents: number;
   }): { coveredCents: number; isCreditDebtCovered: boolean };
   resetDatabase(): void;
+  createAccount(input: CreateAccountInput): Account;
+  updateAccount(input: UpdateAccountInput): Account;
+  deleteAccount(id: string): void;
+  createCategoryGroup(input: CreateCategoryGroupInput): CategoryGroup;
+  updateCategoryGroup(input: UpdateCategoryGroupInput): CategoryGroup;
+  deleteCategoryGroup(id: string): void;
+  createCategory(input: CreateCategoryInput): Category;
+  updateCategory(input: UpdateCategoryInput): Category;
+  deleteCategory(id: string): void;
 }
 
