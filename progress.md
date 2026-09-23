@@ -2,8 +2,13 @@
 
 ## Current State
 
+<<<<<<< HEAD
 **Last Updated:** 2026-09-15 15:55
 **Active Feature:** ALM-014 Onboarding Safe Area Collision Resolved & Merged (PR #35)
+=======
+**Last Updated:** 2026-09-15 14:45
+**Active Feature:** ALM-013 User Onboarding Wizard Completed & Merged (PRs #30, #31, #32, #33)
+>>>>>>> origin/main
 
 ## Status
 
@@ -118,7 +123,6 @@
 
 - [x] `./init.sh`: 166/166 Jest unit/integration tests pass (23 suites), `tsc --noEmit` 0 errors.
 - [x] ALM-015 Ticket 01: 14 new behavioral tests for `SCEN-002` through `SCEN-015` passing.
-
 
 
 
