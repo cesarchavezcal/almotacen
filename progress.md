@@ -109,31 +109,35 @@
   - Implemented `factoryReset`, `clearTransactionsOnly`, `seedDemoData`, `getDiagnostics` in `SQLiteLedgerRepository` and `useLedgerStore`
   - Created behavioral test suite `src/storage/__tests__/ledgerRepository.reset.test.ts` covering `SCEN-016` through `SCEN-019` (4/4 tests passing)
   - 170/170 tests passing across 24 test suites via `./init.sh`, 0 TypeScript errors
-- [x] Executed Step 7 (Implementation - ALM-017 Ticket 03: Settings Tab Navigation & Presentational Layout):
-  - Created presentational components `SettingsRow`, `SettingsSection`, `SettingsView` with iOS grouped inset styling in `src/components/settings/`
+- [x] Executed Step 7, 8 & 9 (Implementation, Two-Axis Review & PR - ALM-017 Ticket 03: Settings Tab Navigation & Presentational Layout):
+  - Created presentational components `SettingsRow`, `SettingsSection`, `SettingsView`, and `SettingsHeaderRow` with iOS grouped inset styling in `src/components/settings/`
   - Created controller hook `useSettings.ts` with diagnostics hydration, route transitions, and native alert confirmation flows
   - Registered persistent `settings` tab in `app/(tabs)/_layout.tsx` and created container screen `app/(tabs)/settings.tsx`
   - Created dedicated stack sub-screens `app/settings/` (`_layout.tsx`, `accounts.tsx`, `groups.tsx`, `categories.tsx`)
+  - Refactored `app/(tabs)/accounts.tsx` into container-presentational architecture delegating to `src/components/AccountsView.tsx`
   - Added "+ Add" shortcuts in primary tabs `budget.tsx` and `accounts.tsx`
   - Authored behavioral component test suite in `app/(tabs)/__tests__/settings.test.tsx` verifying `SCEN-001` (9/9 tests passing)
-  - 179/179 tests passing across 25 test suites via `./init.sh`, 0 TypeScript errors
+  - Two-Axis Review completed: Axis 1 Spec Compliance (PASSED) + Axis 2 Standards Compliance via `.gga` (PASSED)
+  - 183/183 tests passing across 26 test suites via `./init.sh`, 0 TypeScript errors
+  - PR opened: [PR #38](https://github.com/cesarchavezcal/almotacen/pull/38)
 
 ### What's In Progress
 
-- [ ] ALM-018 Ticket 04: Entity Creation & Edit Modals / Sheets (Accounts, Groups, Categories)
+- [ ] Awaiting merge of [PR #38](https://github.com/cesarchavezcal/almotacen/pull/38)
 
 ### What's Next
 
-1. Run `/autonomic review` for Ticket 03 (Two-Axis Review: spec compliance + standards review).
-2. Commit Ticket 03 to `feature/CCH/ALM-017-settings-navigation-and-layout`.
-3. Push branch and open Pull Request.
+1. Merge PR #38 into `main`.
+2. Proceed to `/autonomic plan openspec/changes/settings-entity-management-data-reset/tickets/04-entity-management-modals.md` (Ticket 04: Entity Creation & Edit Modals / Sheets).
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 179/179 Jest unit/integration tests pass (25 suites), `tsc --noEmit` 0 errors.
+- [x] `./init.sh`: 183/183 Jest unit/integration tests pass (26 suites), `tsc --noEmit` 0 errors.
 - [x] ALM-015 Ticket 01: 14 behavioral tests passing (`SCEN-002` through `SCEN-015`).
 - [x] ALM-016 Ticket 02: 4 behavioral tests passing (`SCEN-016` through `SCEN-019`).
 - [x] ALM-017 Ticket 03: 9 behavioral tests passing (`SCEN-001`).
+- [x] `.gga` Automated Pre-commit Review: PASSED.
+
 
 
 
