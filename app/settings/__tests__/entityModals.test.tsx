@@ -429,4 +429,80 @@ describe('Entity Management Modals & Confirmation Alerts (Ticket 04)', () => {
       expect(repo.getBudgetState().categories[cat.id]).toBeDefined();
     });
   });
+
+  describe('Destructive Double-Confirmation Alerts & Deletion Rejections', () => {
+    it('executes two-step alert confirmation before deleting entity', () => {
+      const alertSpy = jest.spyOn(Alert, 'alert');
+      const onDeleteMock = jest.fn();
+
+      const triggerAccountDelete = (name: string, onConfirm: () => void) => {
+        Alert.alert('Delete Account?', `Are you sure you want to delete "${name}"?`, [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => {
+              Alert.alert('Confirm Deletion', 'This cannot be undone. Are you sure?', [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Permanently Delete', style: 'destructive', onPress: onConfirm },
+              ]);
+            },
+          },
+        ]);
+      };
+
+      triggerAccountDelete('Checking', onDeleteMock);
+
+      expect(alertSpy).toHaveBeenCalledWith(
+        'Delete Account?',
+        'Are you sure you want to delete "Checking"?',
+        expect.any(Array)
+      );
+
+      const step1Buttons = fromAny<AlertButtonOption[], unknown>(alertSpy.mock.calls[0]?.[2] ?? []);
+      const step1Destructive = step1Buttons.find((btn) => btn.style === 'destructive');
+      expect(step1Destructive).toBeDefined();
+
+      step1Destructive?.onPress?.();
+
+      expect(alertSpy).toHaveBeenCalledWith(
+        'Confirm Deletion',
+        'This cannot be undone. Are you sure?',
+        expect.any(Array)
+      );
+
+      const step2Buttons = fromAny<AlertButtonOption[], unknown>(alertSpy.mock.calls[1]?.[2] ?? []);
+      const step2Destructive = step2Buttons.find((btn) => btn.style === 'destructive');
+      expect(step2Destructive).toBeDefined();
+
+      step2Destructive?.onPress?.();
+      expect(onDeleteMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('catches repository integrity error on account deletion and maps to error banner', () => {
+      const account = repo.createAccount({ name: 'Checking', accountType: 'checking', balanceCents: 10000 });
+      const group = repo.createCategoryGroup({ name: 'Living' });
+      const cat = repo.createCategory({ groupId: group.id, name: 'Rent', targetCents: 10000 });
+      repo.postOutflow({
+        id: 'tx-test-guard',
+        accountId: account.id,
+        categoryId: cat.id,
+        amountCents: 2500,
+        payee: 'Supermarket',
+      });
+
+      let errorMessage: string | null = null;
+      try {
+        repo.deleteAccount(account.id);
+      } catch (err: unknown) {
+        errorMessage = err instanceof Error ? err.message : 'Cannot delete account.';
+      }
+
+      expect(errorMessage).toMatch(/Cannot delete account with existing transactions/i);
+
+      const banner = FormErrorBanner({ message: errorMessage });
+      expect(banner).not.toBeNull();
+      expect(banner?.props.children[1].props.children).toBe(errorMessage);
+    });
+  });
 });

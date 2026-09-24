@@ -77,22 +77,36 @@ export default function GroupsSettingsScreen(): React.JSX.Element {
   const handleDeleteGroup = useCallback(() => {
     if (!editingGroup) return;
     const groupToDeleteId = editingGroup.id;
+    const groupName = editingGroup.name;
 
     Alert.alert(
       'Delete Group?',
-      'Are you sure you want to delete this category group? Child categories must be removed first.',
+      `Are you sure you want to delete "${groupName}"? Child categories must be removed first.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            try {
-              deleteCategoryGroup(groupToDeleteId);
-              handleCloseModal();
-            } catch (err: unknown) {
-              setErrorMessage(err instanceof Error ? err.message : 'Cannot delete category group.');
-            }
+            Alert.alert(
+              'Confirm Deletion',
+              'This cannot be undone. Are you sure you want to permanently delete this category group?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Permanently Delete',
+                  style: 'destructive',
+                  onPress: () => {
+                    try {
+                      deleteCategoryGroup(groupToDeleteId);
+                      handleCloseModal();
+                    } catch (err: unknown) {
+                      setErrorMessage(err instanceof Error ? err.message : 'Cannot delete category group.');
+                    }
+                  },
+                },
+              ]
+            );
           },
         },
       ]

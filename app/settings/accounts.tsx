@@ -55,6 +55,18 @@ export default function AccountsSettingsScreen(): React.JSX.Element {
       return;
     }
 
+    const trimmedBalance = balanceInput.trim();
+    if (!trimmedBalance) {
+      setErrorMessage('Starting balance cannot be empty.');
+      return;
+    }
+
+    const numericOnly = trimmedBalance.replace(/[$,\s-]/g, '');
+    if (numericOnly.length > 0 && isNaN(Number(numericOnly))) {
+      setErrorMessage('Please enter a valid balance amount.');
+      return;
+    }
+
     const rawCents = parseCurrencyToCents(balanceInput);
     const balanceCents = accountType === 'credit' ? -Math.abs(rawCents) : rawCents;
 
@@ -81,22 +93,36 @@ export default function AccountsSettingsScreen(): React.JSX.Element {
   const handleDeleteAccount = useCallback(() => {
     if (!editingAccount) return;
     const accountToDeleteId = editingAccount.id;
+    const accountName = editingAccount.name;
 
     Alert.alert(
       'Delete Account?',
-      'Are you sure you want to delete this account? This cannot be undone.',
+      `Are you sure you want to delete "${accountName}"?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            try {
-              deleteAccount(accountToDeleteId);
-              handleCloseModal();
-            } catch (err: unknown) {
-              setErrorMessage(err instanceof Error ? err.message : 'Cannot delete account.');
-            }
+            Alert.alert(
+              'Confirm Deletion',
+              'This cannot be undone. Are you sure you want to permanently delete this account?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Permanently Delete',
+                  style: 'destructive',
+                  onPress: () => {
+                    try {
+                      deleteAccount(accountToDeleteId);
+                      handleCloseModal();
+                    } catch (err: unknown) {
+                      setErrorMessage(err instanceof Error ? err.message : 'Cannot delete account.');
+                    }
+                  },
+                },
+              ]
+            );
           },
         },
       ]

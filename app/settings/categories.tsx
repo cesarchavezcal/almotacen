@@ -89,7 +89,17 @@ export default function CategoriesSettingsScreen(): React.JSX.Element {
       return;
     }
 
-    const targetCents = parseCurrencyToCents(targetAmountInput);
+    let targetCents = 0;
+    const trimmedTarget = targetAmountInput.trim();
+    if (trimmedTarget) {
+      const numericOnly = trimmedTarget.replace(/[$,\s]/g, '');
+      if (numericOnly.length > 0 && isNaN(Number(numericOnly))) {
+        setErrorMessage('Please enter a valid target amount.');
+        return;
+      }
+      targetCents = parseCurrencyToCents(trimmedTarget);
+    }
+
     let targetDueDay: number | undefined = undefined;
     if (targetDueDayInput.trim()) {
       const parsedDay = parseInt(targetDueDayInput.trim(), 10);
@@ -138,22 +148,36 @@ export default function CategoriesSettingsScreen(): React.JSX.Element {
   const handleDeleteCategory = useCallback(() => {
     if (!editingCategory) return;
     const categoryToDeleteId = editingCategory.id;
+    const categoryName = editingCategory.name;
 
     Alert.alert(
       'Delete Category?',
-      'Are you sure you want to delete this envelope category? Balance must be zero and without linked transactions.',
+      `Are you sure you want to delete "${categoryName}"? Balance must be zero and without linked transactions.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            try {
-              deleteCategory(categoryToDeleteId);
-              handleCloseModal();
-            } catch (err: unknown) {
-              setErrorMessage(err instanceof Error ? err.message : 'Cannot delete category.');
-            }
+            Alert.alert(
+              'Confirm Deletion',
+              'This cannot be undone. Are you sure you want to permanently delete this category?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Permanently Delete',
+                  style: 'destructive',
+                  onPress: () => {
+                    try {
+                      deleteCategory(categoryToDeleteId);
+                      handleCloseModal();
+                    } catch (err: unknown) {
+                      setErrorMessage(err instanceof Error ? err.message : 'Cannot delete category.');
+                    }
+                  },
+                },
+              ]
+            );
           },
         },
       ]
