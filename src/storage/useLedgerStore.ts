@@ -1,8 +1,18 @@
 import { useSyncExternalStore, useCallback } from 'react';
 import { getDatabase } from './database';
 import { SQLiteLedgerRepository } from './ledgerRepository';
-import { BudgetState, Transaction } from '../domain/ledger/types';
-import { CategoryGroup, LedgerRepository, DiagnosticsData } from './types';
+import { BudgetState, Transaction, Account, Category } from '../domain/ledger/types';
+import {
+  CategoryGroup,
+  LedgerRepository,
+  DiagnosticsData,
+  CreateAccountInput,
+  UpdateAccountInput,
+  CreateCategoryGroupInput,
+  UpdateCategoryGroupInput,
+  CreateCategoryInput,
+  UpdateCategoryInput,
+} from './types';
 import { MonthRolloverResult } from '../domain/ledger/rollover';
 
 let repositoryInstance: LedgerRepository | null = null;
@@ -51,6 +61,15 @@ export interface UseLedgerStoreResult {
   clearTransactionsOnly: () => void;
   seedDemoData: () => void;
   getDiagnostics: () => DiagnosticsData;
+  createAccount: (input: CreateAccountInput) => Account;
+  updateAccount: (input: UpdateAccountInput) => Account;
+  deleteAccount: (id: string) => void;
+  createCategoryGroup: (input: CreateCategoryGroupInput) => CategoryGroup;
+  updateCategoryGroup: (input: UpdateCategoryGroupInput) => CategoryGroup;
+  deleteCategoryGroup: (id: string) => void;
+  createCategory: (input: CreateCategoryInput) => Category;
+  updateCategory: (input: UpdateCategoryInput) => Category;
+  deleteCategory: (id: string) => void;
 }
 
 function getRepository(): LedgerRepository {
@@ -214,10 +233,87 @@ export function useLedgerStore(): UseLedgerStoreResult {
     repo.seedDemoData();
     notifyListeners();
   }, [repo]);
-
   const getDiagnostics = useCallback(() => {
     return repo.getDiagnostics();
   }, [repo]);
+
+  const createAccount = useCallback(
+    (input: CreateAccountInput) => {
+      const result = repo.createAccount(input);
+      notifyListeners();
+      return result;
+    },
+    [repo]
+  );
+
+  const updateAccount = useCallback(
+    (input: UpdateAccountInput) => {
+      const result = repo.updateAccount(input);
+      notifyListeners();
+      return result;
+    },
+    [repo]
+  );
+
+  const deleteAccount = useCallback(
+    (id: string) => {
+      repo.deleteAccount(id);
+      notifyListeners();
+    },
+    [repo]
+  );
+
+  const createCategoryGroup = useCallback(
+    (input: CreateCategoryGroupInput) => {
+      const result = repo.createCategoryGroup(input);
+      notifyListeners();
+      return result;
+    },
+    [repo]
+  );
+
+  const updateCategoryGroup = useCallback(
+    (input: UpdateCategoryGroupInput) => {
+      const result = repo.updateCategoryGroup(input);
+      notifyListeners();
+      return result;
+    },
+    [repo]
+  );
+
+  const deleteCategoryGroup = useCallback(
+    (id: string) => {
+      repo.deleteCategoryGroup(id);
+      notifyListeners();
+    },
+    [repo]
+  );
+
+  const createCategory = useCallback(
+    (input: CreateCategoryInput) => {
+      const result = repo.createCategory(input);
+      notifyListeners();
+      return result;
+    },
+    [repo]
+  );
+
+  const updateCategory = useCallback(
+    (input: UpdateCategoryInput) => {
+      const result = repo.updateCategory(input);
+      notifyListeners();
+      return result;
+    },
+    [repo]
+  );
+
+  const deleteCategory = useCallback(
+    (id: string) => {
+      repo.deleteCategory(id);
+      notifyListeners();
+    },
+    [repo]
+  );
 
   return {
     state: store.budgetState,
@@ -235,8 +331,16 @@ export function useLedgerStore(): UseLedgerStoreResult {
     clearTransactionsOnly: handleClearTransactionsOnly,
     seedDemoData: handleSeedDemoData,
     getDiagnostics,
+    createAccount,
+    updateAccount,
+    deleteAccount,
+    createCategoryGroup,
+    updateCategoryGroup,
+    deleteCategoryGroup,
+    createCategory,
+    updateCategory,
+    deleteCategory,
   };
-
 }
 
 export function setCustomLedgerRepository(customRepo: LedgerRepository | null): void {
