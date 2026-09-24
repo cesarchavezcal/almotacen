@@ -11,7 +11,7 @@ export {
   ErrorBoundary,
 } from 'expo-router';
 
-export const unstable_settings = {
+export const unstable_settings: { initialRouteName: string } = {
   // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: '(tabs)',
 };
@@ -82,6 +82,7 @@ function RootLayoutNav(): React.JSX.Element {
             contentStyle: { backgroundColor: colors.canvas },
           }}
         />
+        <Stack.Screen name="settings" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );
