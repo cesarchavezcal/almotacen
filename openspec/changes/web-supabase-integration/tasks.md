@@ -30,11 +30,11 @@ flowchart LR
 ## Tasks Breakdown
 
 ### [Ticket 01: Supabase Schema & Anonymous Client](./tickets/01-supabase-schema-and-client.md)
-- [ ] Add `@supabase/supabase-js` dependency to `package.json`.
-- [ ] Author `supabase/migrations/20260925_init_ledger_schema.sql` with tables: `metadata`, `accounts`, `category_groups`, `categories`, `transactions`.
-- [ ] Add RLS policies enforcing `auth.uid() = user_id` across all tables.
-- [ ] Implement `src/storage/supabase/client.ts` with anonymous auth bootstrap and environment credentials (`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`).
-- [ ] Write unit tests verifying client initialization and type definitions.
+- [x] Add `@supabase/supabase-js` dependency to `package.json`.
+- [x] Author `supabase/migrations/20260925_init_ledger_schema.sql` with tables: `metadata`, `accounts`, `category_groups`, `categories`, `transactions`.
+- [x] Add RLS policies enforcing `auth.uid() = user_id` across all tables.
+- [x] Implement `src/storage/supabase/client.ts` with anonymous auth bootstrap and environment credentials (`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`).
+- [x] Write unit tests verifying client initialization and type definitions.
 
 ### [Ticket 02: Cached Supabase Ledger Repository](./tickets/02-cached-supabase-ledger-repository.md)
 - [ ] Implement `SupabaseLedgerRepository` implementing `LedgerRepository` contract.

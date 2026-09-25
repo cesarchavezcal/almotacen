@@ -3,7 +3,8 @@
 ## Metadata
 - **Change**: `web-supabase-integration`
 - **Bound Scenarios**: [`SCEN-001`](../spec-tests.md#scen-001-automatic-anonymous-authentication-on-web), [`SCEN-002`](../spec-tests.md#scen-002-row-level-security-isolation), [`SCEN-003`](../spec-tests.md#scen-003-integer-cents--entity-integrity-invariants)
-- **Status**: Ready
+- **Status**: Completed
+- **PR**: [#42](https://github.com/cesarchavezcal/almotacen/pull/42)
 
 ---
 
