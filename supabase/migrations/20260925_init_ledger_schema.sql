@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     id TEXT PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL DEFAULT auth.uid(),
     name TEXT NOT NULL,
-    account_type TEXT NOT NULL CHECK (account_type IN ('depository', 'credit')),
+    account_type TEXT NOT NULL CHECK (account_type IN ('checking', 'savings', 'credit', 'cash')),
     balance_cents BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS categories (
     activity_cents BIGINT NOT NULL DEFAULT 0,
     available_cents BIGINT NOT NULL DEFAULT 0,
     target_cents BIGINT NOT NULL DEFAULT 0,
-    target_type TEXT CHECK (target_type IN ('NEED_FOR_SPENDING', 'MONTHLY_SAVINGS_BUILDER', 'TARGET_BALANCE')),
+    target_type TEXT CHECK (target_type IN ('NEEDED_FOR_SPENDING', 'MONTHLY_SET_ASIDE')),
     target_due_day INTEGER CHECK (target_due_day BETWEEN 1 AND 31),
     unfunded_debt_cents BIGINT NOT NULL DEFAULT 0,
     is_credit_payment INTEGER NOT NULL DEFAULT 0 CHECK (is_credit_payment IN (0, 1)),

@@ -216,7 +216,11 @@ export class SupabaseLedgerRepository implements LedgerRepository {
       state: BudgetState,
       groups: CategoryGroup[]
     ) => { newState: BudgetState; newGroups?: CategoryGroup[]; result: T },
-    persistRemote: (userId: string) => PromiseLike<unknown>
+    persistRemote: (
+      userId: string,
+      targetState: BudgetState,
+      targetGroups: CategoryGroup[]
+    ) => PromiseLike<unknown>
   ): T {
     const snapshot = this.cloneState();
     try {
@@ -228,7 +232,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
       this.notify();
 
       if (this.userId) {
-        Promise.resolve(persistRemote(this.userId)).catch((err) => {
+        Promise.resolve(persistRemote(this.userId, newState, newGroups ?? this.groups)).catch((err) => {
           const syncError = err instanceof Error ? err : new Error(String(err));
           const enrichedError = new LedgerError(
             `Remote sync rejected, rolling back local cache: ${syncError.message}`
@@ -293,7 +297,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           },
         };
       },
-      async (userId) => {
+      async (userId, targetState) => {
         const txRow = mapDomainToTransactionRow(
           {
             id: params.id,
@@ -309,11 +313,11 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           'outflow'
         );
 
-        const targetAccount = this.budgetState.accounts[params.accountId];
-        const targetCategory = this.budgetState.categories[params.categoryId];
+        const targetAccount = targetState.accounts[params.accountId];
+        const targetCategory = targetState.categories[params.categoryId];
 
         const promises: PromiseLike<unknown>[] = [
-          this.client.from('transactions').insert(txRow),
+          this.client.from('transactions').insert(txRow).throwOnError(),
         ];
 
         if (targetAccount) {
@@ -323,6 +327,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
               .update({ balance_cents: targetAccount.balanceCents })
               .eq('id', params.accountId)
               .eq('user_id', userId)
+              .throwOnError()
           );
         }
 
@@ -336,11 +341,12 @@ export class SupabaseLedgerRepository implements LedgerRepository {
               })
               .eq('id', params.categoryId)
               .eq('user_id', userId)
+              .throwOnError()
           );
         }
 
         if (targetAccount?.accountType === 'credit' && targetAccount.creditPaymentCategoryId) {
-          const paymentCat = this.budgetState.categories[targetAccount.creditPaymentCategoryId];
+          const paymentCat = targetState.categories[targetAccount.creditPaymentCategoryId];
           if (paymentCat) {
             promises.push(
               this.client
@@ -350,6 +356,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
                 })
                 .eq('id', paymentCat.id)
                 .eq('user_id', userId)
+                .throwOnError()
             );
           }
         }
@@ -388,7 +395,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           },
         };
       },
-      async (userId) => {
+      async (userId, targetState) => {
         const txRow = mapDomainToTransactionRow(
           {
             id: params.id,
@@ -403,10 +410,10 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           'inflow'
         );
 
-        const targetAccount = this.budgetState.accounts[params.accountId];
+        const targetAccount = targetState.accounts[params.accountId];
 
         const promises: PromiseLike<unknown>[] = [
-          this.client.from('transactions').insert(txRow),
+          this.client.from('transactions').insert(txRow).throwOnError(),
         ];
 
         if (targetAccount) {
@@ -416,6 +423,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
               .update({ balance_cents: targetAccount.balanceCents })
               .eq('id', params.accountId)
               .eq('user_id', userId)
+              .throwOnError()
           );
         }
 
@@ -425,8 +433,9 @@ export class SupabaseLedgerRepository implements LedgerRepository {
             .upsert({
               user_id: userId,
               key: 'ready_to_assign_cents',
-              value: String(this.budgetState.readyToAssignCents),
+              value: String(targetState.readyToAssignCents),
             })
+            .throwOnError()
         );
 
         await Promise.all(promises);
@@ -453,8 +462,8 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           },
         };
       },
-      async (userId) => {
-        const targetCategory = this.budgetState.categories[params.categoryId];
+      async (userId, targetState) => {
+        const targetCategory = targetState.categories[params.categoryId];
 
         const promises: PromiseLike<unknown>[] = [
           this.client
@@ -462,8 +471,9 @@ export class SupabaseLedgerRepository implements LedgerRepository {
             .upsert({
               user_id: userId,
               key: 'ready_to_assign_cents',
-              value: String(this.budgetState.readyToAssignCents),
-            }),
+              value: String(targetState.readyToAssignCents),
+            })
+            .throwOnError(),
         ];
 
         if (targetCategory) {
@@ -476,6 +486,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
               })
               .eq('id', params.categoryId)
               .eq('user_id', userId)
+              .throwOnError()
           );
         }
 
@@ -515,7 +526,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           },
         };
       },
-      async (userId) => {
+      async (userId, targetState) => {
         const txRow = mapDomainToTransactionRow(
           {
             id: params.id,
@@ -531,11 +542,11 @@ export class SupabaseLedgerRepository implements LedgerRepository {
         );
         txRow.transfer_account_id = params.toAccountId;
 
-        const fromAccount = this.budgetState.accounts[params.fromAccountId];
-        const toAccount = this.budgetState.accounts[params.toAccountId];
+        const fromAccount = targetState.accounts[params.fromAccountId];
+        const toAccount = targetState.accounts[params.toAccountId];
 
         const promises: PromiseLike<unknown>[] = [
-          this.client.from('transactions').insert(txRow),
+          this.client.from('transactions').insert(txRow).throwOnError(),
         ];
 
         if (fromAccount) {
@@ -545,6 +556,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
               .update({ balance_cents: fromAccount.balanceCents })
               .eq('id', params.fromAccountId)
               .eq('user_id', userId)
+              .throwOnError()
           );
         }
 
@@ -555,10 +567,11 @@ export class SupabaseLedgerRepository implements LedgerRepository {
               .update({ balance_cents: toAccount.balanceCents })
               .eq('id', params.toAccountId)
               .eq('user_id', userId)
+              .throwOnError()
           );
 
           if (toAccount.creditPaymentCategoryId) {
-            const paymentCat = this.budgetState.categories[toAccount.creditPaymentCategoryId];
+            const paymentCat = targetState.categories[toAccount.creditPaymentCategoryId];
             if (paymentCat) {
               promises.push(
                 this.client
@@ -566,6 +579,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
                   .update({ available_cents: paymentCat.availableCents })
                   .eq('id', paymentCat.id)
                   .eq('user_id', userId)
+                  .throwOnError()
               );
             }
           }
@@ -585,15 +599,16 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           result,
         };
       },
-      async (userId) => {
+      async (userId, targetState) => {
         const promises: PromiseLike<unknown>[] = [
           this.client
             .from('metadata')
             .upsert({
               user_id: userId,
               key: 'ready_to_assign_cents',
-              value: String(this.budgetState.readyToAssignCents),
-            }),
+              value: String(targetState.readyToAssignCents),
+            })
+            .throwOnError(),
         ];
 
         if (targetMonth) {
@@ -605,10 +620,11 @@ export class SupabaseLedgerRepository implements LedgerRepository {
                 key: 'current_cycle_month',
                 value: targetMonth,
               })
+              .throwOnError()
           );
         }
 
-        for (const category of Object.values(this.budgetState.categories)) {
+        for (const category of Object.values(targetState.categories)) {
           promises.push(
             this.client
               .from('categories')
@@ -619,6 +635,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
               })
               .eq('id', category.id)
               .eq('user_id', userId)
+              .throwOnError()
           );
         }
 
@@ -672,18 +689,19 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           },
         };
       },
-      async (userId) => {
+      async (userId, targetState) => {
         const promises: PromiseLike<unknown>[] = [
           this.client
             .from('metadata')
             .upsert({
               user_id: userId,
               key: 'ready_to_assign_cents',
-              value: String(this.budgetState.readyToAssignCents),
-            }),
+              value: String(targetState.readyToAssignCents),
+            })
+            .throwOnError(),
         ];
 
-        for (const category of Object.values(this.budgetState.categories)) {
+        for (const category of Object.values(targetState.categories)) {
           promises.push(
             this.client
               .from('categories')
@@ -693,6 +711,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
               })
               .eq('id', category.id)
               .eq('user_id', userId)
+              .throwOnError()
           );
         }
 
@@ -723,9 +742,9 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           },
         };
       },
-      async (userId) => {
-        const sourceCat = this.budgetState.categories[params.sourceCategoryId];
-        const targetCat = this.budgetState.categories[params.targetCategoryId];
+      async (userId, targetState) => {
+        const sourceCat = targetState.categories[params.sourceCategoryId];
+        const targetCat = targetState.categories[params.targetCategoryId];
 
         const promises: PromiseLike<unknown>[] = [];
 
@@ -739,6 +758,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
               })
               .eq('id', params.sourceCategoryId)
               .eq('user_id', userId)
+              .throwOnError()
           );
         }
 
@@ -753,11 +773,12 @@ export class SupabaseLedgerRepository implements LedgerRepository {
               })
               .eq('id', params.targetCategoryId)
               .eq('user_id', userId)
+              .throwOnError()
           );
         }
 
         // Check if any credit payment category changed
-        for (const cat of Object.values(this.budgetState.categories)) {
+        for (const cat of Object.values(targetState.categories)) {
           if (cat.isCreditPayment) {
             promises.push(
               this.client
@@ -768,6 +789,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
                 })
                 .eq('id', cat.id)
                 .eq('user_id', userId)
+                .throwOnError()
             );
           }
         }
@@ -837,7 +859,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           result: newAccount,
         };
       },
-      async (userId) => {
+      async (userId, targetState) => {
         const promises: PromiseLike<unknown>[] = [];
 
         if (input.accountType === 'credit') {
@@ -848,7 +870,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
               user_id: userId,
               name: prep.paymentGroupName,
               sort_order: 0,
-            })
+            }).throwOnError()
           );
           promises.push(
             this.client.from('categories').insert({
@@ -865,7 +887,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
               is_credit_payment: 1,
               credit_account_id: id,
               sort_order: 0,
-            })
+            }).throwOnError()
           );
         }
 
@@ -876,7 +898,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
             name: input.name,
             account_type: input.accountType,
             balance_cents: input.balanceCents,
-          })
+          }).throwOnError()
         );
 
         const rtaDelta = calculateDepositoryInflowOnCreation(input.accountType, input.balanceCents);
@@ -885,8 +907,8 @@ export class SupabaseLedgerRepository implements LedgerRepository {
             this.client.from('metadata').upsert({
               user_id: userId,
               key: 'ready_to_assign_cents',
-              value: String(this.budgetState.readyToAssignCents),
-            })
+              value: String(targetState.readyToAssignCents),
+            }).throwOnError()
           );
         }
 
@@ -928,7 +950,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           result: updatedAccount,
         };
       },
-      async (userId) => {
+      async (userId, targetState) => {
         const promises: PromiseLike<unknown>[] = [
           this.client
             .from('accounts')
@@ -937,7 +959,8 @@ export class SupabaseLedgerRepository implements LedgerRepository {
               balance_cents: updatedBalance,
             })
             .eq('id', input.id)
-            .eq('user_id', userId),
+            .eq('user_id', userId)
+            .throwOnError(),
         ];
 
         if (delta !== 0) {
@@ -945,8 +968,8 @@ export class SupabaseLedgerRepository implements LedgerRepository {
             this.client.from('metadata').upsert({
               user_id: userId,
               key: 'ready_to_assign_cents',
-              value: String(this.budgetState.readyToAssignCents),
-            })
+              value: String(targetState.readyToAssignCents),
+            }).throwOnError()
           );
         }
 
@@ -1008,6 +1031,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
               .delete()
               .eq('id', paymentCategoryToDelete)
               .eq('user_id', userId)
+              .throwOnError()
           );
         }
 
@@ -1017,6 +1041,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
             .delete()
             .eq('id', id)
             .eq('user_id', userId)
+            .throwOnError()
         );
 
         await Promise.all(promises);
@@ -1044,15 +1069,15 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           result: newGroup,
         };
       },
-      async (userId) => {
-        const group = this.groups.find((g) => g.id === id);
+      async (userId, _targetState, targetGroups) => {
+        const group = targetGroups.find((g) => g.id === id);
         if (group) {
           await this.client.from('category_groups').insert({
             id: group.id,
             user_id: userId,
             name: group.name,
             sort_order: group.sortOrder,
-          });
+          }).throwOnError();
         }
       }
     );
@@ -1084,7 +1109,8 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           .from('category_groups')
           .update({ name: input.name })
           .eq('id', input.id)
-          .eq('user_id', userId);
+          .eq('user_id', userId)
+          .throwOnError();
       }
     );
   }
@@ -1112,7 +1138,8 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           .from('category_groups')
           .delete()
           .eq('id', id)
-          .eq('user_id', userId);
+          .eq('user_id', userId)
+          .throwOnError();
       }
     );
   }
@@ -1153,12 +1180,12 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           result: newCategory,
         };
       },
-      async (userId) => {
-        const cat = this.budgetState.categories[id];
+      async (userId, targetState) => {
+        const cat = targetState.categories[id];
         if (cat) {
           await this.client.from('categories').insert(
             mapDomainToCategoryRow(cat, userId, 0)
-          );
+          ).throwOnError();
         }
       }
     );
@@ -1218,7 +1245,8 @@ export class SupabaseLedgerRepository implements LedgerRepository {
             target_due_day: newTargetDueDay,
           })
           .eq('id', input.id)
-          .eq('user_id', userId);
+          .eq('user_id', userId)
+          .throwOnError();
       }
     );
   }
@@ -1256,7 +1284,8 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           .from('categories')
           .delete()
           .eq('id', id)
-          .eq('user_id', userId);
+          .eq('user_id', userId)
+          .throwOnError();
       }
     );
   }
@@ -1289,15 +1318,15 @@ export class SupabaseLedgerRepository implements LedgerRepository {
       },
       async (userId) => {
         await Promise.all([
-          this.client.from('transactions').delete().eq('user_id', userId),
-          this.client.from('categories').delete().eq('user_id', userId),
-          this.client.from('category_groups').delete().eq('user_id', userId),
-          this.client.from('accounts').delete().eq('user_id', userId),
+          this.client.from('transactions').delete().eq('user_id', userId).throwOnError(),
+          this.client.from('categories').delete().eq('user_id', userId).throwOnError(),
+          this.client.from('category_groups').delete().eq('user_id', userId).throwOnError(),
+          this.client.from('accounts').delete().eq('user_id', userId).throwOnError(),
           this.client.from('metadata').upsert([
             { user_id: userId, key: 'schema_version', value: '2' },
             { user_id: userId, key: 'ready_to_assign_cents', value: '0' },
             { user_id: userId, key: 'onboarding_completed', value: 'false' },
-          ]),
+          ]).throwOnError(),
         ]);
       }
     );
@@ -1334,10 +1363,10 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           result: undefined,
         };
       },
-      async (userId) => {
+      async (userId, targetState) => {
         await Promise.all([
-          this.client.from('transactions').delete().eq('user_id', userId),
-          ...Object.values(this.budgetState.categories).map((c) =>
+          this.client.from('transactions').delete().eq('user_id', userId).throwOnError(),
+          ...Object.values(targetState.categories).map((c) =>
             this.client
               .from('categories')
               .update({
@@ -1347,15 +1376,16 @@ export class SupabaseLedgerRepository implements LedgerRepository {
               })
               .eq('id', c.id)
               .eq('user_id', userId)
+              .throwOnError()
           ),
           this.client.from('metadata').upsert([
             {
               user_id: userId,
               key: 'ready_to_assign_cents',
-              value: String(this.budgetState.readyToAssignCents),
+              value: String(targetState.readyToAssignCents),
             },
             { user_id: userId, key: 'onboarding_completed', value: 'true' },
-          ]),
+          ]).throwOnError(),
         ]);
       }
     );
@@ -1393,28 +1423,38 @@ export class SupabaseLedgerRepository implements LedgerRepository {
       },
       async (userId) => {
         await Promise.all([
-          this.client.from('transactions').delete().eq('user_id', userId),
-          this.client.from('categories').delete().eq('user_id', userId),
-          this.client.from('category_groups').delete().eq('user_id', userId),
-          this.client.from('accounts').delete().eq('user_id', userId),
+          this.client.from('transactions').delete().eq('user_id', userId).throwOnError(),
+          this.client.from('categories').delete().eq('user_id', userId).throwOnError(),
+          this.client.from('category_groups').delete().eq('user_id', userId).throwOnError(),
+          this.client.from('accounts').delete().eq('user_id', userId).throwOnError(),
         ]);
 
         if (seed.groups.length > 0) {
           await this.client
             .from('category_groups')
-            .insert(seed.groups.map((g) => mapDomainToCategoryGroupRow(g, userId)));
+            .insert(seed.groups.map((g) => mapDomainToCategoryGroupRow(g, userId)))
+            .throwOnError();
         }
 
         if (seed.categories.length > 0) {
           await this.client
             .from('categories')
-            .insert(seed.categories.map((c, idx) => mapDomainToCategoryRow(c, userId, idx)));
+            .insert(
+              seed.categories.map((c, idx) => {
+                const linkedAccount = seed.accounts.find(
+                  (a) => a.creditPaymentCategoryId === c.id
+                );
+                return mapDomainToCategoryRow(c, userId, idx, linkedAccount?.id);
+              })
+            )
+            .throwOnError();
         }
 
         if (seed.accounts.length > 0) {
           await this.client
             .from('accounts')
-            .insert(seed.accounts.map((a) => mapDomainToAccountRow(a, userId)));
+            .insert(seed.accounts.map((a) => mapDomainToAccountRow(a, userId)))
+            .throwOnError();
         }
 
         await this.client.from('metadata').upsert([
@@ -1425,7 +1465,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           },
           { user_id: userId, key: 'onboarding_completed', value: 'true' },
           { user_id: userId, key: 'schema_version', value: '2' },
-        ]);
+        ]).throwOnError();
       }
     );
   }

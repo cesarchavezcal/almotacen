@@ -30,11 +30,11 @@ function createMockSupabase(
   } = {}
 ) {
   const tableData: Record<string, unknown[]> = {
-    metadata: initialData.metadata ?? [],
-    accounts: initialData.accounts ?? [],
-    category_groups: initialData.category_groups ?? [],
-    categories: initialData.categories ?? [],
-    transactions: initialData.transactions ?? [],
+    metadata: (initialData.metadata ?? []).map((r) => ({ ...r })),
+    accounts: (initialData.accounts ?? []).map((r) => ({ ...r })),
+    category_groups: (initialData.category_groups ?? []).map((r) => ({ ...r })),
+    categories: (initialData.categories ?? []).map((r) => ({ ...r })),
+    transactions: (initialData.transactions ?? []).map((r) => ({ ...r })),
   };
 
   const handlers: Record<string, MockTableHandlers> = {};
@@ -57,21 +57,27 @@ function createMockSupabase(
           };
         }),
         insert: jest.fn().mockImplementation((rows: unknown) => {
-          if (options.failOnInsert) {
-            return Promise.reject(new Error('Simulated network failure on insert'));
-          }
-          const rowArr = Array.isArray(rows) ? rows : [rows];
-          tableData[table]?.push(...rowArr);
-          return Promise.resolve({ data: rows, error: null });
+          const builder = {
+            throwOnError: jest.fn().mockImplementation(() => builder),
+            then: (resolve: (val: unknown) => unknown, reject?: (err: unknown) => unknown) => {
+              if (options.failOnInsert) {
+                return Promise.reject(new Error('Simulated network failure on insert')).then(resolve, reject);
+              }
+              const rowArr = Array.isArray(rows) ? rows : [rows];
+              tableData[table]?.push(...rowArr);
+              return Promise.resolve({ data: rows, error: null }).then(resolve, reject);
+            },
+          };
+          return builder;
         }),
         update: jest.fn().mockImplementation(() => {
-          const builder: { eq: jest.Mock; then: (resolve: (val: unknown) => unknown, reject?: (err: unknown) => unknown) => Promise<unknown> } = {
-            eq: jest.fn().mockImplementation(() => {
-              if (options.failOnUpdate) {
-                return Promise.reject(new Error('Simulated network failure on update'));
-              }
-              return builder;
-            }),
+          const builder: {
+            eq: jest.Mock;
+            throwOnError: jest.Mock;
+            then: (resolve: (val: unknown) => unknown, reject?: (err: unknown) => unknown) => Promise<unknown>;
+          } = {
+            eq: jest.fn().mockImplementation(() => builder),
+            throwOnError: jest.fn().mockImplementation(() => builder),
             then: (resolve: (val: unknown) => unknown, reject?: (err: unknown) => unknown) => {
               if (options.failOnUpdate) {
                 return Promise.reject(new Error('Simulated network failure on update')).then(resolve, reject);
@@ -82,13 +88,13 @@ function createMockSupabase(
           return builder;
         }),
         delete: jest.fn().mockImplementation(() => {
-          const builder: { eq: jest.Mock; then: (resolve: (val: unknown) => unknown, reject?: (err: unknown) => unknown) => Promise<unknown> } = {
-            eq: jest.fn().mockImplementation(() => {
-              if (options.failOnDelete) {
-                return Promise.reject(new Error('Simulated network failure on delete'));
-              }
-              return builder;
-            }),
+          const builder: {
+            eq: jest.Mock;
+            throwOnError: jest.Mock;
+            then: (resolve: (val: unknown) => unknown, reject?: (err: unknown) => unknown) => Promise<unknown>;
+          } = {
+            eq: jest.fn().mockImplementation(() => builder),
+            throwOnError: jest.fn().mockImplementation(() => builder),
             then: (resolve: (val: unknown) => unknown, reject?: (err: unknown) => unknown) => {
               if (options.failOnDelete) {
                 return Promise.reject(new Error('Simulated network failure on delete')).then(resolve, reject);
@@ -99,10 +105,35 @@ function createMockSupabase(
           return builder;
         }),
         upsert: jest.fn().mockImplementation((rows: unknown) => {
-          if (options.failOnInsert) {
-            return Promise.reject(new Error('Simulated network failure on upsert'));
-          }
-          return Promise.resolve({ data: rows, error: null });
+          const builder = {
+            throwOnError: jest.fn().mockImplementation(() => builder),
+            then: (resolve: (val: unknown) => unknown, reject?: (err: unknown) => unknown) => {
+              if (options.failOnInsert) {
+                return Promise.reject(new Error('Simulated network failure on upsert')).then(resolve, reject);
+              }
+              const rowArr = Array.isArray(rows) ? rows : [rows];
+              for (const row of rowArr) {
+                const r = row as Record<string, unknown>;
+                const existingIdx = (tableData[table] ?? []).findIndex((existing) => {
+                  const e = existing as Record<string, unknown>;
+                  if (table === 'metadata' && typeof e.key === 'string' && typeof r.key === 'string') {
+                    return e.key === r.key;
+                  }
+                  if (typeof e.id === 'string' && typeof r.id === 'string') {
+                    return e.id === r.id;
+                  }
+                  return false;
+                });
+                if (existingIdx >= 0) {
+                  tableData[table][existingIdx] = { ...(tableData[table][existingIdx] as Record<string, unknown>), ...r };
+                } else {
+                  tableData[table]?.push(r);
+                }
+              }
+              return Promise.resolve({ data: rows, error: null }).then(resolve, reject);
+            },
+          };
+          return builder;
         }),
       };
     }
@@ -455,13 +486,13 @@ describe('SupabaseLedgerRepository (Tickets 02: SCEN-004, SCEN-005, SCEN-006, SC
     });
 
     it('throws ValidationError for invalid or corrupted account_type in row mapping', () => {
-      const corruptedRow = {
+      const corruptedRow = fromPartial<AccountRow>({
         id: 'acc-bad',
         user_id: 'test-user-uuid',
         name: 'Bad Account',
-        account_type: 'corrupted_type' as any,
+        account_type: 'corrupted_type' as unknown as AccountRow['account_type'],
         balance_cents: 10000,
-      };
+      });
       expect(() => mapAccountRowToDomain(corruptedRow)).toThrow(ValidationError);
     });
   });
@@ -588,6 +619,86 @@ describe('SupabaseLedgerRepository (Tickets 02: SCEN-004, SCEN-005, SCEN-006, SC
       expect(postDiag.categoryGroupCount).toBe(0);
       expect(postDiag.categoryCount).toBe(0);
       expect(repo.getBudgetState().readyToAssignCents).toBe(0);
+    });
+
+    it('seeds demo data with correct credit_account_id for payment categories', async () => {
+      const { mockClient, tableData } = createMockSupabase();
+      const repo = new SupabaseLedgerRepository(mockClient);
+      await repo.initializeAsync();
+
+      repo.seedDemoData();
+
+      // Wait a tick for background promises
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      const categories = tableData['categories'] as CategoryRow[];
+      const ccCategory = categories.find((c) => c.is_credit_payment === 1);
+      expect(ccCategory).toBeDefined();
+      expect(ccCategory?.credit_account_id).toBe('acc-credit');
+    });
+
+    it('captures immutable readyToAssignCents in background upserts preventing state races', async () => {
+      const { mockClient, tableData } = createMockSupabase({
+        accounts: seedAccounts,
+        category_groups: seedGroups,
+        categories: seedCategories,
+        metadata: seedMetadata,
+      });
+
+      const repo = new SupabaseLedgerRepository(mockClient);
+      await repo.initializeAsync();
+
+      // Perform allocation
+      repo.allocateEnvelope({
+        categoryId: 'cat-groceries',
+        amountCents: 10000,
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      const metadataRows = tableData['metadata'] as MetadataRow[];
+      const rtaRow = metadataRows.find((m) => m.key === 'ready_to_assign_cents');
+      expect(rtaRow?.value).toBe('70000');
+    });
+
+    it('notifies error subscribers and rolls back when throwOnError rejects', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const { mockClient } = createMockSupabase(
+        {
+          accounts: seedAccounts,
+          category_groups: seedGroups,
+          categories: seedCategories,
+          metadata: seedMetadata,
+        },
+        { failOnUpdate: true }
+      );
+
+      const repo = new SupabaseLedgerRepository(mockClient);
+      await repo.initializeAsync();
+
+      const errorListener = jest.fn();
+      repo.subscribeError(errorListener);
+
+      repo.updateAccount({
+        id: 'acc-checking',
+        name: 'Updated Checking',
+      });
+
+      // Synchronous optimistic update
+      expect(repo.getBudgetState().accounts['acc-checking'].name).toBe('Updated Checking');
+
+      // Wait for background promise rejection
+      await new Promise((resolve) => setTimeout(resolve, 20));
+
+      // Rolled back
+      expect(repo.getBudgetState().accounts['acc-checking'].name).toBe('Checking Account');
+      expect(errorListener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('Remote sync rejected'),
+        })
+      );
+
+      consoleSpy.mockRestore();
     });
   });
 });

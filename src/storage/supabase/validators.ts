@@ -3,6 +3,13 @@ import { isAccountType, isTransactionType } from './mappers';
 import { isTargetType } from '../../domain/ledger/types';
 
 /**
+ * Checks if a value represents a valid integer cents numeric or serialized bigint.
+ */
+function isValidCents(val: unknown): boolean {
+  return typeof val === 'number' || typeof val === 'string' || typeof val === 'bigint';
+}
+
+/**
  * Runtime type guard for Postgres AccountRow.
  */
 export function isAccountRow(val: unknown): val is AccountRow {
@@ -13,7 +20,7 @@ export function isAccountRow(val: unknown): val is AccountRow {
     typeof r.user_id === 'string' &&
     typeof r.name === 'string' &&
     isAccountType(r.account_type) &&
-    (typeof r.balance_cents === 'number' || typeof r.balance_cents === 'string' || typeof r.balance_cents === 'bigint')
+    isValidCents(r.balance_cents)
   );
 }
 
@@ -43,6 +50,10 @@ export function isCategoryRow(val: unknown): val is CategoryRow {
     typeof r.user_id === 'string' &&
     typeof r.group_id === 'string' &&
     typeof r.name === 'string' &&
+    isValidCents(r.assigned_cents) &&
+    isValidCents(r.available_cents) &&
+    isValidCents(r.target_cents) &&
+    isValidCents(r.unfunded_debt_cents) &&
     validTarget &&
     typeof r.sort_order === 'number'
   );
@@ -59,6 +70,7 @@ export function isTransactionRow(val: unknown): val is TransactionRow {
     typeof r.user_id === 'string' &&
     typeof r.account_id === 'string' &&
     typeof r.payee === 'string' &&
+    isValidCents(r.amount_cents) &&
     isTransactionType(r.transaction_type) &&
     typeof r.occurred_at === 'string'
   );
