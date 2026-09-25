@@ -37,16 +37,16 @@ flowchart LR
 - [x] Write unit tests verifying client initialization and type definitions.
 
 ### [Ticket 02: Cached Supabase Ledger Repository](./tickets/02-cached-supabase-ledger-repository.md)
-- [ ] Implement `SupabaseLedgerRepository` implementing `LedgerRepository` contract.
-- [ ] Implement `initializeAsync()` hydrating in-memory `BudgetState` cache from Postgres tables.
-- [ ] Implement synchronous getters: `getBudgetState()`, `getCategoryGroups()`.
-- [ ] Implement optimistic mutations with rollback on error:
+- [x] Implement `SupabaseLedgerRepository` implementing `LedgerRepository` contract.
+- [x] Implement `initializeAsync()` hydrating in-memory `BudgetState` cache from Postgres tables.
+- [x] Implement synchronous getters: `getBudgetState()`, `getCategoryGroups()`.
+- [x] Implement optimistic mutations with rollback on error:
   - `postOutflow`, `postInflow`, `allocateEnvelope`, `postCreditCardPayment`.
   - `createAccount`, `updateAccount`, `deleteAccount`.
   - `createCategoryGroup`, `updateCategoryGroup`, `deleteCategoryGroup`.
   - `createCategory`, `updateCategory`, `deleteCategory`.
   - `factoryReset`, `clearTransactionsOnly`, `seedDemoData`, `getDiagnostics`.
-- [ ] Write unit and integration tests with mocked Supabase client verifying cache hydration, optimistic state updates, and rollback invariants.
+- [x] Write unit and integration tests with mocked Supabase client verifying cache hydration, optimistic state updates, and rollback invariants.
 
 ### [Ticket 03: Platform Factory & Web Bootstrapping](./tickets/03-platform-factory-and-web-bootstrapping.md)
 - [ ] Update `src/storage/useLedgerStore.ts` repository factory to return `SupabaseLedgerRepository` when `Platform.OS === 'web'` and `SQLiteLedgerRepository` when `Platform.OS !== 'web'`.
