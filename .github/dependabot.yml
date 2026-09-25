@@ -18,13 +18,7 @@ updates:
     labels:
       - "chore"
 
-  # ---------------------------------------------------------------------------
-  # Downstream Project Ecosystems
-  # When initializing this repository for a specific stack via /init-project,
-  # enable the matching ecosystem block below:
-  # ---------------------------------------------------------------------------
-
-  # Node / JavaScript / TypeScript (npm / yarn / pnpm)
+  # Node / JavaScript / TypeScript (Expo / React Native / npm)
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -39,46 +33,3 @@ updates:
     labels:
       - "chore"
 
-  # Python (pip / poetry / pipenv)
-  # - package-ecosystem: "pip"
-  #   directory: "/"
-  #   schedule:
-  #     interval: "weekly"
-  #   commit-message:
-  #     prefix: "chore"
-  #     include: "scope"
-  #   labels:
-  #     - "chore"
-
-  # Rust (cargo)
-  # - package-ecosystem: "cargo"
-  #   directory: "/"
-  #   schedule:
-  #     interval: "weekly"
-  #   commit-message:
-  #     prefix: "chore"
-  #     include: "scope"
-  #   labels:
-  #     - "chore"
-
-  # Go (gomod)
-  # - package-ecosystem: "gomod"
-  #   directory: "/"
-  #   schedule:
-  #     interval: "weekly"
-  #   commit-message:
-  #     prefix: "chore"
-  #     include: "scope"
-  #   labels:
-  #     - "chore"
-
-  # Swift / iOS (swift)
-  # - package-ecosystem: "swift"
-  #   directory: "/"
-  #   schedule:
-  #     interval: "weekly"
-  #   commit-message:
-  #     prefix: "chore"
-  #     include: "scope"
-  #   labels:
-  #     - "chore"

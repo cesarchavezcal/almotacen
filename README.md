@@ -180,4 +180,13 @@ Create Branch ──> Make Changes & Commit ──> Push & Open PR ──> Merge
 | `/sdd-verify` / `/code-review` | Two-axis audit (Spec + Standards compliance) and GGA pre-commit verification |
 | `/sdd-archive` | Archive completed change into `openspec/changes/archive/` and sync living specs |
 | `/find-skills` | Search open ecosystem skills via `npx skills find` with interactive selection |
+| `/show-me` | Visual diagrams, component trees, and call trees |
 | `/plan` | Generate implementation plan artifact with mandatory turn boundary pause |
+
+---
+
+## 🔒 Security & Vulnerability Policy
+
+- **Security Advisories**: For details on responsible disclosure and reporting vulnerabilities, see [`SECURITY.md`](SECURITY.md).
+- **Automated Dependency Updates**: Configured in [`.github/dependabot.yml`](.github/dependabot.yml) with weekly automated checks for `npm` and `github-actions`.
+

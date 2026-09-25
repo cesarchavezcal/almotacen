@@ -121,22 +121,38 @@
   - 183/183 tests passing across 26 test suites via `./init.sh`, 0 TypeScript errors
   - PR opened: [PR #38](https://github.com/cesarchavezcal/almotacen/pull/38)
 
+- [x] Executed Step 7, 8 & 9 (Implementation, Two-Axis Review & PR - ALM-018 Ticket 04: Entity Creation & Edit Modals / Sheets):
+  - Created presentational modal forms (`AccountModal`, `CategoryGroupModal`, `CategoryModal`) with strict integer cents conversion and error handling
+  - Wired up modals to dedicated stack screens (`app/settings/accounts.tsx`, `app/settings/groups.tsx`, `app/settings/categories.tsx`)
+  - Two-Axis Review completed, merged via PR #39.
+- [x] Executed Step 7, 8 & 9 (Web Supabase Integration - Ticket 01: Schema & Anonymous Client):
+  - Created Postgres DDL schema `supabase/migrations/20260925_init_ledger_schema.sql` with multi-tenancy and RLS policies
+  - Implemented `@supabase/supabase-js` client `src/storage/supabase/client.ts` with anonymous authentication
+  - Authored unit test suite `src/storage/supabase/__tests__/client.test.ts` (3/3 tests passing)
+  - Two-Axis Review completed, merged via PR #42.
+- [x] Executed Step 7 (Web Supabase Integration - Ticket 02: Cached Supabase Ledger Repository):
+  - Implemented `SupabaseLedgerRepository` in `src/storage/supabase/supabaseLedgerRepository.ts` adhering to `LedgerRepository` interface
+  - Implemented in-memory `BudgetState` caching with zero-latency synchronous reads for `useSyncExternalStore`
+  - Implemented optimistic mutations with rollback snapshot mechanism on network rejection (`SCEN-006`, `SCEN-007`)
+  - Authored unit test suite `src/storage/supabase/__tests__/supabaseLedgerRepository.test.ts` (14/14 tests passing)
+  - 222/222 tests passing across 29 suites via `./init.sh`, 0 TypeScript errors
+
 ### What's In Progress
 
-- [ ] Awaiting merge of [PR #38](https://github.com/cesarchavezcal/almotacen/pull/38)
+- [ ] Executing Two-Axis Review for Ticket 02 (`feature/CCH/ALM-022-cached-supabase-repository`)
 
 ### What's Next
 
-1. Merge PR #38 into `main`.
-2. Proceed to `/autonomic plan openspec/changes/settings-entity-management-data-reset/tickets/04-entity-management-modals.md` (Ticket 04: Entity Creation & Edit Modals / Sheets).
+1. Open PR for Ticket 02 and run Two-Axis Review.
+2. Squash & merge PR into `main`.
+3. Proceed to `/autonomic plan openspec/changes/web-supabase-integration/tickets/03-platform-factory-and-web-bootstrapping.md` (Ticket 03: Platform Factory & Web Bootstrapping).
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 183/183 Jest unit/integration tests pass (26 suites), `tsc --noEmit` 0 errors.
-- [x] ALM-015 Ticket 01: 14 behavioral tests passing (`SCEN-002` through `SCEN-015`).
-- [x] ALM-016 Ticket 02: 4 behavioral tests passing (`SCEN-016` through `SCEN-019`).
-- [x] ALM-017 Ticket 03: 9 behavioral tests passing (`SCEN-001`).
-- [x] `.gga` Automated Pre-commit Review: PASSED.
+- [x] `./init.sh`: 222/222 Jest unit/integration tests pass (29 suites), `tsc --noEmit` 0 errors.
+- [x] Web Supabase Integration Ticket 01: 3 behavioral tests passing (`SCEN-001`, `SCEN-002`, `SCEN-003`).
+- [x] Web Supabase Integration Ticket 02: 14 behavioral tests passing (`SCEN-004`, `SCEN-005`, `SCEN-006`, `SCEN-007`).
+
 
 
 
