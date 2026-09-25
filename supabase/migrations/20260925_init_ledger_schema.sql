@@ -10,7 +10,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- ==========================================
 CREATE TABLE IF NOT EXISTS metadata (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL DEFAULT auth.uid(),
     key TEXT NOT NULL,
     value TEXT NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
@@ -24,7 +24,7 @@ CREATE INDEX IF NOT EXISTS idx_metadata_user ON metadata(user_id);
 -- ==========================================
 CREATE TABLE IF NOT EXISTS accounts (
     id TEXT PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL DEFAULT auth.uid(),
     name TEXT NOT NULL,
     account_type TEXT NOT NULL CHECK (account_type IN ('depository', 'credit')),
     balance_cents BIGINT NOT NULL DEFAULT 0,
@@ -39,7 +39,7 @@ CREATE INDEX IF NOT EXISTS idx_accounts_user ON accounts(user_id);
 -- ==========================================
 CREATE TABLE IF NOT EXISTS category_groups (
     id TEXT PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL DEFAULT auth.uid(),
     name TEXT NOT NULL,
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
@@ -52,7 +52,7 @@ CREATE INDEX IF NOT EXISTS idx_category_groups_user ON category_groups(user_id);
 -- ==========================================
 CREATE TABLE IF NOT EXISTS categories (
     id TEXT PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL DEFAULT auth.uid(),
     group_id TEXT REFERENCES category_groups(id) ON DELETE CASCADE NOT NULL,
     name TEXT NOT NULL,
     assigned_cents BIGINT NOT NULL DEFAULT 0,
@@ -75,7 +75,7 @@ CREATE INDEX IF NOT EXISTS idx_categories_group ON categories(user_id, group_id)
 -- ==========================================
 CREATE TABLE IF NOT EXISTS transactions (
     id TEXT PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL DEFAULT auth.uid(),
     account_id TEXT REFERENCES accounts(id) ON DELETE CASCADE NOT NULL,
     category_id TEXT REFERENCES categories(id) ON DELETE SET NULL,
     amount_cents BIGINT NOT NULL,

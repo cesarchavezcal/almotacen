@@ -52,8 +52,8 @@ export function getSupabaseClient(customConfig?: SupabaseConfig): SupabaseClient
   return _supabaseClient;
 }
 
-export function setSupabaseClientInstance(client: SupabaseClient | null): void {
-  _supabaseClient = client;
+export function resetSupabaseClientForTesting(): void {
+  _supabaseClient = null;
 }
 
 export async function ensureAnonymousSession(

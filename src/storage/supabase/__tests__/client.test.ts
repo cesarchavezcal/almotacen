@@ -1,12 +1,45 @@
 import {
   getSupabaseConfig,
   getSupabaseClient,
-  setSupabaseClientInstance,
+  resetSupabaseClientForTesting,
   ensureAnonymousSession,
   SupabaseConfigurationError,
   SupabaseAuthError,
 } from '../client';
 import { SupabaseClient, Session } from '@supabase/supabase-js';
+import { fromPartial } from '@total-typescript/shoehorn';
+
+interface MockAuthOptions {
+  session?: Session | null;
+  getSessionError?: Error | null;
+  signInSession?: Session | null;
+  signInError?: Error | null;
+}
+
+function createMockSupabaseClient(options: MockAuthOptions = {}): {
+  client: SupabaseClient;
+  getSessionMock: jest.Mock;
+  signInAnonymouslyMock: jest.Mock;
+} {
+  const getSessionMock = jest.fn().mockResolvedValue({
+    data: { session: options.session ?? null },
+    error: options.getSessionError ?? null,
+  });
+
+  const signInAnonymouslyMock = jest.fn().mockResolvedValue({
+    data: { session: options.signInSession ?? null },
+    error: options.signInError ?? null,
+  });
+
+  const client = fromPartial<SupabaseClient>({
+    auth: fromPartial<SupabaseClient['auth']>({
+      getSession: getSessionMock,
+      signInAnonymously: signInAnonymouslyMock,
+    }),
+  });
+
+  return { client, getSessionMock, signInAnonymouslyMock };
+}
 
 describe('Supabase Client & Auth Bootstrap (SCEN-001)', () => {
   const originalEnv = process.env;
@@ -14,12 +47,12 @@ describe('Supabase Client & Auth Bootstrap (SCEN-001)', () => {
   beforeEach(() => {
     jest.resetModules();
     process.env = { ...originalEnv };
-    setSupabaseClientInstance(null);
+    resetSupabaseClientForTesting();
   });
 
   afterAll(() => {
     process.env = originalEnv;
-    setSupabaseClientInstance(null);
+    resetSupabaseClientForTesting();
   });
 
   describe('Configuration', () => {
@@ -68,75 +101,46 @@ describe('Supabase Client & Auth Bootstrap (SCEN-001)', () => {
     };
 
     it('reuses existing session if active', async () => {
-      const mockClient = {
-        auth: {
-          getSession: jest.fn().mockResolvedValue({
-            data: { session: mockSession },
-            error: null,
-          }),
-          signInAnonymously: jest.fn(),
-        },
-      } as unknown as SupabaseClient;
+      const { client, getSessionMock, signInAnonymouslyMock } = createMockSupabaseClient({
+        session: mockSession,
+      });
 
-      const session = await ensureAnonymousSession(mockClient);
+      const session = await ensureAnonymousSession(client);
 
       expect(session).toEqual(mockSession);
-      expect(mockClient.auth.getSession).toHaveBeenCalledTimes(1);
-      expect(mockClient.auth.signInAnonymously).not.toHaveBeenCalled();
+      expect(getSessionMock).toHaveBeenCalledTimes(1);
+      expect(signInAnonymouslyMock).not.toHaveBeenCalled();
     });
 
     it('triggers signInAnonymously when no session exists', async () => {
-      const mockClient = {
-        auth: {
-          getSession: jest.fn().mockResolvedValue({
-            data: { session: null },
-            error: null,
-          }),
-          signInAnonymously: jest.fn().mockResolvedValue({
-            data: { session: mockSession },
-            error: null,
-          }),
-        },
-      } as unknown as SupabaseClient;
+      const { client, getSessionMock, signInAnonymouslyMock } = createMockSupabaseClient({
+        session: null,
+        signInSession: mockSession,
+      });
 
-      const session = await ensureAnonymousSession(mockClient);
+      const session = await ensureAnonymousSession(client);
 
       expect(session).toEqual(mockSession);
-      expect(mockClient.auth.getSession).toHaveBeenCalledTimes(1);
-      expect(mockClient.auth.signInAnonymously).toHaveBeenCalledTimes(1);
+      expect(getSessionMock).toHaveBeenCalledTimes(1);
+      expect(signInAnonymouslyMock).toHaveBeenCalledTimes(1);
     });
 
     it('throws SupabaseAuthError if getSession fails', async () => {
       const authError = new Error('Network error inspecting session');
-      const mockClient = {
-        auth: {
-          getSession: jest.fn().mockResolvedValue({
-            data: { session: null },
-            error: authError,
-          }),
-          signInAnonymously: jest.fn(),
-        },
-      } as unknown as SupabaseClient;
+      const { client } = createMockSupabaseClient({
+        getSessionError: authError,
+      });
 
-      await expect(ensureAnonymousSession(mockClient)).rejects.toThrow(SupabaseAuthError);
+      await expect(ensureAnonymousSession(client)).rejects.toThrow(SupabaseAuthError);
     });
 
     it('throws SupabaseAuthError if signInAnonymously fails', async () => {
       const signInError = new Error('Anonymous sign-in disabled');
-      const mockClient = {
-        auth: {
-          getSession: jest.fn().mockResolvedValue({
-            data: { session: null },
-            error: null,
-          }),
-          signInAnonymously: jest.fn().mockResolvedValue({
-            data: { session: null },
-            error: signInError,
-          }),
-        },
-      } as unknown as SupabaseClient;
+      const { client } = createMockSupabaseClient({
+        signInError,
+      });
 
-      await expect(ensureAnonymousSession(mockClient)).rejects.toThrow(SupabaseAuthError);
+      await expect(ensureAnonymousSession(client)).rejects.toThrow(SupabaseAuthError);
     });
   });
 });
