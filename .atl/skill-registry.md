@@ -69,6 +69,7 @@
 | [`handoff`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/handoff/SKILL.md) | `/handoff` | `mattpocock/skills` | Compact the current conversation into a handoff document for another agent to pick up. |
 | [`claude-handoff`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/claude-handoff/SKILL.md) | `/claude-handoff` | `mattpocock/skills` | Hand the current conversation off to a fresh background agent that picks up the work immediately. |
 | [`loop-me`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/loop-me/SKILL.md) | `/loop-me` | `mattpocock/skills` | Grill me about specs for the workflows I want to build, within this workspace. |
+| [`show-me`](.agents/skills/show-me/SKILL.md) | `/show-me` | `humanlayer/skills` | Help the user understand the current topic visually with concise diagrams, code-shape sketches, and focused HTML artifacts. |
 
 ---
 
