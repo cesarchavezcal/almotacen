@@ -130,28 +130,41 @@
   - Implemented `@supabase/supabase-js` client `src/storage/supabase/client.ts` with anonymous authentication
   - Authored unit test suite `src/storage/supabase/__tests__/client.test.ts` (3/3 tests passing)
   - Two-Axis Review completed, merged via PR #42.
-- [x] Executed Step 7 (Web Supabase Integration - Ticket 02: Cached Supabase Ledger Repository):
+- [x] Executed Step 7, 8 & 9 (Web Supabase Integration - Ticket 02: Cached Supabase Ledger Repository):
   - Implemented `SupabaseLedgerRepository` in `src/storage/supabase/supabaseLedgerRepository.ts` adhering to `LedgerRepository` interface
   - Implemented in-memory `BudgetState` caching with zero-latency synchronous reads for `useSyncExternalStore`
   - Implemented optimistic mutations with rollback snapshot mechanism on network rejection (`SCEN-006`, `SCEN-007`)
-  - Authored unit test suite `src/storage/supabase/__tests__/supabaseLedgerRepository.test.ts` (14/14 tests passing)
-  - 222/222 tests passing across 29 suites via `./init.sh`, 0 TypeScript errors
+  - Chained `.throwOnError()` on all Supabase mutation queries for reliable error handling
+  - Authored unit test suite `src/storage/supabase/__tests__/supabaseLedgerRepository.test.ts` (19/19 tests passing)
+  - Two-Axis Review completed, squashed & merged via [PR #56](https://github.com/cesarchavezcal/almotacen/pull/56)
+  - 227/227 tests passing across 29 suites via `./init.sh`, 0 TypeScript errors
+
+- [x] Executed Step 7, 8 & 9 (Web Supabase Integration - Ticket 03: Platform Factory & Web Bootstrapping):
+  - Updated `src/storage/useLedgerStore.ts` with platform-aware factory returning `SupabaseLedgerRepository` on Web and `SQLiteLedgerRepository` on Native
+  - Created `src/hooks/useWebBootstrap.ts` orchestrator and hook for anonymous session initialization and cache hydration
+  - Integrated `useWebBootstrap` in `app/_layout.tsx` to delay navigation rendering until cache and fonts are ready
+  - Updated `src/hooks/useOnboardingGuard.ts` with web-safe diagnostics check avoiding SQLite calls on web
+  - Authored behavioral test suite `src/storage/__tests__/platformFactory.test.ts` verifying `SCEN-008` (9/9 tests passing)
+  - Verified web bundling with `npx expo export --platform web`
+  - 236/236 tests passing across 30 suites via `./init.sh`, 0 TypeScript errors
 
 ### What's In Progress
 
-- [ ] Executing Two-Axis Review for Ticket 02 (`feature/CCH/ALM-022-cached-supabase-repository`)
+- [ ] Two-Axis Review & PR for Ticket 03: Platform Factory & Web Bootstrapping
 
 ### What's Next
 
-1. Open PR for Ticket 02 and run Two-Axis Review.
-2. Squash & merge PR into `main`.
-3. Proceed to `/autonomic plan openspec/changes/web-supabase-integration/tickets/03-platform-factory-and-web-bootstrapping.md` (Ticket 03: Platform Factory & Web Bootstrapping).
+1. Run Two-Axis review (Spec Compliance vs `SCEN-008` + GGA Standards Review).
+2. Commit and push branch `feature/CCH/ALM-023-platform-factory-and-web-bootstrapping`.
+3. Open PR via `gh pr create` and merge into `main`.
+4. Run `/sdd-archive` to archive the `web-supabase-integration` change.
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 222/222 Jest unit/integration tests pass (29 suites), `tsc --noEmit` 0 errors.
+- [x] `./init.sh`: 236/236 Jest unit/integration tests pass (30 suites), `tsc --noEmit` 0 errors.
 - [x] Web Supabase Integration Ticket 01: 3 behavioral tests passing (`SCEN-001`, `SCEN-002`, `SCEN-003`).
-- [x] Web Supabase Integration Ticket 02: 14 behavioral tests passing (`SCEN-004`, `SCEN-005`, `SCEN-006`, `SCEN-007`).
+- [x] Web Supabase Integration Ticket 02: 19 behavioral tests passing (`SCEN-004`, `SCEN-005`, `SCEN-006`, `SCEN-007`).
+- [x] Web Supabase Integration Ticket 03: 9 behavioral tests passing (`SCEN-008`).
 
 
 

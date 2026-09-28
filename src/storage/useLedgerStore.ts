@@ -1,6 +1,9 @@
 import { useSyncExternalStore, useCallback } from 'react';
+import { Platform } from 'react-native';
 import { getDatabase } from './database';
 import { SQLiteLedgerRepository } from './ledgerRepository';
+import { getSupabaseClient } from './supabase/client';
+import { SupabaseLedgerRepository } from './supabase/supabaseLedgerRepository';
 import { BudgetState, Transaction, Account, Category } from '../domain/ledger/types';
 import {
   CategoryGroup,
@@ -72,13 +75,28 @@ export interface UseLedgerStoreResult {
   deleteCategory: (id: string) => void;
 }
 
-function getRepository(): LedgerRepository {
-
+export function getRepository(): LedgerRepository {
   if (!repositoryInstance) {
-    const db = getDatabase();
-    repositoryInstance = new SQLiteLedgerRepository(db);
+    if (Platform.OS === 'web') {
+      const client = getSupabaseClient();
+      const repo = new SupabaseLedgerRepository(client);
+      repo.subscribe(() => {
+        notifyListeners();
+      });
+      repositoryInstance = repo;
+    } else {
+      const db = getDatabase();
+      repositoryInstance = new SQLiteLedgerRepository(db);
+    }
   }
   return repositoryInstance;
+}
+
+export function resetRepositoryInstanceForTesting(): void {
+  repositoryInstance = null;
+  currentBudgetState = null;
+  currentGroups = null;
+  currentSnapshot = null;
 }
 
 function notifyListeners(): void {

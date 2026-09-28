@@ -49,7 +49,7 @@ flowchart LR
 - [x] Write unit and integration tests with mocked Supabase client verifying cache hydration, optimistic state updates, and rollback invariants.
 
 ### [Ticket 03: Platform Factory & Web Bootstrapping](./tickets/03-platform-factory-and-web-bootstrapping.md)
-- [ ] Update `src/storage/useLedgerStore.ts` repository factory to return `SupabaseLedgerRepository` when `Platform.OS === 'web'` and `SQLiteLedgerRepository` when `Platform.OS !== 'web'`.
-- [ ] Integrate async bootstrap hook (`useWebBootstrap`) in `app/_layout.tsx` for web environments to await anonymous session and cache hydration before rendering navigation stack.
-- [ ] Verify `./init.sh` green pass across all test suites and typechecks.
-- [ ] Smoke test `npx expo start --web` ensuring clean launch on `http://localhost:8081`.
+- [x] Update `src/storage/useLedgerStore.ts` repository factory to return `SupabaseLedgerRepository` when `Platform.OS === 'web'` and `SQLiteLedgerRepository` when `Platform.OS !== 'web'`.
+- [x] Integrate async bootstrap hook (`useWebBootstrap`) in `app/_layout.tsx` for web environments to await anonymous session and cache hydration before rendering navigation stack.
+- [x] Verify `./init.sh` green pass across all test suites and typechecks.
+- [x] Smoke test `npx expo start --web` ensuring clean launch on `http://localhost:8081`.

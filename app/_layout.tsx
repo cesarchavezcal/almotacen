@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { colors } from '@/src/theme';
 import { useOnboardingGuard } from '@/src/hooks/useOnboardingGuard';
+import { useWebBootstrap } from '@/src/hooks/useWebBootstrap';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -23,19 +24,21 @@ export default function RootLayout(): React.JSX.Element | null {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  const { isReady, error: bootstrapError } = useWebBootstrap();
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
-  }, [error]);
+    if (bootstrapError) throw bootstrapError;
+  }, [error, bootstrapError]);
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded && isReady) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, isReady]);
 
-  if (!loaded) {
+  if (!loaded || !isReady) {
     return null;
   }
 
