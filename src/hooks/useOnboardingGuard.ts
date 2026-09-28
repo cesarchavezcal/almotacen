@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { getDatabase } from '../storage/database';
 import { isOnboardingCompleted } from '../storage/schema';
 import { DatabaseAdapter } from '../storage/types';
+import { getRepository } from '../storage/useLedgerStore';
 
 export interface OnboardingGuardState {
   isOnboardingCompleted: boolean | null;
@@ -10,8 +10,14 @@ export interface OnboardingGuardState {
 }
 
 export function checkOnboardingStatus(db?: DatabaseAdapter): boolean {
-  const database = db ?? getDatabase();
-  return isOnboardingCompleted(database);
+  if (db) {
+    return isOnboardingCompleted(db);
+  }
+  const repo = getRepository();
+  if (typeof repo.isOnboardingCompleted === 'function') {
+    return repo.isOnboardingCompleted();
+  }
+  return repo.getDiagnostics().accountCount > 0;
 }
 
 export function useOnboardingGuard(db?: DatabaseAdapter): OnboardingGuardState {

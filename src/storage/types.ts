@@ -69,6 +69,8 @@ export interface DiagnosticsData {
 }
 
 export interface LedgerRepository {
+  initializeAsync?(): Promise<void>;
+  isOnboardingCompleted?(): boolean;
   getBudgetState(): BudgetState;
   getCategoryGroups(): CategoryGroup[];
   postOutflow(params: {

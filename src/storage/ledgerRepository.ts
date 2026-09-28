@@ -35,6 +35,7 @@ import {
   factoryReset,
   clearTransactionsOnly,
   getDiagnostics,
+  isOnboardingCompleted as isDbOnboardingCompleted,
 } from './schema';
 
 interface CategoryGroupRow {
@@ -81,6 +82,14 @@ interface TransactionRow {
 
 export class SQLiteLedgerRepository implements LedgerRepository {
   constructor(private db: DatabaseAdapter) {}
+
+  async initializeAsync(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  isOnboardingCompleted(): boolean {
+    return isDbOnboardingCompleted(this.db);
+  }
 
   getCategoryGroups(): CategoryGroup[] {
     const groupRows = this.db.getAllSync<CategoryGroupRow>(

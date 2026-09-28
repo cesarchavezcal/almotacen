@@ -64,6 +64,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
   private budgetState: BudgetState;
   private groups: CategoryGroup[];
   private schemaVersion = 2;
+  private onboardingCompleted = false;
   private listeners = new Set<() => void>();
   private errorListeners = new Set<(err: LedgerError) => void>();
   private lastSyncError: LedgerError | null = null;
@@ -93,6 +94,10 @@ export class SupabaseLedgerRepository implements LedgerRepository {
     return () => {
       this.errorListeners.delete(listener);
     };
+  }
+
+  isOnboardingCompleted(): boolean {
+    return this.onboardingCompleted;
   }
 
   getLastSyncError(): LedgerError | null {
@@ -175,6 +180,9 @@ export class SupabaseLedgerRepository implements LedgerRepository {
         .reduce((sum, a) => sum + a.balanceCents, 0);
     }
 
+    const obMeta = metaData.find((m) => m.key === 'onboarding_completed');
+    this.onboardingCompleted = obMeta ? obMeta.value === 'true' : accountsData.length > 0;
+
     let totalOutflowCents = 0;
     let totalInflowCents = 0;
     for (const tx of domainTransactions) {
@@ -197,7 +205,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
     this.notify();
   }
 
-  private cloneState(): { budgetState: BudgetState; groups: CategoryGroup[] } {
+  private cloneState(): { budgetState: BudgetState; groups: CategoryGroup[]; onboardingCompleted: boolean } {
     return {
       budgetState: {
         readyToAssignCents: this.budgetState.readyToAssignCents,
@@ -208,6 +216,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
         totalInflowCents: this.budgetState.totalInflowCents,
       },
       groups: this.groups.map((g) => ({ ...g })),
+      onboardingCompleted: this.onboardingCompleted,
     };
   }
 
@@ -240,6 +249,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           this.lastSyncError = enrichedError;
           this.budgetState = snapshot.budgetState;
           this.groups = snapshot.groups;
+          this.onboardingCompleted = snapshot.onboardingCompleted;
           this.notify();
           for (const errorListener of this.errorListeners) {
             errorListener(enrichedError);
@@ -252,6 +262,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
     } catch (err) {
       this.budgetState = snapshot.budgetState;
       this.groups = snapshot.groups;
+      this.onboardingCompleted = snapshot.onboardingCompleted;
       this.notify();
       throw err;
     }
@@ -1303,6 +1314,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
   factoryReset(): void {
     this.executeOptimisticMutation(
       () => {
+        this.onboardingCompleted = false;
         return {
           newState: {
             readyToAssignCents: 0,
@@ -1335,6 +1347,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
   clearTransactionsOnly(): void {
     this.executeOptimisticMutation(
       (state) => {
+        this.onboardingCompleted = true;
         const resetCategories: Record<string, Category> = {};
         for (const [id, cat] of Object.entries(state.categories)) {
           resetCategories[id] = {
@@ -1396,6 +1409,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
 
     this.executeOptimisticMutation(
       () => {
+        this.onboardingCompleted = true;
         const accountsRecord: Record<string, Account> = {};
         for (const a of seed.accounts) {
           accountsRecord[a.id] = { ...a };

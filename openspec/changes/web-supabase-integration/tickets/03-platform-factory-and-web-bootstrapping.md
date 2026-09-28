@@ -3,7 +3,7 @@
 ## Metadata
 - **Change**: `web-supabase-integration`
 - **Bound Scenarios**: [`SCEN-008`](../spec-tests.md#scen-008-platform-specific-repository-factory)
-- **Status**: Ready
+- **Status**: Complete
 
 ---
 
@@ -24,8 +24,8 @@ Wire the repository factory in `useLedgerStore.ts` to conditionally return `Supa
 ---
 
 ## 3. Implementation Checklist
-- [ ] Implement `src/hooks/useWebBootstrap.ts`.
-- [ ] Update `src/storage/useLedgerStore.ts` with platform-aware factory.
-- [ ] Connect `useWebBootstrap` in `app/_layout.tsx`.
-- [ ] Implement unit tests for factory routing.
-- [ ] Run `./init.sh` to ensure all 201+ tests and typechecks pass.
+- [x] Implement `src/hooks/useWebBootstrap.ts`.
+- [x] Update `src/storage/useLedgerStore.ts` with platform-aware factory.
+- [x] Connect `useWebBootstrap` in `app/_layout.tsx`.
+- [x] Implement unit tests for factory routing.
+- [x] Run `./init.sh` to ensure all 201+ tests and typechecks pass.
