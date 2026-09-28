@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Platform } from 'react-native';
-import { getDatabase } from '../storage/database';
 import { isOnboardingCompleted } from '../storage/schema';
 import { DatabaseAdapter } from '../storage/types';
 import { getRepository } from '../storage/useLedgerStore';
@@ -12,12 +10,14 @@ export interface OnboardingGuardState {
 }
 
 export function checkOnboardingStatus(db?: DatabaseAdapter): boolean {
-  if (Platform.OS === 'web') {
-    const repo = getRepository();
-    return repo.getDiagnostics().accountCount > 0;
+  if (db) {
+    return isOnboardingCompleted(db);
   }
-  const database = db ?? getDatabase();
-  return isOnboardingCompleted(database);
+  const repo = getRepository();
+  if (typeof repo.isOnboardingCompleted === 'function') {
+    return repo.isOnboardingCompleted();
+  }
+  return repo.getDiagnostics().accountCount > 0;
 }
 
 export function useOnboardingGuard(db?: DatabaseAdapter): OnboardingGuardState {

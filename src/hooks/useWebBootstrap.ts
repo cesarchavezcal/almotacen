@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Platform } from 'react-native';
 import { ensureAnonymousSession } from '../storage/supabase/client';
 import { getRepository } from '../storage/useLedgerStore';
-import { SupabaseLedgerRepository } from '../storage/supabase/supabaseLedgerRepository';
+import { LedgerError } from '../storage/types';
 
 export interface WebBootstrapState {
   isReady: boolean;
@@ -20,8 +20,10 @@ export async function bootstrapWeb(): Promise<void> {
   }
   await ensureAnonymousSession();
   const repo = getRepository();
-  if (repo instanceof SupabaseLedgerRepository) {
+  if (typeof repo.initializeAsync === 'function') {
     await repo.initializeAsync();
+  } else {
+    throw new LedgerError('Active LedgerRepository does not support initializeAsync');
   }
 }
 

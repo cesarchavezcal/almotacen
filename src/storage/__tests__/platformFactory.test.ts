@@ -10,13 +10,21 @@ import { fromPartial } from '@total-typescript/shoehorn';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 jest.mock('../supabase/client', () => {
-  const actual = jest.requireActual('../supabase/client') as object;
+  const actual = jest.requireActual<Record<string, unknown>>('../supabase/client');
   return {
     ...actual,
     ensureAnonymousSession: jest.fn(),
     getSupabaseClient: jest.fn(),
   };
 });
+
+function setPlatformOS(os: Platform['OS']): void {
+  Object.defineProperty(Platform, 'OS', {
+    value: os,
+    configurable: true,
+    writable: true,
+  });
+}
 
 describe('Platform-Specific Repository Factory & Web Bootstrapping (SCEN-008)', () => {
   const originalPlatform = Platform.OS;
@@ -29,13 +37,13 @@ describe('Platform-Specific Repository Factory & Web Bootstrapping (SCEN-008)', 
   });
 
   afterEach(() => {
-    (Platform as { OS: string }).OS = originalPlatform;
+    setPlatformOS(originalPlatform);
     resetRepositoryInstanceForTesting();
   });
 
   describe('SCEN-008: Platform-Specific Repository Factory Routing', () => {
     it('returns SupabaseLedgerRepository instance when Platform.OS is web', () => {
-      (Platform as { OS: string }).OS = 'web';
+      setPlatformOS('web');
 
       const mockSupabaseClient = fromPartial<SupabaseClient>({
         auth: fromPartial<SupabaseClient['auth']>({
@@ -56,7 +64,7 @@ describe('Platform-Specific Repository Factory & Web Bootstrapping (SCEN-008)', 
     });
 
     it('returns SQLiteLedgerRepository instance when Platform.OS is ios or android', () => {
-      (Platform as { OS: string }).OS = 'ios';
+      setPlatformOS('ios');
 
       const repo = getRepository();
 
@@ -64,7 +72,7 @@ describe('Platform-Specific Repository Factory & Web Bootstrapping (SCEN-008)', 
     });
 
     it('reuses the singleton instance on subsequent calls within the same platform', () => {
-      (Platform as { OS: string }).OS = 'ios';
+      setPlatformOS('ios');
 
       const repo1 = getRepository();
       const repo2 = getRepository();
@@ -73,7 +81,7 @@ describe('Platform-Specific Repository Factory & Web Bootstrapping (SCEN-008)', 
     });
 
     it('creates a new repository instance after resetRepositoryInstanceForTesting', () => {
-      (Platform as { OS: string }).OS = 'ios';
+      setPlatformOS('ios');
 
       const repo1 = getRepository();
       resetRepositoryInstanceForTesting();
@@ -86,7 +94,7 @@ describe('Platform-Specific Repository Factory & Web Bootstrapping (SCEN-008)', 
 
   describe('Web Bootstrapping Lifecycle (bootstrapWeb)', () => {
     it('skips Supabase auth and hydration when Platform.OS is native', async () => {
-      (Platform as { OS: string }).OS = 'ios';
+      setPlatformOS('ios');
 
       const ensureMock = jest.spyOn(supabaseClientModule, 'ensureAnonymousSession');
 
@@ -96,7 +104,7 @@ describe('Platform-Specific Repository Factory & Web Bootstrapping (SCEN-008)', 
     });
 
     it('executes ensureAnonymousSession and initializeAsync sequentially when Platform.OS is web', async () => {
-      (Platform as { OS: string }).OS = 'web';
+      setPlatformOS('web');
 
       const ensureMock = jest.spyOn(supabaseClientModule, 'ensureAnonymousSession').mockResolvedValue(
         fromPartial({
@@ -132,7 +140,7 @@ describe('Platform-Specific Repository Factory & Web Bootstrapping (SCEN-008)', 
 
   describe('Failure-First Invariants: Bootstrap Errors', () => {
     it('fails fast when ensureAnonymousSession throws during web bootstrap', async () => {
-      (Platform as { OS: string }).OS = 'web';
+      setPlatformOS('web');
 
       jest
         .spyOn(supabaseClientModule, 'ensureAnonymousSession')
@@ -142,7 +150,7 @@ describe('Platform-Specific Repository Factory & Web Bootstrapping (SCEN-008)', 
     });
 
     it('fails fast and propagates error when initializeAsync throws during web bootstrap', async () => {
-      (Platform as { OS: string }).OS = 'web';
+      setPlatformOS('web');
 
       jest.spyOn(supabaseClientModule, 'ensureAnonymousSession').mockResolvedValue(
         fromPartial({
@@ -173,8 +181,8 @@ describe('Platform-Specific Repository Factory & Web Bootstrapping (SCEN-008)', 
   });
 
   describe('Web-Safe Onboarding Status Guard', () => {
-    it('evaluates onboarding status from repository diagnostics on web without opening SQLite', () => {
-      (Platform as { OS: string }).OS = 'web';
+    it('evaluates onboarding status from repository contract without opening SQLite', () => {
+      setPlatformOS('web');
 
       const mockSupabaseClient = fromPartial<SupabaseClient>({
         auth: fromPartial<SupabaseClient['auth']>({
@@ -188,31 +196,19 @@ describe('Platform-Specific Repository Factory & Web Bootstrapping (SCEN-008)', 
       });
       jest.spyOn(supabaseClientModule, 'getSupabaseClient').mockReturnValue(mockSupabaseClient);
 
-      const diagSpy = jest
-        .spyOn(SupabaseLedgerRepository.prototype, 'getDiagnostics')
-        .mockReturnValue({
-          schemaVersion: 2,
-          accountCount: 0,
-          categoryGroupCount: 0,
-          categoryCount: 0,
-          transactionCount: 0,
-        });
+      const obSpy = jest
+        .spyOn(SupabaseLedgerRepository.prototype, 'isOnboardingCompleted')
+        .mockReturnValue(false);
 
-      // 0 accounts -> not completed
+      // not completed
       expect(checkOnboardingStatus()).toBe(false);
 
-      diagSpy.mockReturnValue({
-        schemaVersion: 2,
-        accountCount: 2,
-        categoryGroupCount: 4,
-        categoryCount: 8,
-        transactionCount: 0,
-      });
+      obSpy.mockReturnValue(true);
 
-      // 2 accounts -> completed
+      // completed
       expect(checkOnboardingStatus()).toBe(true);
 
-      diagSpy.mockRestore();
+      obSpy.mockRestore();
     });
   });
 });
