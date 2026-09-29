@@ -2,8 +2,8 @@
 
 ## Current State
 
-**Last Updated:** 2026-09-23 16:05
-**Active Feature:** ALM-017 Settings Tab Navigation & Presentational Layout (Ticket 03)
+**Last Updated:** 2026-09-28 17:30
+**Active Feature:** None (Ready for next change)
 
 ## Status
 
@@ -146,18 +146,28 @@
   - Updated `src/hooks/useOnboardingGuard.ts` with web-safe diagnostics check avoiding SQLite calls on web
   - Authored behavioral test suite `src/storage/__tests__/platformFactory.test.ts` verifying `SCEN-008` (9/9 tests passing)
   - Verified web bundling with `npx expo export --platform web`
+  - Two-Axis Review completed, squashed & merged via [PR #57](https://github.com/cesarchavezcal/almotacen/pull/57)
   - 236/236 tests passing across 30 suites via `./init.sh`, 0 TypeScript errors
+
+- [x] Executed Documentation & Planning Archival:
+  - Renamed active planning files to `✅_*.md` and archived under `docs/planning/archive/`
+  - Squashed & merged via [PR #58](https://github.com/cesarchavezcal/almotacen/pull/58)
+
+- [x] Executed SDD Change Archival (`/sdd-archive`):
+  - Verified 13/13 tasks complete in `tasks.md` (Task Completion Gate passed)
+  - Mechanically moved change to `openspec/changes/archive/2026-09-28-web-supabase-integration/` via `git mv`
+  - Verified pre-move snapshot readback (`diff -r`) with 0 differences (empty diff)
+  - Persisted `archive-report.md` documenting terminal lifecycle state and verification evidence
+  - Squashed & merged via [PR #59](https://github.com/cesarchavezcal/almotacen/pull/59)
 
 ### What's In Progress
 
-- [ ] Two-Axis Review & PR for Ticket 03: Platform Factory & Web Bootstrapping
+None (idle, ready for next change).
 
 ### What's Next
 
-1. Run Two-Axis review (Spec Compliance vs `SCEN-008` + GGA Standards Review).
-2. Commit and push branch `feature/CCH/ALM-023-platform-factory-and-web-bootstrapping`.
-3. Open PR via `gh pr create` and merge into `main`.
-4. Run `/sdd-archive` to archive the `web-supabase-integration` change.
+1. Select next feature or change from roadmap or user directive.
+2. Kick off discovery or planning (`/autonomic plan`).
 
 ## Evidence of Completion
 
@@ -165,6 +175,7 @@
 - [x] Web Supabase Integration Ticket 01: 3 behavioral tests passing (`SCEN-001`, `SCEN-002`, `SCEN-003`).
 - [x] Web Supabase Integration Ticket 02: 19 behavioral tests passing (`SCEN-004`, `SCEN-005`, `SCEN-006`, `SCEN-007`).
 - [x] Web Supabase Integration Ticket 03: 9 behavioral tests passing (`SCEN-008`).
+- [x] Change Archival: `web-supabase-integration` archived to `openspec/changes/archive/2026-09-28-web-supabase-integration/` (PR #59).
 
 
 
