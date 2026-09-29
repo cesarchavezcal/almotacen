@@ -1,64 +1,80 @@
-# Session Handoff
+# Session Handoff: Almotacen (Oystercatcher)
 
-## Current Objective
+**Date**: 2026-09-29  
+**Current State**: Idle / Clean slate (Cycle `web-supabase-integration` fully closed & archived)  
+**Base Commit**: Synced to `origin/main` (`8eb02bd`)  
+**Workspace**: `/Users/cesaradalbertochavezcalderon/orca/workspaces/almotacen/oystercatcher`
 
-- **Goal**: Deliver Web Supabase Integration (Phase 1, Tickets 01–03) end-to-end.
-- **Current Status**: Completed, verified, reviewed, and merged to `main` via PRs #42, #56, and #57.
-- **Branch / Commit**: Synced to `origin/main` (`8e3c61e`).
+---
 
-## Completed This Session
+## 1. Executive Summary & Context
 
-- [x] **Ticket 01 (Supabase Schema & Anonymous Client)**: PR #42 (`2f1384e`)
-  - Authored Postgres DDL migration `supabase/migrations/20260925_init_ledger_schema.sql` with multi-tenancy, bigint integer cents, and RLS policies.
-  - Implemented `@supabase/supabase-js` client in `src/storage/supabase/client.ts` with anonymous authentication bootstrap.
-  - Authored unit test suite `src/storage/supabase/__tests__/client.test.ts` (3/3 passing).
-- [x] **Ticket 02 (Cached Supabase Ledger Repository)**: PR #56 (`4183bba`)
-  - Implemented `SupabaseLedgerRepository` adhering to `LedgerRepository` interface with zero-latency synchronous reads.
-  - Built in-memory `BudgetState` caching with optimistic mutations and pre-mutation rollback on remote failure.
-  - Authored unit test suite `src/storage/supabase/__tests__/supabaseLedgerRepository.test.ts` (19/19 passing).
-- [x] **Ticket 03 (Platform Factory & Web Bootstrapping)**: PR #57 (`8e3c61e`)
-  - Updated `src/storage/useLedgerStore.ts` with platform-aware factory returning `SupabaseLedgerRepository` on Web and `SQLiteLedgerRepository` on Native.
-  - Implemented `src/hooks/useWebBootstrap.ts` orchestrator for anonymous session initialization and cache hydration.
-  - Integrated `useWebBootstrap` in `app/_layout.tsx` to delay navigation rendering until cache and fonts are ready.
-  - Decoupled onboarding guard in `src/hooks/useOnboardingGuard.ts` with polymorphic `isOnboardingCompleted()` on repository interface.
-  - Authored behavioral test suite `src/storage/__tests__/platformFactory.test.ts` verifying `SCEN-008` (9/9 passing).
+The change `web-supabase-integration` has been delivered, reviewed across two axes, merged, and archived under `openspec/changes/archive/2026-09-28-web-supabase-integration/`. The project now possesses a production-ready hybrid storage architecture:
+- **Web**: Supabase Postgres with anonymous session authentication (`signInAnonymously()`), RLS tenant isolation, and an in-memory caching repository (`SupabaseLedgerRepository`) providing zero-latency synchronous reads for `useSyncExternalStore` and background optimistic persistence with rollback safety.
+- **Native (iOS / Android)**: Embedded SQLite (`expo-sqlite`) as primary local-first storage.
+- **Bootstrapping**: Transparent repository resolution via platform factory in `src/storage/useLedgerStore.ts` and `useWebBootstrap` hook delaying splash screen until cache hydration completes.
 
-## Verification Evidence
+All planning documents have been renamed to `✅_*.md` and archived under `docs/planning/archive/`.
 
-| Check | Command | Result | Notes |
+---
+
+## 2. Recent Merged Deliverables
+
+| Deliverable | Pull Request | Merge Commit | Artifacts & Documentation |
 |---|---|---|---|
-| Full Test Harness | `./init.sh` | PASS | 236/236 unit/integration tests passing across 30 suites |
-| Typecheck | `npx tsc --noEmit` | PASS | 0 TypeScript errors |
-| Unit & Screen Tests | `npx jest` | PASS | All 30 test suites green |
-| Web Bundling | `npx expo export --platform web` | PASS | Web bundle compiled cleanly |
-| Pre-Commit Quality | `.gga` audit | PASS | Strict types, integer cents, clean hexagonal boundaries |
-| PR #42 (Ticket 01) | `gh pr merge 42` | MERGED | Supabase schema & anonymous client (`2f1384e`) |
-| PR #56 (Ticket 02) | `gh pr merge 56` | MERGED | Cached Supabase ledger repository (`4183bba`) |
-| PR #57 (Ticket 03) | `gh pr merge 57` | MERGED | Platform factory & web bootstrapping (`8e3c61e`) |
+| Ticket 01: Schema & Client | [PR #42](https://github.com/cesarchavezcal/almotacen/pull/42) | `2f1384e` | `supabase/migrations/20260925_init_ledger_schema.sql`, `src/storage/supabase/client.ts` |
+| Ticket 02: Cached Supabase Repository | [PR #56](https://github.com/cesarchavezcal/almotacen/pull/56) | `4183bba` | `src/storage/supabase/supabaseLedgerRepository.ts`, unit test suite |
+| Ticket 03: Platform Factory & Bootstrap | [PR #57](https://github.com/cesarchavezcal/almotacen/pull/57) | `8e3c61e` | `src/storage/useLedgerStore.ts`, `src/hooks/useWebBootstrap.ts`, `app/_layout.tsx` |
+| Planning Documents Archival | [PR #58](https://github.com/cesarchavezcal/almotacen/pull/58) | `f372caa` | `docs/planning/archive/` |
+| SDD Change Archival | [PR #59](https://github.com/cesarchavezcal/almotacen/pull/59) | `a175702` | `openspec/changes/archive/2026-09-28-web-supabase-integration/archive-report.md` |
+| Progress Log Update | [PR #60](https://github.com/cesarchavezcal/almotacen/pull/60) | `8eb02bd` | `progress.md` |
 
-## Key Architecture & Domain Files
+---
 
-- **Platform Store Factory**: `src/storage/useLedgerStore.ts` (transparent platform switching)
-- **Web Bootstrapping**: `src/hooks/useWebBootstrap.ts`, `app/_layout.tsx`
-- **Supabase Persistence**: `src/storage/supabase/client.ts`, `src/storage/supabase/supabaseLedgerRepository.ts`
-- **Polymorphic Contract**: `src/storage/types.ts` (`LedgerRepository.initializeAsync`, `LedgerRepository.isOnboardingCompleted`)
-- **Native Storage**: `src/storage/ledgerRepository.ts`, `src/storage/database.ts`
-- **Test Suites**: `src/storage/__tests__/platformFactory.test.ts`, `src/storage/supabase/__tests__/`
+## 3. Verification & Repository Health
 
-## Critical Invariants & Rules
+- **Automated Test Suite**: 30/30 test suites passing, 236/236 unit and integration tests green via `./init.sh`.
+- **Static Analysis**: `npx tsc --noEmit` clean pass with 0 errors.
+- **Web Export**: `npx expo export --platform web` cleanly builds bundle.
+- **Git Tree**: Clean working tree on `cesarchavezcal/oystercatcher`, fully in sync with `origin/main`.
 
-1. **Git & GitHub Identity**: Always verify `git config user.name "cesarchavezcal"` and execute `gh auth switch --hostname github.com --user cesarchavezcal` before running any git or gh CLI commands.
-2. **Clean Architecture Boundaries**: The domain layer (`src/domain/`) must never import SQLite, Supabase, or React dependencies. All persistence operations go through typed repository interfaces.
-3. **Integer Cents Discipline**: All financial balances, transactions, and envelope calculations strictly use integer cents.
-4. **No SQLite on Web**: `getDatabase()` must never execute on web; all web persistence uses `SupabaseLedgerRepository`.
-4. **No Type Assertions in Step Navigation**: Bounded step transitions (`nextWizardStep`, `prevWizardStep`) must enforce step range invariants without `as WizardStep` casting.
+---
 
-## Next Session Startup
+## 4. Suggested Skills for Next Agent
 
-1. Run `./init.sh` to verify zero test regressions.
-2. Inspect `feature_list.json` and active tickets in `openspec/` to select the next feature/epic.
-3. Run `gh auth switch --hostname github.com --user cesarchavezcal` before creating new branches or PRs.
+When picking up the next task, the incoming agent should leverage these specialized skills:
 
-## Recommended Next Step
+1. **`autonomic`**: Run `/autonomic plan [idea]` to autonomously execute the 7-step architecture pipeline (Steps 1–6: Scoping, UX charts, specs, test contracts, IA/OOUX, and tickets).
+2. **`harness`**: For executing single tickets using strict Red ➔ Green ➔ Refactor TDD with failure-first enumeration.
+3. **`code-review`**: For two-axis code review (Axis 1: Spec Compliance vs `spec-tests.md`, Axis 2: Clean architecture and `.gga` standards).
+4. **`expo-router`**: When developing or structuring navigation routes, stack layouts, or modals.
+5. **`expo-ui` / `expo-native-ui`**: For native controls, sheets, and Apple HIG patterns.
+6. **`supabase` / `supabase-postgres-best-practices`**: If adding new relational tables, RLS policies, or Supabase queries.
+7. **`react-native-testing`**: For component, screen, and interaction tests using React Native Testing Library.
+8. **`unslop`**: Mandatory gate for PR descriptions and documentation, removing AI boilerplate.
 
-- Select the next feature milestone from the roadmap (e.g. review target configuration in `feature/CCH/ALM-013-category-target-config` or begin the next scheduled epic).
+---
+
+## 5. Critical Invariants & Rules
+
+1. **Git & GitHub Identity**:
+   - Ensure `git config user.name "cesarchavezcal"` and `git config user.email "cesarchavezcal@gmail.com"`.
+   - GitHub CLI operations must bind `GH_TOKEN=$(gh auth token -u cesarchavezcal)` or execute `gh auth switch --user cesarchavezcal` to avoid 403 authorization rejections.
+   - Never add `Co-Authored-By` or AI attribution to commits. Use conventional commits only.
+2. **Anti-Tautology Invariant (Tests Before Code)**:
+   - NEVER write unit tests after writing code. Tests must originate from specification contracts (`spec-tests.md`) before code is implemented.
+3. **Integer Cents Discipline**:
+   - All financial balances, transactions, and envelope calculations strictly use integer cents (`bigint` in Postgres, integer in TypeScript domain).
+4. **Clean Architecture Boundaries**:
+   - Domain layer (`src/domain/`) must never import SQLite, Supabase, or React dependencies. All persistence operations go through typed repository interfaces (`LedgerRepository`).
+5. **No SQLite on Web**:
+   - `getDatabase()` must never execute on web; all web persistence uses `SupabaseLedgerRepository`.
+
+---
+
+## 6. Next Session Startup Checklist
+
+1. Run `./init.sh` to confirm baseline test suite and typecheck health.
+2. Inspect `progress.md` and `openspec/` for active changes.
+3. Query the user or inspect `feature_list.json` to select the next feature milestone.
+4. Launch the next cycle via `/autonomic plan [idea]` or `/autonomic work [ticket]`.
