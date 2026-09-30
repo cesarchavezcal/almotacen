@@ -5,7 +5,6 @@ import { LedgerRepository } from '../storage/types';
 import { getRepository } from '../storage/useLedgerStore';
 import {
   ArchetypePresetId,
-  ValidatedOnboardingConfig,
 } from '../domain/onboarding/types';
 import {
   getArchetypeTemplate,
@@ -13,6 +12,7 @@ import {
 } from '../domain/onboarding/archetypes';
 import {
   OnboardingValidationError,
+  validateOnboardingConfig,
 } from '../domain/onboarding/onboardingService';
 import { parseCurrencyToCents } from '../domain/ledger/currency';
 import {
@@ -91,15 +91,13 @@ export function executeCommitOnboarding(
     template.categories
   );
 
-  const validatedConfig: ValidatedOnboardingConfig = {
+  const validatedConfig = validateOnboardingConfig({
     depositoryAccount: {
-      id: `acc-${Date.now()}-chk`,
       name: checkingName,
       startingBalanceCents: startingCashCents,
     },
     creditCardAccount: inputs.hasCreditCard
       ? {
-          id: `acc-${Date.now()}-cc`,
           name: creditCardName,
           startingDebtCents: creditCardDebtCents,
         }
@@ -107,7 +105,8 @@ export function executeCommitOnboarding(
     template,
     allocations: allocationResult.allocations,
     remainingReadyToAssignCents: allocationResult.remainingReadyToAssignCents,
-  };
+  });
+
   repo.commitOnboardingConfig(validatedConfig);
 
   void Haptics.notificationAsync?.(Haptics.NotificationFeedbackType.Success);

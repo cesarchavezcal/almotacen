@@ -65,17 +65,11 @@ commitOnboardingConfig(config: ValidatedOnboardingConfig): void {
       return { newState, newGroups, result: undefined };
     },
     async (userId) => {
-      // 4. Batch upsert accounts, category_groups, categories, and metadata (onboarding_completed: true)
-      await Promise.all([
-        this.client.from('category_groups').insert(groupRows).throwOnError(),
-        this.client.from('accounts').insert(accountRows).throwOnError(),
-        this.client.from('categories').insert(categoryRows).throwOnError(),
-        this.client.from('metadata').upsert({
-          user_id: userId,
-          key: 'onboarding_completed',
-          value: 'true',
-        }).throwOnError(),
-      ]);
+      // 4. Batch idempotent upsert category_groups, accounts, categories, and metadata (onboarding_completed: true)
+      await this.client.from('category_groups').upsert(groupRows).throwOnError();
+      await this.client.from('accounts').upsert(accountRows).throwOnError();
+      await this.client.from('categories').upsert(categoryRows).throwOnError();
+      await this.client.from('metadata').upsert(metadataRows).throwOnError();
     }
   );
 }

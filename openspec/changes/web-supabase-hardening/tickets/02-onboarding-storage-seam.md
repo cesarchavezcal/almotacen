@@ -18,12 +18,12 @@ Decouple `useOnboardingWizard` from direct SQLite calls (`getDatabase()`). Eleva
    - Wrap in `withTransactionSync` to insert checking account, optional credit account & category, initial category allocations, and `metadata (onboarding_completed: true)`.
 3. Implement `commitOnboardingConfig` in `src/storage/supabase/supabaseLedgerRepository.ts`:
    - Use `executeOptimisticMutation` to update in-memory `BudgetState` (readyToAssignCents, accounts, categories) immediately.
-   - Dispatch background batch inserts to Supabase tables (`accounts`, `category_groups`, `categories`, and `metadata`).
+   - Dispatch background idempotent batch upserts to Supabase tables (`category_groups`, `accounts`, `categories`, and `metadata`) without destructive deletions.
 4. Refactor `src/hooks/useOnboardingWizard.ts`:
    - Accept optional `customRepo?: LedgerRepository` defaulting to `getRepository()`.
-   - In `handleCommit`, call `repo.commitOnboardingConfig(params)` instead of `executeCommitOnboarding(db, ...)`.
-   - In `handleExploreDemo`, call `repo.seedDemoData()` instead of `seedDemoData(db)`.
-5. Author tests in `src/storage/__tests__/` and `src/hooks/__tests__/` verifying web onboarding completes with mocked Supabase client and zero SQLite dependencies.
+   - In `executeCommitOnboarding`, validate inputs using domain `validateOnboardingConfig(params)` and pass the resulting `ValidatedOnboardingConfig` to `repo.commitOnboardingConfig(config)`.
+   - In `executeExploreDemo`, call `repo.seedDemoData()` directly on `LedgerRepository`.
+5. Author tests in `src/storage/__tests__/onboardingSeam.test.ts` and `src/hooks/__tests__/useOnboardingWizard.test.ts` verifying web onboarding completes with mocked Supabase client and zero SQLite dependencies.
 
 ---
 

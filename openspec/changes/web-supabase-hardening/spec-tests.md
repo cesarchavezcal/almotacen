@@ -31,10 +31,11 @@ This document establishes the Red-ready behavioral acceptance criteria for Phase
 ### `SCEN-010`: Web Onboarding Commitment & Hydration
 - **Given** an anonymous web user at the final step of the onboarding wizard
 - **When** the user submits checking account "$2,000.00" and archetype allocations
-- **Then** `LedgerRepository.commitOnboardingConfig()` executes without calling `expo-sqlite` or `node:sqlite`
+- **Then** inputs are validated via pure domain `validateOnboardingConfig()` enforcing zero-based cash invariants
+- **And** `LedgerRepository.commitOnboardingConfig()` executes without calling `expo-sqlite` or `node:sqlite`
 - **And** updates in-memory `BudgetState` immediately (`readyToAssignCents: 0`, accounts and categories created)
 - **And** sets `isOnboardingCompleted() === true`
-- **And** dispatches remote batch upserts to Supabase Postgres.
+- **And** dispatches idempotent remote batch upserts to Supabase Postgres without destructive deletions.
 
 ### `SCEN-011`: Explore Demo via Repository Seam
 - **Given** a web user on the first step of onboarding
