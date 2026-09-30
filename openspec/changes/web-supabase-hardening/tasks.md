@@ -53,11 +53,11 @@ flowchart LR
 - [x] Author unit and integration tests in `src/storage/__tests__/` and `src/hooks/__tests__/` verifying web onboarding without SQLite dependencies.
 
 ### [Ticket 03: DB Optimization, RLS InitPlan & Realtime DDL](./tickets/03-db-rls-optimization-and-realtime-ddl.md)
-- [ ] Author migration `supabase/migrations/20260930_optimize_rls_and_realtime.sql`.
-- [ ] Add foreign key indexes on `categories(credit_account_id)` and `transactions(transfer_account_id)`.
-- [ ] Re-create all RLS policies with `TO authenticated` and `USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id)`.
-- [ ] Add tables to `supabase_realtime` publication.
-- [ ] Verify SQL syntax and RLS behavior via test assertions.
+- [x] Author migration `supabase/migrations/20260930_optimize_rls_and_realtime.sql`.
+- [x] Add foreign key indexes on `categories(credit_account_id)` and `transactions(transfer_account_id)`.
+- [x] Re-create all RLS policies with `TO authenticated` and `USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id)`.
+- [x] Add tables to `supabase_realtime` publication.
+- [x] Verify SQL syntax and RLS behavior via test assertions.
 
 ### [Ticket 04: Coalesced Realtime Synchronization](./tickets/04-coalesced-realtime-sync.md)
 - [ ] Add `client.channel('user-ledger')` subscription in `SupabaseLedgerRepository` listening to `postgres_changes`.
