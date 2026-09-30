@@ -45,12 +45,12 @@ flowchart LR
 - [x] Add `package.json` convenience scripts: `supabase:start`, `supabase:stop`, `supabase:reset`.
 
 ### [Ticket 02: Platform-Agnostic Onboarding Storage Seam](./tickets/02-onboarding-storage-seam.md)
-- [ ] Add `commitOnboardingConfig(config: ValidatedOnboardingConfig): void` to `LedgerRepository` interface in `src/storage/types.ts`.
-- [ ] Implement `commitOnboardingConfig` on `SQLiteLedgerRepository` delegating to SQLite transaction logic.
-- [ ] Implement `commitOnboardingConfig` on `SupabaseLedgerRepository` with optimistic cache update and remote batch upserts.
-- [ ] Refactor `src/hooks/useOnboardingWizard.ts` to accept `customRepo?: LedgerRepository` defaulting to `getRepository()`.
-- [ ] Replace `executeExploreDemo(db, ...)` with `repo.seedDemoData()`.
-- [ ] Author unit and integration tests verifying web onboarding without SQLite dependencies.
+- [x] Add `commitOnboardingConfig(config: ValidatedOnboardingConfig): void` to `LedgerRepository` interface in `src/storage/types.ts`.
+- [x] Implement `commitOnboardingConfig` on `SQLiteLedgerRepository` delegating to SQLite transaction logic.
+- [x] Implement `commitOnboardingConfig` on `SupabaseLedgerRepository` with optimistic cache update and remote batch upserts.
+- [x] Refactor `src/hooks/useOnboardingWizard.ts` to accept `customRepo?: LedgerRepository` defaulting to `getRepository()`.
+- [x] Replace `executeExploreDemo(db, ...)` with `repo.seedDemoData()`.
+- [x] Author unit and integration tests verifying web onboarding without SQLite dependencies.
 
 ### [Ticket 03: DB Optimization, RLS InitPlan & Realtime DDL](./tickets/03-db-rls-optimization-and-realtime-ddl.md)
 - [ ] Author migration `supabase/migrations/20260930_optimize_rls_and_realtime.sql`.

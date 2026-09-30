@@ -8,6 +8,7 @@ import {
   Transaction,
   isTargetType,
 } from '../../domain/ledger/types';
+import { ValidatedOnboardingConfig } from '../../domain/onboarding/types';
 import {
   CreateAccountInput,
   CreateCategoryGroupInput,
@@ -56,6 +57,12 @@ import {
   isTransactionRow,
   isMetadataRow,
 } from './validators';
+import {
+  AccountRow,
+  CategoryGroupRow,
+  CategoryRow,
+  MetadataRow,
+} from './types';
 import { DEFAULT_SEED_DATA } from '../schema';
 
 export class SupabaseLedgerRepository implements LedgerRepository {
@@ -98,6 +105,206 @@ export class SupabaseLedgerRepository implements LedgerRepository {
 
   isOnboardingCompleted(): boolean {
     return this.onboardingCompleted;
+  }
+
+  commitOnboardingConfig(config: ValidatedOnboardingConfig): void {
+    this.executeOptimisticMutation(
+      () => {
+        this.onboardingCompleted = true;
+
+        const checkingId = config.depositoryAccount.id;
+        const accountsRecord: Record<string, Account> = {
+          [checkingId]: {
+            id: checkingId,
+            name: config.depositoryAccount.name,
+            accountType: 'checking',
+            balanceCents: config.depositoryAccount.startingBalanceCents,
+          },
+        };
+
+        const newGroups: CategoryGroup[] = [];
+        const categoriesRecord: Record<string, Category> = {};
+
+        if (config.creditCardAccount) {
+          const creditCardAccountId = config.creditCardAccount.id;
+          const creditCardName = config.creditCardAccount.name;
+          const startingDebtCents = config.creditCardAccount.startingDebtCents;
+          const paymentCatId = 'cat-cc-payment';
+          const paymentGroupId = 'grp-payments';
+
+          newGroups.push({
+            id: paymentGroupId,
+            name: 'Credit Card Payments',
+            sortOrder: 0,
+          });
+
+          categoriesRecord[paymentCatId] = {
+            id: paymentCatId,
+            groupId: paymentGroupId,
+            name: `${creditCardName} Payment`,
+            targetCents: 0,
+            targetType: 'NEEDED_FOR_SPENDING',
+            assignedCents: 0,
+            availableCents: 0,
+            isCreditPayment: true,
+            unfundedDebtCents: startingDebtCents,
+          };
+
+          accountsRecord[creditCardAccountId] = {
+            id: creditCardAccountId,
+            name: creditCardName,
+            accountType: 'credit',
+            balanceCents: -Math.abs(startingDebtCents),
+            creditPaymentCategoryId: paymentCatId,
+          };
+        }
+
+        for (const group of config.template.groups) {
+          newGroups.push({
+            id: group.id,
+            name: group.name,
+            sortOrder: group.sortOrder,
+          });
+        }
+
+        for (const category of config.template.categories) {
+          const allocatedCents = Math.max(0, Math.floor(config.allocations[category.id] ?? 0));
+          categoriesRecord[category.id] = {
+            id: category.id,
+            groupId: category.groupId,
+            name: category.name,
+            targetCents: category.targetCents,
+            targetType: category.targetType,
+            targetDueDay: category.targetDueDay,
+            assignedCents: allocatedCents,
+            availableCents: allocatedCents,
+            isCreditPayment: false,
+            unfundedDebtCents: 0,
+          };
+        }
+
+        const newState: BudgetState = {
+          readyToAssignCents: config.remainingReadyToAssignCents,
+          accounts: accountsRecord,
+          categories: categoriesRecord,
+          transactions: [],
+          totalOutflowCents: 0,
+          totalInflowCents: 0,
+        };
+
+        return {
+          newState,
+          newGroups,
+          result: undefined,
+        };
+      },
+      async (userId) => {
+        // Clear previous user rows to ensure clean slate
+        await Promise.all([
+          this.client.from('transactions').delete().eq('user_id', userId).throwOnError(),
+          this.client.from('categories').delete().eq('user_id', userId).throwOnError(),
+          this.client.from('accounts').delete().eq('user_id', userId).throwOnError(),
+          this.client.from('category_groups').delete().eq('user_id', userId).throwOnError(),
+          this.client.from('metadata').delete().eq('user_id', userId).throwOnError(),
+        ]);
+
+        const groupRows: CategoryGroupRow[] = [];
+        const paymentGroupId = 'grp-payments';
+        if (config.creditCardAccount) {
+          groupRows.push({
+            id: paymentGroupId,
+            user_id: userId,
+            name: 'Credit Card Payments',
+            sort_order: 0,
+          });
+        }
+        for (const group of config.template.groups) {
+          groupRows.push({
+            id: group.id,
+            user_id: userId,
+            name: group.name,
+            sort_order: group.sortOrder,
+          });
+        }
+
+        const accountRows: AccountRow[] = [
+          {
+            id: config.depositoryAccount.id,
+            user_id: userId,
+            name: config.depositoryAccount.name,
+            account_type: 'checking',
+            balance_cents: config.depositoryAccount.startingBalanceCents,
+          },
+        ];
+        if (config.creditCardAccount) {
+          accountRows.push({
+            id: config.creditCardAccount.id,
+            user_id: userId,
+            name: config.creditCardAccount.name,
+            account_type: 'credit',
+            balance_cents: -Math.abs(config.creditCardAccount.startingDebtCents),
+          });
+        }
+
+        const categoryRows: CategoryRow[] = [];
+        if (config.creditCardAccount) {
+          categoryRows.push({
+            id: 'cat-cc-payment',
+            user_id: userId,
+            group_id: paymentGroupId,
+            name: `${config.creditCardAccount.name} Payment`,
+            target_cents: 0,
+            target_type: 'NEEDED_FOR_SPENDING',
+            target_due_day: null,
+            assigned_cents: 0,
+            activity_cents: 0,
+            available_cents: 0,
+            unfunded_debt_cents: config.creditCardAccount.startingDebtCents,
+            is_credit_payment: 1,
+            credit_account_id: config.creditCardAccount.id,
+            sort_order: 0,
+          });
+        }
+        let sortOrder = 1;
+        for (const cat of config.template.categories) {
+          const allocatedCents = Math.max(0, Math.floor(config.allocations[cat.id] ?? 0));
+          categoryRows.push({
+            id: cat.id,
+            user_id: userId,
+            group_id: cat.groupId,
+            name: cat.name,
+            target_cents: cat.targetCents,
+            target_type: cat.targetType ?? null,
+            target_due_day: cat.targetDueDay ?? null,
+            assigned_cents: allocatedCents,
+            activity_cents: 0,
+            available_cents: allocatedCents,
+            unfunded_debt_cents: 0,
+            is_credit_payment: 0,
+            credit_account_id: null,
+            sort_order: sortOrder++,
+          });
+        }
+
+        const metadataRows: MetadataRow[] = [
+          {
+            user_id: userId,
+            key: 'ready_to_assign_cents',
+            value: String(config.remainingReadyToAssignCents),
+          },
+          {
+            user_id: userId,
+            key: 'onboarding_completed',
+            value: 'true',
+          },
+        ];
+
+        await this.client.from('category_groups').insert(groupRows).throwOnError();
+        await this.client.from('accounts').insert(accountRows).throwOnError();
+        await this.client.from('categories').insert(categoryRows).throwOnError();
+        await this.client.from('metadata').upsert(metadataRows).throwOnError();
+      }
+    );
   }
 
   getLastSyncError(): LedgerError | null {
@@ -256,6 +463,15 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           }
           console.error(enrichedError.message);
         });
+      } else {
+        const unauthenticatedError = new LedgerError(
+          'Remote sync skipped: no authenticated user session available to persist changes.'
+        );
+        this.lastSyncError = unauthenticatedError;
+        for (const errorListener of this.errorListeners) {
+          errorListener(unauthenticatedError);
+        }
+        console.warn(unauthenticatedError.message);
       }
 
       return result;

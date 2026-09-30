@@ -2,6 +2,7 @@ import React from 'react';
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { createCleanTestDatabase } from '../../storage/testDatabase';
 import { DatabaseAdapter } from '../../storage/types';
+import { SQLiteLedgerRepository } from '../../storage/ledgerRepository';
 import { isOnboardingCompleted } from '../../storage/schema';
 import { getArchetypeTemplate } from '../../domain/onboarding/archetypes';
 import {
@@ -161,10 +162,11 @@ describe('Onboarding Wizard Screen & Controller (Ticket 04 / SCEN-052, SCEN-053,
 
   describe('Wizard Controller Functions (SCEN-052, SCEN-053, SCEN-054)', () => {
     it('SCEN-052: executeExploreDemo populates default seed data and completes onboarding', () => {
+      const repo = new SQLiteLedgerRepository(db);
       const navigateMock = jest.fn();
       expect(isOnboardingCompleted(db)).toBe(false);
 
-      executeExploreDemo(db, navigateMock);
+      executeExploreDemo(repo, navigateMock);
 
       expect(isOnboardingCompleted(db)).toBe(true);
       expect(navigateMock).toHaveBeenCalledTimes(1);
@@ -176,11 +178,12 @@ describe('Onboarding Wizard Screen & Controller (Ticket 04 / SCEN-052, SCEN-053,
     });
 
     it('SCEN-053 & SCEN-054: executeCommitOnboarding commits accounts, templates, and allocations', () => {
+      const repo = new SQLiteLedgerRepository(db);
       const navigateMock = jest.fn();
       expect(isOnboardingCompleted(db)).toBe(false);
 
       executeCommitOnboarding(
-        db,
+        repo,
         {
           checkingName: 'Main Checking',
           checkingBalanceText: '2,500.00',
@@ -220,12 +223,13 @@ describe('Onboarding Wizard Screen & Controller (Ticket 04 / SCEN-052, SCEN-053,
     });
 
     it('validates required inputs in executeCommitOnboarding', () => {
+      const repo = new SQLiteLedgerRepository(db);
       const navigateMock = jest.fn();
 
       // Empty checking name
       expect(() =>
         executeCommitOnboarding(
-          db,
+          repo,
           {
             checkingName: '   ',
             checkingBalanceText: '1000.00',
@@ -241,7 +245,7 @@ describe('Onboarding Wizard Screen & Controller (Ticket 04 / SCEN-052, SCEN-053,
       // Empty credit card name when toggle is active
       expect(() =>
         executeCommitOnboarding(
-          db,
+          repo,
           {
             checkingName: 'Checking',
             checkingBalanceText: '1000.00',

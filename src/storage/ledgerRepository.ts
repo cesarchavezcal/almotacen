@@ -11,6 +11,8 @@ import {
   DiagnosticsData,
 } from './types';
 import { BudgetState, Account, Category, Transaction, isTargetType } from '../domain/ledger/types';
+import { ValidatedOnboardingConfig } from '../domain/onboarding/types';
+import { SQLiteOnboardingRepository } from './onboardingRepository';
 import { EntityNotFoundError } from '../domain/ledger/errors';
 import {
   prepareCreditCardPaymentCategory,
@@ -89,6 +91,11 @@ export class SQLiteLedgerRepository implements LedgerRepository {
 
   isOnboardingCompleted(): boolean {
     return isDbOnboardingCompleted(this.db);
+  }
+
+  commitOnboardingConfig(config: ValidatedOnboardingConfig): void {
+    const onboardingRepo = new SQLiteOnboardingRepository(this.db);
+    onboardingRepo.commitOnboardingConfig(config);
   }
 
   getCategoryGroups(): CategoryGroup[] {
