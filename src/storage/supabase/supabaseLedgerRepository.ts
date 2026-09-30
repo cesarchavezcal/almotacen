@@ -199,15 +199,6 @@ export class SupabaseLedgerRepository implements LedgerRepository {
         };
       },
       async (userId) => {
-        // Clear previous user rows to ensure clean slate
-        await Promise.all([
-          this.client.from('transactions').delete().eq('user_id', userId).throwOnError(),
-          this.client.from('categories').delete().eq('user_id', userId).throwOnError(),
-          this.client.from('accounts').delete().eq('user_id', userId).throwOnError(),
-          this.client.from('category_groups').delete().eq('user_id', userId).throwOnError(),
-          this.client.from('metadata').delete().eq('user_id', userId).throwOnError(),
-        ]);
-
         const groupRows: CategoryGroupRow[] = [];
         const paymentGroupId = 'grp-payments';
         if (config.creditCardAccount) {
@@ -299,9 +290,9 @@ export class SupabaseLedgerRepository implements LedgerRepository {
           },
         ];
 
-        await this.client.from('category_groups').insert(groupRows).throwOnError();
-        await this.client.from('accounts').insert(accountRows).throwOnError();
-        await this.client.from('categories').insert(categoryRows).throwOnError();
+        await this.client.from('category_groups').upsert(groupRows).throwOnError();
+        await this.client.from('accounts').upsert(accountRows).throwOnError();
+        await this.client.from('categories').upsert(categoryRows).throwOnError();
         await this.client.from('metadata').upsert(metadataRows).throwOnError();
       }
     );

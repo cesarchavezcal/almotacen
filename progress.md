@@ -159,29 +159,29 @@
 - [x] Executed Step 7 (Implementation - ALM-026 Ticket 02: Platform-Agnostic Onboarding Storage Seam):
   - Elevated `commitOnboardingConfig` to `LedgerRepository` in `src/storage/types.ts`
   - Implemented `commitOnboardingConfig` in `SQLiteLedgerRepository` delegating to `SQLiteOnboardingRepository`
-  - Implemented `commitOnboardingConfig` in `SupabaseLedgerRepository` with optimistic cache update and remote batch inserts
+  - Implemented `commitOnboardingConfig` in `SupabaseLedgerRepository` with optimistic cache update and idempotent batch upserts
+  - Routed `executeCommitOnboarding` through pure domain `validateOnboardingConfig` enforcing zero-based invariants
   - Refactored `src/hooks/useOnboardingWizard.ts` to consume `LedgerRepository` instead of direct SQLite `getDatabase()`, eliminating web crashes
-  - Authored behavioral test suite `src/storage/__tests__/onboardingSeam.test.ts` (3/3 tests passing)
-  - Verified `./init.sh`: 239/239 Jest tests passing across all 31 suites, 0 TypeScript errors
+  - Authored behavioral test suite `src/storage/__tests__/onboardingSeam.test.ts` (3/3 tests passing) and controller tests in `src/hooks/__tests__/useOnboardingWizard.test.ts` (4/4 tests passing)
+  - Verified `./init.sh`: 243/243 Jest tests passing across all 32 suites, 0 TypeScript errors
 
 ### What's In Progress
 
-`web-supabase-hardening` (Transitioning to ALM-027 Ticket 03: DB Optimization, RLS InitPlan & Realtime DDL).
+`web-supabase-hardening` (Refining Ticket 02 based on Two-Axis Review & preparing for Ticket 03).
 
 ### What's Next
 
-1. Open PR for Ticket 02 (`feature/CCH/ALM-026-onboarding-storage-seam`).
-2. Merge PR #63 into `main`.
-3. Plan and execute Ticket 03 (`ALM-027`): Author migration `20260930_optimize_rls_and_realtime.sql` with InitPlan RLS + FK indexes.
+1. Commit and merge refinement PR for Ticket 02.
+2. Plan and execute Ticket 03 (`ALM-027`): Author migration `20260930_optimize_rls_and_realtime.sql` with InitPlan RLS + FK indexes.
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 239/239 Jest unit/integration tests pass (31 suites), `tsc --noEmit` 0 errors.
+- [x] `./init.sh`: 243/243 Jest unit/integration tests pass (32 suites), `tsc --noEmit` 0 errors.
 - [x] Web Supabase Integration Ticket 01: 3 behavioral tests passing (`SCEN-001`, `SCEN-002`, `SCEN-003`).
 - [x] Web Supabase Integration Ticket 02: 19 behavioral tests passing (`SCEN-004`, `SCEN-005`, `SCEN-006`, `SCEN-007`).
 - [x] Web Supabase Integration Ticket 03: 9 behavioral tests passing (`SCEN-008`).
 - [x] Web Supabase Hardening Ticket 01: Reverted TS to ~6.0.3, config.toml & .env.example (`SCEN-009`).
-- [x] Web Supabase Hardening Ticket 02: 3 behavioral tests passing (`SCEN-010`, `SCEN-011`).
+- [x] Web Supabase Hardening Ticket 02: 7 behavioral/controller tests passing (`SCEN-010`, `SCEN-011`).
 - [x] Change Archival: `web-supabase-integration` archived to `openspec/changes/archive/2026-09-28-web-supabase-integration/` (PR #59).
 
 

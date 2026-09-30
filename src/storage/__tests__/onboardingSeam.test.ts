@@ -7,9 +7,24 @@ import { ValidatedOnboardingConfig } from '../../domain/onboarding/types';
 import { getArchetypeTemplate } from '../../domain/onboarding/archetypes';
 import { fromPartial } from '@total-typescript/shoehorn';
 import { SupabaseClient } from '@supabase/supabase-js';
+import {
+  AccountRow,
+  CategoryGroupRow,
+  CategoryRow,
+  TransactionRow,
+  MetadataRow,
+} from '../supabase/types';
+
+interface MockTableData {
+  metadata: MetadataRow[];
+  accounts: AccountRow[];
+  category_groups: CategoryGroupRow[];
+  categories: CategoryRow[];
+  transactions: TransactionRow[];
+}
 
 function createMockSupabaseForOnboarding() {
-  const tableData: Record<string, unknown[]> = {
+  const tableData: MockTableData = {
     metadata: [],
     accounts: [],
     category_groups: [],
@@ -28,14 +43,14 @@ function createMockSupabaseForOnboarding() {
         error: null,
       }),
     },
-    from: jest.fn().mockImplementation((table: string) => {
+    from: jest.fn().mockImplementation((table: keyof MockTableData) => {
       const builder: Record<string, unknown> = {};
       builder.select = jest.fn().mockImplementation(() => {
         return Promise.resolve({ data: tableData[table] ?? [], error: null });
       });
       builder.insert = jest.fn().mockImplementation((rows: unknown) => {
         const rowArr = Array.isArray(rows) ? rows : [rows];
-        tableData[table]?.push(...rowArr);
+        (tableData[table] as unknown[]).push(...rowArr);
         const chain = {
           throwOnError: jest.fn().mockImplementation(() => chain),
           then: (resolve: (val: unknown) => unknown) =>
@@ -45,7 +60,7 @@ function createMockSupabaseForOnboarding() {
       });
       builder.upsert = jest.fn().mockImplementation((rows: unknown) => {
         const rowArr = Array.isArray(rows) ? rows : [rows];
-        tableData[table]?.push(...rowArr);
+        (tableData[table] as unknown[]).push(...rowArr);
         const chain = {
           throwOnError: jest.fn().mockImplementation(() => chain),
           then: (resolve: (val: unknown) => unknown) =>
@@ -123,14 +138,14 @@ describe('Onboarding Storage Seam (Ticket 02 / SCEN-010, SCEN-011)', () => {
       expect(state.categories['cat-cc-payment'].isCreditPayment).toBe(true);
       expect(state.categories['cat-cc-payment'].unfundedDebtCents).toBe(50000);
 
-      // Allow background remote persistence promise to flush
-      await new Promise((r) => setTimeout(r, 10));
+      // Deterministically flush event loop ticks for background remote persistence
+      await new Promise((resolve) => setImmediate(resolve));
 
       // Remote tables must have received rows
       expect(tableData.accounts.length).toBe(2);
       expect(tableData.categories.length).toBeGreaterThan(0);
       expect(tableData.category_groups.length).toBeGreaterThan(0);
-      expect(tableData.metadata.some((m: unknown) => (m as { key: string; value: string }).key === 'onboarding_completed' && (m as { key: string; value: string }).value === 'true')).toBe(true);
+      expect(tableData.metadata.some((m) => m.key === 'onboarding_completed' && m.value === 'true')).toBe(true);
     });
   });
 
