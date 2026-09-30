@@ -1,5 +1,6 @@
 import { BudgetState, Transaction, CategoryGroup, Account, Category } from '../domain/ledger/types';
 import { MonthRolloverResult } from '../domain/ledger/rollover';
+import { ValidatedOnboardingConfig } from '../domain/onboarding/types';
 
 export interface DatabaseAdapter {
   execSync(sql: string): void;
@@ -70,7 +71,8 @@ export interface DiagnosticsData {
 
 export interface LedgerRepository {
   initializeAsync?(): Promise<void>;
-  isOnboardingCompleted?(): boolean;
+  isOnboardingCompleted(): boolean;
+  commitOnboardingConfig(config: ValidatedOnboardingConfig): void;
   getBudgetState(): BudgetState;
   getCategoryGroups(): CategoryGroup[];
   postOutflow(params: {

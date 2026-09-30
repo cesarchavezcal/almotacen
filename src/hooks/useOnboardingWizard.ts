@@ -1,20 +1,17 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { DatabaseAdapter } from '../storage/types';
-import { getDatabase } from '../storage/database';
-import { seedDemoData } from '../storage/schema';
-import { createOnboardingRepository } from '../storage/onboardingRepository';
+import { LedgerRepository } from '../storage/types';
+import { getRepository } from '../storage/useLedgerStore';
 import {
   ArchetypePresetId,
-  CommitOnboardingConfigParams,
+  ValidatedOnboardingConfig,
 } from '../domain/onboarding/types';
 import {
   getArchetypeTemplate,
   calculateInitialAllocation,
 } from '../domain/onboarding/archetypes';
 import {
-  commitOnboardingConfig,
   OnboardingValidationError,
 } from '../domain/onboarding/onboardingService';
 import { parseCurrencyToCents } from '../domain/ledger/currency';
@@ -59,16 +56,16 @@ function prevWizardStep(current: WizardStep): WizardStep {
 }
 
 export function executeExploreDemo(
-  db: DatabaseAdapter,
+  repo: LedgerRepository,
   onSuccessNavigate: () => void
 ): void {
-  seedDemoData(db);
+  repo.seedDemoData();
   void Haptics.notificationAsync?.(Haptics.NotificationFeedbackType.Success);
   onSuccessNavigate();
 }
 
 export function executeCommitOnboarding(
-  db: DatabaseAdapter,
+  repo: LedgerRepository,
   inputs: CommitWizardInputs,
   onSuccessNavigate: () => void
 ): void {
@@ -94,14 +91,15 @@ export function executeCommitOnboarding(
     template.categories
   );
 
-  const repo = createOnboardingRepository(db);
-  const params: CommitOnboardingConfigParams = {
+  const validatedConfig: ValidatedOnboardingConfig = {
     depositoryAccount: {
+      id: `acc-${Date.now()}-chk`,
       name: checkingName,
       startingBalanceCents: startingCashCents,
     },
     creditCardAccount: inputs.hasCreditCard
       ? {
+          id: `acc-${Date.now()}-cc`,
           name: creditCardName,
           startingDebtCents: creditCardDebtCents,
         }
@@ -110,17 +108,19 @@ export function executeCommitOnboarding(
     allocations: allocationResult.allocations,
     remainingReadyToAssignCents: allocationResult.remainingReadyToAssignCents,
   };
+  repo.commitOnboardingConfig(validatedConfig);
 
-  commitOnboardingConfig(repo, params);
   void Haptics.notificationAsync?.(Haptics.NotificationFeedbackType.Success);
   onSuccessNavigate();
 }
 
 export function useOnboardingWizard(
-  customDb?: DatabaseAdapter
+  customRepo?: LedgerRepository
 ): OnboardingWizardViewProps {
   const router = useRouter();
-  const db = customDb ?? getDatabase();
+  const repo = useMemo<LedgerRepository>(() => {
+    return customRepo ?? getRepository();
+  }, [customRepo]);
 
   const [step, setStep] = useState<WizardStep>(1);
   const [checkingName, setCheckingName] = useState<string>('Primary Checking');
@@ -185,7 +185,7 @@ export function useOnboardingWizard(
 
   const handleExploreDemo = (): void => {
     try {
-      executeExploreDemo(db, () => {
+      executeExploreDemo(repo, () => {
         router.replace('/(tabs)');
       });
     } catch (err) {
@@ -200,7 +200,7 @@ export function useOnboardingWizard(
 
     try {
       executeCommitOnboarding(
-        db,
+        repo,
         {
           checkingName,
           checkingBalanceText,

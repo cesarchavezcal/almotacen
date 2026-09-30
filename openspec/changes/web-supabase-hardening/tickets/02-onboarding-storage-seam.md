@@ -28,7 +28,7 @@ Decouple `useOnboardingWizard` from direct SQLite calls (`getDatabase()`). Eleva
 ---
 
 ## Verification Criteria
-- [ ] Onboarding wizard runs on Web without invoking `getDatabase()`.
-- [ ] In-memory `BudgetState` reflects new accounts and allocated envelopes immediately upon commitment.
-- [ ] `repo.isOnboardingCompleted()` returns `true` post-commitment.
-- [ ] All unit and component tests pass.
+- [x] Onboarding wizard runs on Web without invoking `getDatabase()`.
+- [x] In-memory `BudgetState` reflects new accounts and allocated envelopes immediately upon commitment.
+- [x] `repo.isOnboardingCompleted()` returns `true` post-commitment.
+- [x] All unit and component tests pass.
