@@ -30,6 +30,6 @@ Implement multi-tab and multi-device realtime synchronization inside `SupabaseLe
 ---
 
 ## Verification Criteria
-- [ ] Remote table events trigger cache re-hydration after 200ms debounce.
-- [ ] In-flight local mutations suppress their own WebSocket echo events.
-- [ ] `notify()` is invoked when remote changes arrive, updating React UI.
+- [x] Remote table events trigger cache re-hydration after 200ms debounce.
+- [x] In-flight local mutations suppress their own WebSocket echo events.
+- [x] `notify()` is invoked when remote changes arrive, updating React UI.

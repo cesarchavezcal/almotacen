@@ -1,4 +1,4 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
 import { getSupabaseClient } from './client';
 import {
   Account,
@@ -75,6 +75,10 @@ export class SupabaseLedgerRepository implements LedgerRepository {
   private listeners = new Set<() => void>();
   private errorListeners = new Set<(err: LedgerError) => void>();
   private lastSyncError: LedgerError | null = null;
+  private realtimeChannel: RealtimeChannel | null = null;
+  private activeWriteCount = 0;
+  private rehydrateDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private isRehydrating = false;
 
   constructor(client?: SupabaseClient) {
     this.client = client ?? getSupabaseClient();
@@ -312,15 +316,11 @@ export class SupabaseLedgerRepository implements LedgerRepository {
     }
   }
 
-  async initializeAsync(): Promise<void> {
-    const { data: userData } = await this.client.auth.getUser();
-    this.userId = userData?.user?.id ?? null;
-
-    if (!this.userId) {
-      const { data: sessionData } = await this.client.auth.getSession();
-      this.userId = sessionData?.session?.user?.id ?? null;
-    }
-
+  private async fetchRemoteSnapshot(_userId: string): Promise<{
+    budgetState: BudgetState;
+    groups: CategoryGroup[];
+    onboardingCompleted: boolean;
+  }> {
     const [accRes, grpRes, catRes, txRes, metaRes] = await Promise.all([
       this.client.from('accounts').select('*'),
       this.client.from('category_groups').select('*'),
@@ -351,7 +351,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
     const txData = validateRows(txRes.data, isTransactionRow);
     const metaData = validateRows(metaRes.data, isMetadataRow);
 
-    this.groups = groupsData.map(mapCategoryGroupRowToDomain);
+    const groups = groupsData.map(mapCategoryGroupRowToDomain);
     const domainCategories = categoriesData.map(mapCategoryRowToDomain);
     const domainTransactions = txData.map(mapTransactionRowToDomain);
 
@@ -379,7 +379,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
     }
 
     const obMeta = metaData.find((m) => m.key === 'onboarding_completed');
-    this.onboardingCompleted = obMeta ? obMeta.value === 'true' : accountsData.length > 0;
+    const onboardingCompleted = obMeta ? obMeta.value === 'true' : accountsData.length > 0;
 
     let totalOutflowCents = 0;
     let totalInflowCents = 0;
@@ -391,7 +391,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
       }
     }
 
-    this.budgetState = {
+    const budgetState: BudgetState = {
       readyToAssignCents,
       accounts: accountsRecord,
       categories: categoriesRecord,
@@ -400,7 +400,112 @@ export class SupabaseLedgerRepository implements LedgerRepository {
       totalInflowCents,
     };
 
+    return {
+      budgetState,
+      groups,
+      onboardingCompleted,
+    };
+  }
+
+  async initializeAsync(): Promise<void> {
+    const { data: userData } = await this.client.auth.getUser();
+    this.userId = userData?.user?.id ?? null;
+
+    if (!this.userId) {
+      const { data: sessionData } = await this.client.auth.getSession();
+      this.userId = sessionData?.session?.user?.id ?? null;
+    }
+
+    const snapshot = await this.fetchRemoteSnapshot(this.userId ?? '');
+    this.budgetState = snapshot.budgetState;
+    this.groups = snapshot.groups;
+    this.onboardingCompleted = snapshot.onboardingCompleted;
+
+    this.setupRealtimeSubscription();
     this.notify();
+  }
+
+  async rehydrateFromRemote(): Promise<void> {
+    if (!this.userId || this.isRehydrating) return;
+    this.isRehydrating = true;
+    try {
+      const snapshot = await this.fetchRemoteSnapshot(this.userId);
+      this.budgetState = snapshot.budgetState;
+      this.groups = snapshot.groups;
+      this.onboardingCompleted = snapshot.onboardingCompleted;
+      this.notify();
+    } catch (err) {
+      const syncError = err instanceof Error ? err : new Error(String(err));
+      const enrichedError = new LedgerError(`Realtime re-hydration failed: ${syncError.message}`);
+      this.lastSyncError = enrichedError;
+      for (const errorListener of this.errorListeners) {
+        errorListener(enrichedError);
+      }
+      console.error(enrichedError.message);
+    } finally {
+      this.isRehydrating = false;
+    }
+  }
+
+  private handleRealtimeEvent(): void {
+    if (this.activeWriteCount > 0) {
+      this.activeWriteCount--;
+      return;
+    }
+
+    if (this.rehydrateDebounceTimer) {
+      clearTimeout(this.rehydrateDebounceTimer);
+    }
+
+    this.rehydrateDebounceTimer = setTimeout(() => {
+      this.rehydrateDebounceTimer = null;
+      void this.rehydrateFromRemote();
+    }, 200);
+  }
+
+  private setupRealtimeSubscription(): void {
+    if (!this.userId || typeof this.client.channel !== 'function') return;
+    this.teardownRealtimeSubscription();
+
+    this.realtimeChannel = this.client
+      .channel(`user-ledger-${this.userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          filter: `user_id=eq.${this.userId}`,
+        },
+        () => {
+          this.handleRealtimeEvent();
+        }
+      )
+      .subscribe();
+  }
+
+  private teardownRealtimeSubscription(): void {
+    if (this.realtimeChannel) {
+      try {
+        if (typeof this.client.removeChannel === 'function') {
+          this.client.removeChannel(this.realtimeChannel);
+        } else if (typeof this.realtimeChannel.unsubscribe === 'function') {
+          this.realtimeChannel.unsubscribe();
+        }
+      } catch (err) {
+        console.warn('Realtime channel teardown failed:', err);
+      }
+      this.realtimeChannel = null;
+    }
+  }
+
+  dispose(): void {
+    if (this.rehydrateDebounceTimer) {
+      clearTimeout(this.rehydrateDebounceTimer);
+      this.rehydrateDebounceTimer = null;
+    }
+    this.teardownRealtimeSubscription();
+    this.listeners.clear();
+    this.errorListeners.clear();
   }
 
   private cloneState(): { budgetState: BudgetState; groups: CategoryGroup[]; onboardingCompleted: boolean } {
@@ -439,7 +544,9 @@ export class SupabaseLedgerRepository implements LedgerRepository {
       this.notify();
 
       if (this.userId) {
+        this.activeWriteCount++;
         Promise.resolve(persistRemote(this.userId, newState, newGroups ?? this.groups)).catch((err) => {
+          this.activeWriteCount = Math.max(0, this.activeWriteCount - 1);
           const syncError = err instanceof Error ? err : new Error(String(err));
           const enrichedError = new LedgerError(
             `Remote sync rejected, rolling back local cache: ${syncError.message}`
