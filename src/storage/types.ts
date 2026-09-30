@@ -123,5 +123,6 @@ export interface LedgerRepository {
   createCategory(input: CreateCategoryInput): Category;
   updateCategory(input: UpdateCategoryInput): Category;
   deleteCategory(id: string): void;
+  dispose?(): void;
 }
 

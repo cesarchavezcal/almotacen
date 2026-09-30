@@ -172,26 +172,38 @@
   - Registered tables into `supabase_realtime` publication with idempotent `DO $$` enrollment
   - Authored behavioral test suite `src/storage/supabase/__tests__/migrationOptimization.test.ts` (30/30 tests passing)
   - Verified `./init.sh`: 273/273 Jest tests passing across all 33 suites, 0 TypeScript errors
+  - Two-Axis Review completed & PR #66 merged to `main`.
+
+- [x] Executed Step 7 (TDD Implementation - ALM-028 Ticket 04: Coalesced Realtime Synchronization):
+  - Added `dispose?(): void` to `LedgerRepository` in `src/storage/types.ts`
+  - Implemented channel subscription to `postgres_changes` on schema `public` with `user_id = eq.${userId}`
+  - Implemented `handleRealtimeEvent` with 200ms coalescing debounce for remote re-hydration (`SCEN-014`)
+  - Implemented local mutation echo suppression via `activeWriteCount` in `executeOptimisticMutation` (`SCEN-015`)
+  - Added defensive handling for non-mocked/missing channel methods and safe error-rollback counter decrement
+  - Authored Red-first behavioral test suite `src/storage/supabase/__tests__/realtimeSync.test.ts` (6/6 tests passing)
+  - Verified `./init.sh`: 279/279 Jest tests passing across all 34 suites, 0 TypeScript compilation errors
 
 ### What's In Progress
 
-`web-supabase-hardening` (Transitioning to ALM-028 Ticket 04: Coalesced Realtime Synchronization).
+`web-supabase-hardening` (Ready for Two-Axis Review and PR on ALM-028 Ticket 04).
 
 ### What's Next
 
-1. Open PR for Ticket 03 (`chore/CCH/ALM-027-db-rls-optimization-and-realtime-ddl`).
-2. Merge PR into `main`.
-3. Plan and execute Ticket 04 (`ALM-028`): Coalesced Realtime Synchronization (`SCEN-014`, `SCEN-015`).
+1. Run Two-Axis Review subagents on Ticket 04 (`ALM-028`).
+2. Push branch `chore/CCH/ALM-028-coalesced-realtime-sync` and open GitHub PR.
+3. Merge PR into `main`.
+4. Proceed to Ticket 05 (`ALM-029`): Auth Lifecycle & Identity Switching (`SCEN-016`, `SCEN-017`).
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 273/273 Jest unit/integration tests pass (33 suites), `tsc --noEmit` 0 errors.
+- [x] `./init.sh`: 279/279 Jest unit/integration tests pass (34 suites), `tsc --noEmit` 0 errors.
 - [x] Web Supabase Integration Ticket 01: 3 behavioral tests passing (`SCEN-001`, `SCEN-002`, `SCEN-003`).
 - [x] Web Supabase Integration Ticket 02: 19 behavioral tests passing (`SCEN-004`, `SCEN-005`, `SCEN-006`, `SCEN-007`).
 - [x] Web Supabase Integration Ticket 03: 9 behavioral tests passing (`SCEN-008`).
 - [x] Web Supabase Hardening Ticket 01: Reverted TS to ~6.0.3, config.toml & .env.example (`SCEN-009`).
 - [x] Web Supabase Hardening Ticket 02: 7 behavioral/controller tests passing (`SCEN-010`, `SCEN-011`).
 - [x] Web Supabase Hardening Ticket 03: 30 migration/RLS tests passing (`SCEN-012`, `SCEN-013`).
+- [x] Web Supabase Hardening Ticket 04: 6 realtime synchronization tests passing (`SCEN-014`, `SCEN-015`).
 - [x] Change Archival: `web-supabase-integration` archived to `openspec/changes/archive/2026-09-28-web-supabase-integration/` (PR #59).
 
 

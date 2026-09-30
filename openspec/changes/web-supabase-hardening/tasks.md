@@ -60,11 +60,11 @@ flowchart LR
 - [x] Verify SQL syntax and RLS behavior via test assertions.
 
 ### [Ticket 04: Coalesced Realtime Synchronization](./tickets/04-coalesced-realtime-sync.md)
-- [ ] Add `client.channel('user-ledger')` subscription in `SupabaseLedgerRepository` listening to `postgres_changes`.
-- [ ] Implement local write echo suppression using an active write counter.
-- [ ] Implement debounced (200ms) re-hydration trigger invoking remote fetch and notifying store listeners.
-- [ ] Provide cleanup / teardown mechanism on repository disposal.
-- [ ] Write integration tests simulating multi-tab broadcast reception and echo filtering.
+- [x] Add `client.channel('user-ledger')` subscription in `SupabaseLedgerRepository` listening to `postgres_changes`.
+- [x] Implement local write echo suppression using an active write counter.
+- [x] Implement debounced (200ms) re-hydration trigger invoking remote fetch and notifying store listeners.
+- [x] Provide cleanup / teardown mechanism on repository disposal.
+- [x] Write integration tests simulating multi-tab broadcast reception and echo filtering.
 
 ### [Ticket 05: Auth Lifecycle & Identity Switching](./tickets/05-auth-lifecycle-and-identity-switching.md)
 - [ ] Integrate `onAuthStateChange` listener in `src/storage/supabase/client.ts` / `useLedgerStore.ts`.
