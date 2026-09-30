@@ -2,8 +2,8 @@
 
 ## Current State
 
-**Last Updated:** 2026-09-28 17:30
-**Active Feature:** None (Ready for next change)
+**Last Updated:** 2026-09-30 11:15
+**Active Feature:** `web-supabase-hardening` (ALM-025: Ticket 01 Complete)
 
 ## Status
 
@@ -149,25 +149,20 @@
   - Two-Axis Review completed, squashed & merged via [PR #57](https://github.com/cesarchavezcal/almotacen/pull/57)
   - 236/236 tests passing across 30 suites via `./init.sh`, 0 TypeScript errors
 
-- [x] Executed Documentation & Planning Archival:
-  - Renamed active planning files to `✅_*.md` and archived under `docs/planning/archive/`
-  - Squashed & merged via [PR #58](https://github.com/cesarchavezcal/almotacen/pull/58)
-
-- [x] Executed SDD Change Archival (`/sdd-archive`):
-  - Verified 13/13 tasks complete in `tasks.md` (Task Completion Gate passed)
-  - Mechanically moved change to `openspec/changes/archive/2026-09-28-web-supabase-integration/` via `git mv`
-  - Verified pre-move snapshot readback (`diff -r`) with 0 differences (empty diff)
-  - Persisted `archive-report.md` documenting terminal lifecycle state and verification evidence
-  - Squashed & merged via [PR #59](https://github.com/cesarchavezcal/almotacen/pull/59)
+- [x] Executed Step 7 (Implementation - ALM-025 Ticket 01: Compiler Baseline, Local Tooling & DX):
+  - Reverted `typescript` to `~6.0.3` in `package.json` to restore `ts-jest` runner compatibility
+  - Added `.env.example` documenting Supabase credentials for local and remote environments
+  - Authored `supabase/config.toml` configuring local Docker ports and enabling anonymous auth
+  - Added npm scripts: `supabase:start`, `supabase:stop`, `supabase:reset`
+  - Verified `./init.sh`: 236/236 Jest tests passing across all 30 suites, 0 TypeScript errors
 
 ### What's In Progress
 
-None (idle, ready for next change).
+`web-supabase-hardening` (ALM-026 Ticket 02: Platform-Agnostic Onboarding Storage Seam).
 
 ### What's Next
 
-1. Select next feature or change from roadmap or user directive.
-2. Kick off discovery or planning (`/autonomic plan`).
+1. Execute Ticket 02 (`ALM-026`): Elevate `commitOnboardingConfig` to `LedgerRepository` and refactor `useOnboardingWizard.ts`.
 
 ## Evidence of Completion
 

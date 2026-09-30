@@ -1,0 +1,10 @@
+project_id = "almotacen"
+
+[auth.anonymous_users]
+enabled = true
+
+[api]
+port = 54321
+
+[db]
+port = 54322
