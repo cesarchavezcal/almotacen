@@ -27,7 +27,7 @@ Author and verify additive migration `supabase/migrations/20260930_optimize_rls_
 ---
 
 ## Verification Criteria
-- [ ] Migration executes cleanly without syntax errors.
-- [ ] RLS policies include `(select auth.uid()) = user_id` and `TO authenticated`.
-- [ ] Foreign key indexes exist.
-- [ ] Tables are added to `supabase_realtime`.
+- [x] Migration executes cleanly without syntax errors.
+- [x] RLS policies include `(select auth.uid()) = user_id` and `TO authenticated`.
+- [x] Foreign key indexes exist.
+- [x] Tables are added to `supabase_realtime`.
