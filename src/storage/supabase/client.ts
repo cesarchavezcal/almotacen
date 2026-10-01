@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient, Session } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, Session, AuthChangeEvent } from '@supabase/supabase-js';
 
 export class SupabaseConfigurationError extends Error {
   constructor(message: string) {
@@ -79,4 +79,19 @@ export async function ensureAnonymousSession(
   }
 
   return authData.session;
+}
+
+export function setupAuthListener(
+  callback: (event: AuthChangeEvent, session: Session | null) => void,
+  client?: SupabaseClient
+): { unsubscribe: () => void } {
+  const supabase = client ?? getSupabaseClient();
+  const { data } = supabase.auth.onAuthStateChange((event, session) => {
+    callback(event, session);
+  });
+  return {
+    unsubscribe: () => {
+      data.subscription.unsubscribe();
+    },
+  };
 }

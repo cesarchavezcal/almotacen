@@ -2,8 +2,8 @@
 
 ## Current State
 
-**Last Updated:** 2026-09-30 11:15
-**Active Feature:** `web-supabase-hardening` (ALM-025: Ticket 01 Complete)
+**Last Updated:** 2026-09-30 18:00
+**Active Feature:** `web-supabase-hardening` (ALM-029: Ticket 05 Complete)
 
 ## Status
 
@@ -183,20 +183,28 @@
   - Authored Red-first behavioral test suite `src/storage/supabase/__tests__/realtimeSync.test.ts` (6/6 tests passing)
   - Verified `./init.sh`: 279/279 Jest tests passing across all 34 suites, 0 TypeScript compilation errors
 
+- [x] Executed Step 7 (TDD Implementation - ALM-029 Ticket 05: Auth Lifecycle & Identity Switching):
+  - Added `setupAuthListener` wrapper in `src/storage/supabase/client.ts` wrapping `supabase.auth.onAuthStateChange`
+  - Implemented `handleAuthStateChange` in `src/storage/useLedgerStore.ts` with identity switch flushing, disposal, and re-hydration
+  - Handled zero-data-loss account claiming (retaining state when `newUserId === currentUserId`)
+  - Wired `setupAuthListener` into `src/hooks/useWebBootstrap.ts` with unmount unsubscribe
+  - Authored behavioral test suite `src/storage/supabase/__tests__/authLifecycle.test.ts` (4/4 tests passing for `SCEN-016` and `SCEN-017`)
+  - Verified `./init.sh`: 283/283 Jest tests passing across all 35 suites, 0 TypeScript compilation errors
+
 ### What's In Progress
 
-`web-supabase-hardening` (Ready for Two-Axis Review and PR on ALM-028 Ticket 04).
+`web-supabase-hardening` (Ready for Two-Axis Review and PR on ALM-029 Ticket 05).
 
 ### What's Next
 
-1. Run Two-Axis Review subagents on Ticket 04 (`ALM-028`).
-2. Push branch `chore/CCH/ALM-028-coalesced-realtime-sync` and open GitHub PR.
+1. Run Two-Axis Review subagents on Ticket 05 (`ALM-029`).
+2. Push branch `chore/CCH/ALM-029-auth-lifecycle-and-identity-switching` and open GitHub PR.
 3. Merge PR into `main`.
-4. Proceed to Ticket 05 (`ALM-029`): Auth Lifecycle & Identity Switching (`SCEN-016`, `SCEN-017`).
+4. Archive `web-supabase-hardening` change to `openspec/changes/archive/`.
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 279/279 Jest unit/integration tests pass (34 suites), `tsc --noEmit` 0 errors.
+- [x] `./init.sh`: 283/283 Jest unit/integration tests pass (35 suites), `tsc --noEmit` 0 errors.
 - [x] Web Supabase Integration Ticket 01: 3 behavioral tests passing (`SCEN-001`, `SCEN-002`, `SCEN-003`).
 - [x] Web Supabase Integration Ticket 02: 19 behavioral tests passing (`SCEN-004`, `SCEN-005`, `SCEN-006`, `SCEN-007`).
 - [x] Web Supabase Integration Ticket 03: 9 behavioral tests passing (`SCEN-008`).
@@ -204,6 +212,7 @@
 - [x] Web Supabase Hardening Ticket 02: 7 behavioral/controller tests passing (`SCEN-010`, `SCEN-011`).
 - [x] Web Supabase Hardening Ticket 03: 30 migration/RLS tests passing (`SCEN-012`, `SCEN-013`).
 - [x] Web Supabase Hardening Ticket 04: 6 realtime synchronization tests passing (`SCEN-014`, `SCEN-015`).
+- [x] Web Supabase Hardening Ticket 05: 4 auth lifecycle & identity switching tests passing (`SCEN-016`, `SCEN-017`).
 - [x] Change Archival: `web-supabase-integration` archived to `openspec/changes/archive/2026-09-28-web-supabase-integration/` (PR #59).
 
 

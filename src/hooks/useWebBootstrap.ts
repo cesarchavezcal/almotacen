@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Platform } from 'react-native';
-import { ensureAnonymousSession } from '../storage/supabase/client';
-import { getRepository } from '../storage/useLedgerStore';
+import { ensureAnonymousSession, setupAuthListener } from '../storage/supabase/client';
+import { getRepository, handleAuthStateChange } from '../storage/useLedgerStore';
 import { LedgerError } from '../storage/types';
 
 export interface WebBootstrapState {
@@ -43,6 +43,16 @@ export function useWebBootstrap(): WebBootstrapState {
       return;
     }
     let isMounted = true;
+
+    const authSub = setupAuthListener((event, session) => {
+      handleAuthStateChange(event, session).catch((err) => {
+        if (isMounted) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          setState({ isReady: false, error });
+        }
+      });
+    });
+
     bootstrapWeb()
       .then(() => {
         if (isMounted) {
@@ -58,6 +68,7 @@ export function useWebBootstrap(): WebBootstrapState {
 
     return () => {
       isMounted = false;
+      authSub.unsubscribe();
     };
   }, []);
 
