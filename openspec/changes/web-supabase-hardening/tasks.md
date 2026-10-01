@@ -67,7 +67,7 @@ flowchart LR
 - [x] Write integration tests simulating multi-tab broadcast reception and echo filtering.
 
 ### [Ticket 05: Auth Lifecycle & Identity Switching](./tickets/05-auth-lifecycle-and-identity-switching.md)
-- [ ] Integrate `onAuthStateChange` listener in `src/storage/supabase/client.ts` / `useLedgerStore.ts`.
-- [ ] When `session.user.id !== currentUserId`, reset repository instance and invoke `bootstrapWeb()` for the new user.
-- [ ] Verify zero-data-loss behavior when converting anonymous users via `updateUser`.
-- [ ] Execute `./init.sh` to ensure 100% green verification pass across all 5 tickets.
+- [x] Integrate `onAuthStateChange` listener in `src/storage/supabase/client.ts` / `useLedgerStore.ts`.
+- [x] When `session.user.id !== currentUserId`, reset repository instance and invoke `bootstrapWeb()` for the new user.
+- [x] Verify zero-data-loss behavior when converting anonymous users via `updateUser`.
+- [x] Execute `./init.sh` to ensure 100% green verification pass across all 5 tickets.

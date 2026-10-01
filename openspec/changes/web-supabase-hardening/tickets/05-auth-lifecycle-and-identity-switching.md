@@ -27,6 +27,6 @@ Establish a reactive auth lifecycle handler listening to `supabase.auth.onAuthSt
 ---
 
 ## Verification Criteria
-- [ ] Switching accounts flushes old budget data and loads new account's data.
-- [ ] Claiming an account preserves existing budget records.
-- [ ] `./init.sh` executes with 100% test pass rate and 0 typecheck errors.
+- [x] Switching accounts flushes old budget data and loads new account's data.
+- [x] Claiming an account preserves existing budget records.
+- [x] `./init.sh` executes with 100% test pass rate and 0 typecheck errors.

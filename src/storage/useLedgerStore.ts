@@ -1,5 +1,6 @@
 import { useSyncExternalStore, useCallback } from 'react';
 import { Platform } from 'react-native';
+import { Session, SupabaseClient, AuthChangeEvent } from '@supabase/supabase-js';
 import { getDatabase } from './database';
 import { SQLiteLedgerRepository } from './ledgerRepository';
 import { getSupabaseClient } from './supabase/client';
@@ -19,6 +20,7 @@ import {
 import { MonthRolloverResult } from '../domain/ledger/rollover';
 
 let repositoryInstance: LedgerRepository | null = null;
+let currentUserId: string | null = null;
 let currentBudgetState: BudgetState | null = null;
 let currentGroups: CategoryGroup[] | null = null;
 let currentSnapshot: { budgetState: BudgetState; groups: CategoryGroup[] } | null = null;
@@ -92,14 +94,30 @@ export function getRepository(): LedgerRepository {
   return repositoryInstance;
 }
 
-export function resetRepositoryInstanceForTesting(): void {
+export function getCurrentUserId(): string | null {
+  return currentUserId;
+}
+
+function disposeCurrentRepository(): void {
+  if (repositoryInstance && typeof repositoryInstance.dispose === 'function') {
+    try {
+      repositoryInstance.dispose();
+    } catch (err) {
+      console.warn('Error disposing repository:', err);
+    }
+  }
   repositoryInstance = null;
+}
+
+export function resetRepositoryInstanceForTesting(): void {
+  disposeCurrentRepository();
   currentBudgetState = null;
   currentGroups = null;
   currentSnapshot = null;
+  currentUserId = null;
 }
 
-function notifyListeners(): void {
+export function notifyListeners(): void {
   const repo = getRepository();
   currentBudgetState = repo.getBudgetState();
   currentGroups = repo.getCategoryGroups();
@@ -112,14 +130,14 @@ function notifyListeners(): void {
   }
 }
 
-function subscribe(listener: () => void): () => void {
+export function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
   };
 }
 
-function getSnapshot(): { budgetState: BudgetState; groups: CategoryGroup[] } {
+export function getSnapshot(): { budgetState: BudgetState; groups: CategoryGroup[] } {
   if (!currentSnapshot) {
     const repo = getRepository();
     currentBudgetState = repo.getBudgetState();
@@ -130,6 +148,59 @@ function getSnapshot(): { budgetState: BudgetState; groups: CategoryGroup[] } {
     };
   }
   return currentSnapshot;
+}
+
+export async function handleAuthStateChange(
+  event: AuthChangeEvent,
+  session: Session | null,
+  customClient?: SupabaseClient
+): Promise<void> {
+  const newUserId = session?.user?.id ?? null;
+
+  if (newUserId) {
+    if (newUserId === currentUserId) {
+      // Same user ID (account claiming via updateUser, token refreshed): zero data loss, retain in-memory state
+      return;
+    }
+
+    // Identity switch (User A -> User B): immediately dispose prior repo and flush memory to prevent stale reads
+    disposeCurrentRepository();
+    currentUserId = newUserId;
+    currentBudgetState = null;
+    currentGroups = null;
+    currentSnapshot = null;
+
+    if (Platform.OS === 'web') {
+      const client = customClient ?? getSupabaseClient();
+      const repo = new SupabaseLedgerRepository(client);
+      repo.subscribe(() => {
+        notifyListeners();
+      });
+      repositoryInstance = repo;
+      if (typeof repo.initializeAsync === 'function') {
+        await repo.initializeAsync();
+      }
+      notifyListeners();
+    }
+  } else if (event === 'SIGNED_OUT' || !session) {
+    // User signed out
+    disposeCurrentRepository();
+    currentUserId = null;
+    currentBudgetState = {
+      readyToAssignCents: 0,
+      accounts: {},
+      categories: {},
+      transactions: [],
+      totalOutflowCents: 0,
+      totalInflowCents: 0,
+    };
+    currentGroups = [];
+    currentSnapshot = {
+      budgetState: currentBudgetState,
+      groups: currentGroups,
+    };
+    notifyListeners();
+  }
 }
 
 export function useLedgerStore(): UseLedgerStoreResult {
