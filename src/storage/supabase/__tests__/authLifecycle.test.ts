@@ -4,16 +4,15 @@ import { fromPartial } from '@total-typescript/shoehorn';
 import {
   handleAuthStateChange,
   getCurrentUserId,
-  getRepository,
   resetRepositoryInstanceForTesting,
   subscribe,
   getSnapshot,
 } from '../../useLedgerStore';
 import { setupAuthListener } from '../client';
-import { SupabaseLedgerRepository } from '../supabaseLedgerRepository';
 
 describe('Auth Lifecycle & Identity Switching (SCEN-016, SCEN-017)', () => {
   let mockClient: SupabaseClient;
+  let mockFrom: jest.Mock;
   let authCallback: ((event: AuthChangeEvent, session: Session | null) => void) | null = null;
   let mockSubscription: { unsubscribe: jest.Mock };
 
@@ -27,6 +26,34 @@ describe('Auth Lifecycle & Identity Switching (SCEN-016, SCEN-017)', () => {
     resetRepositoryInstanceForTesting();
     authCallback = null;
     mockSubscription = { unsubscribe: jest.fn() };
+
+    mockFrom = jest.fn().mockImplementation((table: string) => {
+      return fromPartial({
+        select: jest.fn().mockImplementation(() => {
+          if (table === 'accounts') {
+            return Promise.resolve({
+              data: [
+                {
+                  id: 'acc-1',
+                  user_id: 'user-a-uuid',
+                  name: 'User A Checking',
+                  account_type: 'checking',
+                  balance_cents: 150000,
+                },
+              ],
+              error: null,
+            });
+          }
+          if (table === 'metadata') {
+            return Promise.resolve({
+              data: [{ key: 'ready_to_assign_cents', value: '150000', user_id: 'user-a-uuid' }],
+              error: null,
+            });
+          }
+          return Promise.resolve({ data: [], error: null });
+        }),
+      });
+    });
 
     mockClient = fromPartial<SupabaseClient>({
       auth: fromPartial<SupabaseClient['auth']>({
@@ -43,33 +70,7 @@ describe('Auth Lifecycle & Identity Switching (SCEN-016, SCEN-017)', () => {
           error: null,
         }),
       }),
-      from: jest.fn().mockImplementation((table: string) => {
-        return fromPartial({
-          select: jest.fn().mockImplementation(() => {
-            if (table === 'accounts') {
-              return Promise.resolve({
-                data: [
-                  {
-                    id: 'acc-1',
-                    user_id: 'user-a-uuid',
-                    name: 'User A Checking',
-                    account_type: 'checking',
-                    balance_cents: 150000,
-                  },
-                ],
-                error: null,
-              });
-            }
-            if (table === 'metadata') {
-              return Promise.resolve({
-                data: [{ key: 'ready_to_assign_cents', value: '150000', user_id: 'user-a-uuid' }],
-                error: null,
-              });
-            }
-            return Promise.resolve({ data: [], error: null });
-          }),
-        });
-      }),
+      from: mockFrom,
       channel: jest.fn().mockImplementation(() => ({
         on: jest.fn().mockReturnThis(),
         subscribe: jest.fn().mockReturnThis(),
@@ -91,6 +92,9 @@ describe('Auth Lifecycle & Identity Switching (SCEN-016, SCEN-017)', () => {
 
     expect(mockClient.auth.onAuthStateChange).toHaveBeenCalledWith(expect.any(Function));
     expect(listener.unsubscribe).toBeDefined();
+
+    authCallback?.('SIGNED_IN', null);
+    expect(callback).toHaveBeenCalledWith('SIGNED_IN', null);
 
     listener.unsubscribe();
     expect(mockSubscription.unsubscribe).toHaveBeenCalled();
@@ -114,7 +118,7 @@ describe('Auth Lifecycle & Identity Switching (SCEN-016, SCEN-017)', () => {
       const unsub = subscribe(storeListener);
 
       // Configure mock to return User B data for subsequent queries
-      (mockClient.from as jest.Mock).mockImplementation((table: string) => {
+      mockFrom.mockImplementation((table: string) => {
         return fromPartial({
           select: jest.fn().mockImplementation(() => {
             if (table === 'accounts') {
@@ -172,7 +176,7 @@ describe('Auth Lifecycle & Identity Switching (SCEN-016, SCEN-017)', () => {
       const initialSnapshot = getSnapshot();
 
       // Clear mock calls to verify no re-fetching occurs
-      (mockClient.from as jest.Mock).mockClear();
+      mockFrom.mockClear();
 
       // 2. Simulate account claiming (email/password added via updateUser)
       // Supabase emits USER_UPDATED with identical user.id UUID

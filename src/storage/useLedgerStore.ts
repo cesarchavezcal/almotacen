@@ -98,15 +98,19 @@ export function getCurrentUserId(): string | null {
   return currentUserId;
 }
 
-export function resetRepositoryInstanceForTesting(): void {
+function disposeCurrentRepository(): void {
   if (repositoryInstance && typeof repositoryInstance.dispose === 'function') {
     try {
       repositoryInstance.dispose();
     } catch (err) {
-      console.warn('Error disposing repository during reset:', err);
+      console.warn('Error disposing repository:', err);
     }
   }
   repositoryInstance = null;
+}
+
+export function resetRepositoryInstanceForTesting(): void {
+  disposeCurrentRepository();
   currentBudgetState = null;
   currentGroups = null;
   currentSnapshot = null;
@@ -159,16 +163,12 @@ export async function handleAuthStateChange(
       return;
     }
 
-    // Identity switch (User A -> User B)
-    if (repositoryInstance && typeof repositoryInstance.dispose === 'function') {
-      try {
-        repositoryInstance.dispose();
-      } catch (err) {
-        console.warn('Error disposing repository on auth switch:', err);
-      }
-    }
-    repositoryInstance = null;
+    // Identity switch (User A -> User B): immediately dispose prior repo and flush memory to prevent stale reads
+    disposeCurrentRepository();
     currentUserId = newUserId;
+    currentBudgetState = null;
+    currentGroups = null;
+    currentSnapshot = null;
 
     if (Platform.OS === 'web') {
       const client = customClient ?? getSupabaseClient();
@@ -176,28 +176,15 @@ export async function handleAuthStateChange(
       repo.subscribe(() => {
         notifyListeners();
       });
+      repositoryInstance = repo;
       if (typeof repo.initializeAsync === 'function') {
         await repo.initializeAsync();
       }
-      repositoryInstance = repo;
-      currentBudgetState = repo.getBudgetState();
-      currentGroups = repo.getCategoryGroups();
-      currentSnapshot = {
-        budgetState: currentBudgetState,
-        groups: currentGroups,
-      };
       notifyListeners();
     }
   } else if (event === 'SIGNED_OUT' || !session) {
     // User signed out
-    if (repositoryInstance && typeof repositoryInstance.dispose === 'function') {
-      try {
-        repositoryInstance.dispose();
-      } catch (err) {
-        console.warn('Error disposing repository on sign out:', err);
-      }
-    }
-    repositoryInstance = null;
+    disposeCurrentRepository();
     currentUserId = null;
     currentBudgetState = {
       readyToAssignCents: 0,
