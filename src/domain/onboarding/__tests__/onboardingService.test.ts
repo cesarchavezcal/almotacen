@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createCleanTestDatabase } from '../../../storage/testDatabase';
 import { DatabaseAdapter } from '../../../storage/types';
 import { isOnboardingCompleted } from '../../../storage/schema';
-import { createOnboardingRepository } from '../../../storage/onboardingRepository';
+import { SQLiteLedgerRepository } from '../../../storage/ledgerRepository';
 import { getArchetypeTemplate } from '../archetypes';
 import {
   commitOnboardingConfig,
@@ -17,7 +17,7 @@ describe('Onboarding Commitment Service (Ticket 03 / SCEN-047, SCEN-048)', () =>
 
   beforeEach(() => {
     db = createCleanTestDatabase();
-    repo = createOnboardingRepository(db);
+    repo = new SQLiteLedgerRepository(db);
   });
 
   afterEach(() => {

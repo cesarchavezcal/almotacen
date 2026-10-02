@@ -2,8 +2,9 @@
 
 ## Current State
 
-**Last Updated:** 2026-09-30 18:45
-**Active Feature:** `web-supabase-hardening` (Phase 2 Hardening Complete & Archived)
+**Last Updated:** 2026-10-02 10:45
+**Active Feature:** `codebase-architecture-deepening` (ALM-027 - Complete & Verified)
+
 
 ## Status
 
@@ -183,25 +184,53 @@
   - Authored Red-first behavioral test suite `src/storage/supabase/__tests__/realtimeSync.test.ts` (6/6 tests passing)
   - Verified `./init.sh`: 279/279 Jest tests passing across all 34 suites, 0 TypeScript compilation errors
 
-- [x] Executed Step 7 (TDD Implementation - ALM-029 Ticket 05: Auth Lifecycle & Identity Switching):
-  - Added `setupAuthListener` wrapper in `src/storage/supabase/client.ts` wrapping `supabase.auth.onAuthStateChange`
-  - Implemented `handleAuthStateChange` in `src/storage/useLedgerStore.ts` with identity switch flushing, disposal, and re-hydration
-  - Handled zero-data-loss account claiming (retaining state when `newUserId === currentUserId`)
-  - Wired `setupAuthListener` into `src/hooks/useWebBootstrap.ts` with unmount unsubscribe
-  - Authored behavioral test suite `src/storage/supabase/__tests__/authLifecycle.test.ts` (4/4 tests passing for `SCEN-016` and `SCEN-017`)
-  - Verified `./init.sh`: 283/283 Jest tests passing across all 35 suites, 0 TypeScript compilation errors
+- [x] Executed Step 7 (TDD Implementation - ALM-027 Ticket 01: EntityManager Domain Module):
+  - Created `src/domain/ledger/entityManager.ts` implementing `planAccountDeletion`, `planCategoryDeletion`, `planCategoryGroupDeletion`, and `planAccountCreation`
+  - Authored behavioral unit tests in `src/domain/ledger/entityManager.test.ts` (13/13 tests passing covering `SCEN-060`, `SCEN-061`, `SCEN-062`)
+  - Refactored `SQLiteLedgerRepository` and `SupabaseLedgerRepository` to consume `EntityManager` mutation plans, eliminating 9-step query duplication
+  - Re-exported `EntityManager` and cleaned up dead code in `src/domain/ledger/entityOperations.ts`
+
+- [x] Executed Step 7 (TDD Implementation - ALM-027 Ticket 02: Storage Port Segregation):
+  - Created segregated ports in `src/storage/ports/` (`LedgerTransactionsPort`, `EntityCatalogPort`, `LedgerAdminPort`)
+  - Composed monolithic `LedgerRepository` from the three ports in `src/storage/types.ts`
+  - Streamlined `src/storage/useLedgerStore.ts` by replacing 18 boilerplate `useCallback` forwarders with memoized action proxy
+  - Authored behavioral test `src/storage/__tests__/portSegregation.test.ts` (3/3 tests passing for `SCEN-063`)
+
+- [x] Executed Step 7 (TDD Implementation - ALM-027 Ticket 03: Onboarding Seam Consolidation):
+  - Inlined SQL execution directly into `SQLiteLedgerRepository.commitOnboardingConfig()`
+  - Deleted orphaned `src/storage/onboardingRepository.ts`
+  - Decoupled `useOnboardingGuard.ts` from `DatabaseAdapter`, querying `LedgerRepository.isOnboardingCompleted()` directly
+  - Verified `SCEN-064` in `src/hooks/__tests__/useOnboardingGuard.test.ts`
+
+- [x] Executed Step 7 (TDD Implementation - ALM-027 Ticket 04: Point-of-Sale Expense Intake Module):
+  - Created deep domain module `src/domain/ledger/expenseIntake.ts` implementing `parseCurrencyInput`, `previewExpenseImpact`, `resolvePayeeSuggestion`, and `submitExpense`
+  - Authored unit test suite `src/domain/ledger/expenseIntake.test.ts` (11/11 tests passing for `SCEN-065`, `SCEN-066`, `SCEN-067`)
+  - Created state hook `src/hooks/useExpenseIntake.ts` and extracted presentational `src/components/expense/QuickEntryView.tsx`
+  - Refactored `app/modal.tsx` down from 601 lines to 47 lines (>90% reduction)
+
+- [x] Executed Step 7 (Verification & ADR - ALM-027 Ticket 05: Verification & ADR Recording):
+  - Recorded ADR-002 ("Deepened Domain Seams, Port Segregation & Atomic Entity Manager") in `MEMORY.md`
+  - Verified `./init.sh`: 38/38 Jest test suites passed, 309/309 tests passed, 0 failures, 0 TypeScript errors
+  - Marked all tickets in `openspec/changes/codebase-architecture-deepening/tasks.md` complete
 
 ### What's In Progress
 
-None (Ready for next product epic or feature specification).
+Two-Axis Review & PR opening for `codebase-architecture-deepening` (ALM-027).
 
 ### What's Next
 
-1. Plan next feature milestone or execute next prioritized product epic via `/autonomic plan`.
+1. Run Two-Axis Review (`/autonomic review` or `/code-review`).
+2. Push branch `chore/CCH/ALM-027-codebase-architecture-deepening` and create Pull Request.
+3. Merge PR and archive change to `openspec/changes/archive/`.
 
 ## Evidence of Completion
 
-- [x] `./init.sh`: 283/283 Jest unit/integration tests pass (35 suites), `tsc --noEmit` 0 errors.
+- [x] `./init.sh`: 309/309 Jest unit/integration tests pass (38 suites), `tsc --noEmit` 0 errors.
+- [x] ALM-027 Ticket 01: 13 behavioral tests passing (`SCEN-060`, `SCEN-061`, `SCEN-062`).
+- [x] ALM-027 Ticket 02: 3 port segregation tests passing (`SCEN-063`).
+- [x] ALM-027 Ticket 03: 4 onboarding guard tests passing (`SCEN-064`).
+- [x] ALM-027 Ticket 04: 11 expense intake tests passing (`SCEN-065`, `SCEN-066`, `SCEN-067`).
+- [x] ALM-027 Ticket 05: Full test suite pass (309/309 tests) and ADR-002 recorded.
 - [x] Web Supabase Integration Ticket 01: 3 behavioral tests passing (`SCEN-001`, `SCEN-002`, `SCEN-003`).
 - [x] Web Supabase Integration Ticket 02: 19 behavioral tests passing (`SCEN-004`, `SCEN-005`, `SCEN-006`, `SCEN-007`).
 - [x] Web Supabase Integration Ticket 03: 9 behavioral tests passing (`SCEN-008`).
