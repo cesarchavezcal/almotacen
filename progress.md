@@ -213,17 +213,27 @@
   - Verified `./init.sh`: 38/38 Jest test suites passed, 309/309 tests passed, 0 failures, 0 TypeScript errors
   - Marked all tickets in `openspec/changes/codebase-architecture-deepening/tasks.md` complete
 
+- [x] Executed Step 7 (Implementation - ALM-030 Ticket 01: Delete entityOperations.ts Pass-Through):
+  - Confirmed zero callers across `src/` and `app/` referencing `entityOperations.ts`
+  - Deleted shallow alias `src/domain/ledger/entityOperations.ts`
+  - Verified `EntityManager` serves as direct authority across all entity mutation plans
+  - Verified `./init.sh`: 38/38 Jest test suites passed, 309/309 tests passed, 0 failures, 0 TypeScript errors
+
 ### What's In Progress
 
-None (Architecture Deepening ALM-027 fully merged & archived).
+`deep-module-consolidation` (Ready for Review & PR on ALM-030 Ticket 01).
 
 ### What's Next
 
-1. Plan next feature milestone or execute next prioritized product epic via `/autonomic plan`.
+1. Run Two-Axis Review subagents on Ticket 01 (`ALM-030`).
+2. Push branch `chore/CCH/ALM-030-delete-entity-operations` and open GitHub PR.
+3. Merge PR into `main`.
+4. Proceed to Ticket 02 (`ALM-030`): Remove Dead Port Hooks from Store (`SCEN-019`).
 
 ## Evidence of Completion
 
 - [x] `./init.sh`: 309/309 Jest unit/integration tests pass (38 suites), `tsc --noEmit` 0 errors.
+- [x] Deep Module Consolidation Ticket 01: Deleted `src/domain/ledger/entityOperations.ts` (`SCEN-018`).
 - [x] ALM-027 Ticket 01: 13 behavioral tests passing (`SCEN-060`, `SCEN-061`, `SCEN-062`).
 - [x] ALM-027 Ticket 02: 3 port segregation tests passing (`SCEN-063`).
 - [x] ALM-027 Ticket 03: 4 onboarding guard tests passing (`SCEN-064`).
