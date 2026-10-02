@@ -215,13 +215,11 @@
 
 ### What's In Progress
 
-Two-Axis Review & PR opening for `codebase-architecture-deepening` (ALM-027).
+None (Architecture Deepening ALM-027 fully merged & archived).
 
 ### What's Next
 
-1. Run Two-Axis Review (`/autonomic review` or `/code-review`).
-2. Push branch `chore/CCH/ALM-027-codebase-architecture-deepening` and create Pull Request.
-3. Merge PR and archive change to `openspec/changes/archive/`.
+1. Plan next feature milestone or execute next prioritized product epic via `/autonomic plan`.
 
 ## Evidence of Completion
 
@@ -231,6 +229,7 @@ Two-Axis Review & PR opening for `codebase-architecture-deepening` (ALM-027).
 - [x] ALM-027 Ticket 03: 4 onboarding guard tests passing (`SCEN-064`).
 - [x] ALM-027 Ticket 04: 11 expense intake tests passing (`SCEN-065`, `SCEN-066`, `SCEN-067`).
 - [x] ALM-027 Ticket 05: Full test suite pass (309/309 tests) and ADR-002 recorded.
+- [x] Change Archival: `codebase-architecture-deepening` archived to `openspec/changes/archive/2026-10-02-codebase-architecture-deepening/` (PR #70).
 - [x] Web Supabase Integration Ticket 01: 3 behavioral tests passing (`SCEN-001`, `SCEN-002`, `SCEN-003`).
 - [x] Web Supabase Integration Ticket 02: 19 behavioral tests passing (`SCEN-004`, `SCEN-005`, `SCEN-006`, `SCEN-007`).
 - [x] Web Supabase Integration Ticket 03: 9 behavioral tests passing (`SCEN-008`).
