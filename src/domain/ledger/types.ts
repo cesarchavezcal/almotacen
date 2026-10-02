@@ -65,3 +65,44 @@ export interface BudgetState {
   totalOutflowCents: number;
   totalInflowCents: number;
 }
+
+export interface CreateAccountInput {
+  id?: string;
+  name: string;
+  accountType: Account['accountType'];
+  balanceCents: number;
+}
+
+export interface UpdateAccountInput {
+  id: string;
+  name: string;
+  balanceCents?: number;
+}
+
+export interface CreateCategoryGroupInput {
+  id?: string;
+  name: string;
+}
+
+export interface UpdateCategoryGroupInput {
+  id: string;
+  name: string;
+}
+
+export interface CreateCategoryInput {
+  id?: string;
+  groupId: string;
+  name: string;
+  targetCents?: number;
+  targetType?: Category['targetType'];
+  targetDueDay?: number;
+}
+
+export interface UpdateCategoryInput {
+  id: string;
+  groupId?: string;
+  name?: string;
+  targetCents?: number;
+  targetType?: Category['targetType'];
+  targetDueDay?: number;
+}

@@ -14,14 +14,7 @@ import { BudgetState, Account, Category, Transaction, isTargetType } from '../do
 import { ValidatedOnboardingConfig } from '../domain/onboarding/types';
 import { SQLiteOnboardingRepository } from './onboardingRepository';
 import { EntityNotFoundError } from '../domain/ledger/errors';
-import {
-  prepareCreditCardPaymentCategory,
-  calculateDepositoryInflowOnCreation,
-  assertCanDeleteAccount,
-  assertCanDeleteCategoryGroup,
-  assertCanDeleteCategory,
-  canCleanUpLinkedPaymentCategory,
-} from '../domain/ledger/entityOperations';
+import { EntityManager } from '../domain/ledger/entityManager';
 import {
   postOutflowTransaction,
   postInflowTransaction,
@@ -570,55 +563,50 @@ export class SQLiteLedgerRepository implements LedgerRepository {
   }
   createAccount(input: CreateAccountInput): Account {
     return this.db.withTransactionSync(() => {
-      const id = input.id || `acc-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+      const plan = EntityManager.planAccountCreation(input);
       const now = new Date().toISOString();
-      let creditPaymentCategoryId: string | undefined = undefined;
 
-      if (input.accountType === 'credit') {
-        const preparedPaymentCategory = prepareCreditCardPaymentCategory(input.name, id, input.balanceCents);
-        creditPaymentCategoryId = preparedPaymentCategory.categoryId;
-
-        const existingCategoryGroup = this.db.getFirstSync<{ id: string }>(
+      if (plan.linkedCategoryGroup && plan.linkedPaymentCategory) {
+        const existingGroup = this.db.getFirstSync<{ id: string }>(
           'SELECT id FROM category_groups WHERE id = ?',
-          preparedPaymentCategory.paymentGroupId
+          plan.linkedCategoryGroup.id
         );
-        if (!existingCategoryGroup) {
+        if (!existingGroup) {
           this.db.runSync(
             'INSERT INTO category_groups (id, name, sort_order) VALUES (?, ?, ?)',
-            preparedPaymentCategory.paymentGroupId,
-            preparedPaymentCategory.paymentGroupName,
-            0
+            plan.linkedCategoryGroup.id,
+            plan.linkedCategoryGroup.name,
+            plan.linkedCategoryGroup.sortOrder
           );
         }
 
         this.db.runSync(
           'INSERT INTO categories (id, group_id, name, target_cents, target_type, target_due_day, assigned_cents, available_cents, is_credit_payment, unfunded_debt_cents, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          preparedPaymentCategory.categoryId,
-          preparedPaymentCategory.paymentGroupId,
-          preparedPaymentCategory.categoryName,
+          plan.linkedPaymentCategory.id,
+          plan.linkedPaymentCategory.groupId,
+          plan.linkedPaymentCategory.name,
           0,
           'NEEDED_FOR_SPENDING',
           null,
           0,
           0,
           1,
-          preparedPaymentCategory.startingDebtCents,
+          plan.linkedPaymentCategory.unfundedDebtCents || 0,
           0
         );
       }
 
       this.db.runSync(
         'INSERT INTO accounts (id, name, account_type, balance_cents, credit_payment_category_id, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-        id,
-        input.name,
-        input.accountType,
-        input.balanceCents,
-        creditPaymentCategoryId || null,
+        plan.account.id,
+        plan.account.name,
+        plan.account.accountType,
+        plan.account.balanceCents,
+        plan.account.creditPaymentCategoryId || null,
         now
       );
 
-      const readyToAssignAddition = calculateDepositoryInflowOnCreation(input.accountType, input.balanceCents);
-      if (readyToAssignAddition > 0) {
+      if (plan.readyToAssignInflowCents > 0) {
         const metaRow = this.db.getFirstSync<{ value: string }>(
           'SELECT value FROM metadata WHERE key = ?',
           'ready_to_assign_cents'
@@ -627,17 +615,11 @@ export class SQLiteLedgerRepository implements LedgerRepository {
         this.db.runSync(
           'INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)',
           'ready_to_assign_cents',
-          String(currentReadyToAssignCents + readyToAssignAddition)
+          String(currentReadyToAssignCents + plan.readyToAssignInflowCents)
         );
       }
 
-      return {
-        id,
-        name: input.name,
-        accountType: input.accountType,
-        balanceCents: input.balanceCents,
-        creditPaymentCategoryId,
-      };
+      return plan.account;
     });
   }
 
@@ -703,9 +685,10 @@ export class SQLiteLedgerRepository implements LedgerRepository {
         'SELECT COUNT(*) as count FROM transactions WHERE account_id = ?',
         id
       );
-      assertCanDeleteAccount(transactionCountRow?.count ?? 0);
 
-      // If it is a credit card account, clean up linked payment category if it has no transactions and zero balance
+      let linkedPaymentCategory: Category | undefined = undefined;
+      let linkedPaymentCategoryTransactionCount = 0;
+
       if (existingAccount.credit_payment_category_id) {
         const paymentCategoryId = existingAccount.credit_payment_category_id;
         const paymentCategory = this.db.getFirstSync<CategoryRow>(
@@ -717,16 +700,40 @@ export class SQLiteLedgerRepository implements LedgerRepository {
             'SELECT COUNT(*) as count FROM transactions WHERE category_id = ?',
             paymentCategoryId
           );
-          const paymentCategoryTransactionCount = paymentCategoryTransactionCountRow?.count ?? 0;
-          const paymentCategoryAvailableCents = Number(paymentCategory.available_cents);
-
-          if (canCleanUpLinkedPaymentCategory(paymentCategoryAvailableCents, paymentCategoryTransactionCount)) {
-            this.db.runSync('DELETE FROM categories WHERE id = ?', paymentCategoryId);
-          }
+          linkedPaymentCategoryTransactionCount = paymentCategoryTransactionCountRow?.count ?? 0;
+          linkedPaymentCategory = {
+            id: paymentCategory.id,
+            groupId: paymentCategory.group_id,
+            name: paymentCategory.name,
+            targetCents: Number(paymentCategory.target_cents),
+            assignedCents: Number(paymentCategory.assigned_cents),
+            availableCents: Number(paymentCategory.available_cents),
+            isCreditPayment: Boolean(paymentCategory.is_credit_payment),
+            unfundedDebtCents: Number(paymentCategory.unfunded_debt_cents || 0),
+          };
         }
       }
 
-      this.db.runSync('DELETE FROM accounts WHERE id = ?', id);
+      const plan = EntityManager.planAccountDeletion({
+        account: {
+          id: existingAccount.id,
+          name: existingAccount.name,
+          accountType: existingAccount.account_type,
+          balanceCents: Number(existingAccount.balance_cents),
+          creditPaymentCategoryId: existingAccount.credit_payment_category_id || undefined,
+        },
+        transactionCount: transactionCountRow?.count ?? 0,
+        linkedPaymentCategory,
+        linkedPaymentCategoryTransactionCount,
+      });
+
+      for (const catId of plan.deleteCategoryIds) {
+        this.db.runSync('DELETE FROM categories WHERE id = ?', catId);
+      }
+
+      for (const accId of plan.deleteAccountIds) {
+        this.db.runSync('DELETE FROM accounts WHERE id = ?', accId);
+      }
     });
   }
 
@@ -793,9 +800,15 @@ export class SQLiteLedgerRepository implements LedgerRepository {
         'SELECT COUNT(*) as count FROM categories WHERE group_id = ?',
         id
       );
-      assertCanDeleteCategoryGroup(categoryCountRow?.count ?? 0);
 
-      this.db.runSync('DELETE FROM category_groups WHERE id = ?', id);
+      const plan = EntityManager.planCategoryGroupDeletion({
+        groupId: id,
+        childCategoryCount: categoryCountRow?.count ?? 0,
+      });
+
+      for (const grpId of plan.deleteCategoryGroupIds) {
+        this.db.runSync('DELETE FROM category_groups WHERE id = ?', grpId);
+      }
     });
   }
 
@@ -920,13 +933,23 @@ export class SQLiteLedgerRepository implements LedgerRepository {
         id
       );
 
-      assertCanDeleteCategory({
-        isCreditPayment: existingCategory.is_credit_payment === 1,
-        availableCents: Number(existingCategory.available_cents),
+      const plan = EntityManager.planCategoryDeletion({
+        category: {
+          id: existingCategory.id,
+          groupId: existingCategory.group_id,
+          name: existingCategory.name,
+          targetCents: Number(existingCategory.target_cents),
+          assignedCents: Number(existingCategory.assigned_cents),
+          availableCents: Number(existingCategory.available_cents),
+          isCreditPayment: existingCategory.is_credit_payment === 1,
+          unfundedDebtCents: Number(existingCategory.unfunded_debt_cents || 0),
+        },
         transactionCount: transactionCountRow?.count ?? 0,
       });
 
-      this.db.runSync('DELETE FROM categories WHERE id = ?', id);
+      for (const catId of plan.deleteCategoryIds) {
+        this.db.runSync('DELETE FROM categories WHERE id = ?', catId);
+      }
     });
   }
 }

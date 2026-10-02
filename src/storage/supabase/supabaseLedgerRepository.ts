@@ -31,14 +31,7 @@ import {
 } from '../../domain/ledger/ledgerEngine';
 import { calculateAutoAssignAllocations } from '../../domain/ledger/autoAssign';
 import { coverOverspending } from '../../domain/ledger/overspendingCoverage';
-import {
-  assertCanDeleteAccount,
-  assertCanDeleteCategory,
-  assertCanDeleteCategoryGroup,
-  canCleanUpLinkedPaymentCategory,
-  prepareCreditCardPaymentCategory,
-  calculateDepositoryInflowOnCreation,
-} from '../../domain/ledger/entityOperations';
+import { EntityManager } from '../../domain/ledger/entityManager';
 import {
   mapAccountRowToDomain,
   mapCategoryGroupRowToDomain,
@@ -1125,92 +1118,68 @@ export class SupabaseLedgerRepository implements LedgerRepository {
   }
 
   createAccount(input: CreateAccountInput): Account {
-    const id = input.id || `acc-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-    let creditPaymentCategoryId: string | undefined = undefined;
+    const plan = EntityManager.planAccountCreation(input);
 
     return this.executeOptimisticMutation(
       (state, groups) => {
         let newGroups = [...groups];
         const newCategories = { ...state.categories };
 
-        if (input.accountType === 'credit') {
-          const prep = prepareCreditCardPaymentCategory(input.name, id, input.balanceCents);
-          creditPaymentCategoryId = prep.categoryId;
-
-          if (!groups.some((g) => g.id === prep.paymentGroupId)) {
+        if (plan.linkedCategoryGroup && plan.linkedPaymentCategory) {
+          if (!groups.some((g) => g.id === plan.linkedCategoryGroup?.id)) {
             newGroups = [
-              { id: prep.paymentGroupId, name: prep.paymentGroupName, sortOrder: 0 },
+              plan.linkedCategoryGroup,
               ...newGroups,
             ];
           }
 
-          newCategories[prep.categoryId] = {
-            id: prep.categoryId,
-            groupId: prep.paymentGroupId,
-            name: prep.categoryName,
-            targetCents: 0,
-            targetType: 'NEEDED_FOR_SPENDING',
-            assignedCents: 0,
-            availableCents: 0,
-            isCreditPayment: true,
-            unfundedDebtCents: prep.startingDebtCents,
-          };
+          newCategories[plan.linkedPaymentCategory.id] = plan.linkedPaymentCategory;
         }
-
-        const newAccount: Account = {
-          id,
-          name: input.name,
-          accountType: input.accountType,
-          balanceCents: input.balanceCents,
-          creditPaymentCategoryId,
-        };
 
         const newAccounts = {
           ...state.accounts,
-          [id]: newAccount,
+          [plan.account.id]: plan.account,
         };
 
-        const rtaDelta = calculateDepositoryInflowOnCreation(input.accountType, input.balanceCents);
         const newState: BudgetState = {
           ...state,
           accounts: newAccounts,
           categories: newCategories,
-          readyToAssignCents: state.readyToAssignCents + rtaDelta,
+          readyToAssignCents: state.readyToAssignCents + plan.readyToAssignInflowCents,
         };
 
         return {
           newState,
           newGroups,
-          result: newAccount,
+          result: plan.account,
         };
       },
       async (userId, targetState) => {
         const promises: PromiseLike<unknown>[] = [];
 
-        if (input.accountType === 'credit') {
-          const prep = prepareCreditCardPaymentCategory(input.name, id, input.balanceCents);
+        if (plan.linkedCategoryGroup && plan.linkedPaymentCategory) {
           promises.push(
             this.client.from('category_groups').upsert({
-              id: prep.paymentGroupId,
+              id: plan.linkedCategoryGroup.id,
               user_id: userId,
-              name: prep.paymentGroupName,
+              name: plan.linkedCategoryGroup.name,
               sort_order: 0,
             }).throwOnError()
           );
           promises.push(
             this.client.from('categories').insert({
-              id: prep.categoryId,
+              id: plan.linkedPaymentCategory.id,
               user_id: userId,
-              group_id: prep.paymentGroupId,
-              name: prep.categoryName,
+              group_id: plan.linkedPaymentCategory.groupId,
+              name: plan.linkedPaymentCategory.name,
               assigned_cents: 0,
               activity_cents: 0,
               available_cents: 0,
               target_cents: 0,
               target_type: 'NEEDED_FOR_SPENDING',
-              unfunded_debt_cents: prep.startingDebtCents,
+              unfunded_debt_cents: plan.linkedPaymentCategory.unfundedDebtCents || 0,
               is_credit_payment: 1,
-              credit_account_id: id,
+              credit_account_id: plan.account.id,
               sort_order: 0,
             }).throwOnError()
           );
@@ -1218,16 +1187,15 @@ export class SupabaseLedgerRepository implements LedgerRepository {
 
         promises.push(
           this.client.from('accounts').insert({
-            id,
+            id: plan.account.id,
             user_id: userId,
-            name: input.name,
-            account_type: input.accountType,
-            balance_cents: input.balanceCents,
+            name: plan.account.name,
+            account_type: plan.account.accountType,
+            balance_cents: plan.account.balanceCents,
           }).throwOnError()
         );
 
-        const rtaDelta = calculateDepositoryInflowOnCreation(input.accountType, input.balanceCents);
-        if (rtaDelta > 0) {
+        if (plan.readyToAssignInflowCents > 0) {
           promises.push(
             this.client.from('metadata').upsert({
               user_id: userId,
@@ -1310,29 +1278,36 @@ export class SupabaseLedgerRepository implements LedgerRepository {
     }
 
     const txCount = this.budgetState.transactions.filter((t) => t.accountId === id).length;
-    assertCanDeleteAccount(txCount);
+    let linkedPaymentCategory: Category | undefined = undefined;
+    let linkedPaymentCategoryTransactionCount = 0;
 
-    let paymentCategoryToDelete: string | null = null;
     if (existing.creditPaymentCategoryId) {
       const paymentCat = this.budgetState.categories[existing.creditPaymentCategoryId];
       if (paymentCat) {
-        const catTxCount = this.budgetState.transactions.filter(
+        linkedPaymentCategory = paymentCat;
+        linkedPaymentCategoryTransactionCount = this.budgetState.transactions.filter(
           (t) => t.categoryId === paymentCat.id
         ).length;
-        if (canCleanUpLinkedPaymentCategory(paymentCat.availableCents, catTxCount)) {
-          paymentCategoryToDelete = paymentCat.id;
-        }
       }
     }
+
+    const plan = EntityManager.planAccountDeletion({
+      account: existing,
+      transactionCount: txCount,
+      linkedPaymentCategory,
+      linkedPaymentCategoryTransactionCount,
+    });
 
     this.executeOptimisticMutation(
       (state) => {
         const newAccounts = { ...state.accounts };
-        delete newAccounts[id];
+        for (const accId of plan.deleteAccountIds) {
+          delete newAccounts[accId];
+        }
 
         const newCategories = { ...state.categories };
-        if (paymentCategoryToDelete) {
-          delete newCategories[paymentCategoryToDelete];
+        for (const catId of plan.deleteCategoryIds) {
+          delete newCategories[catId];
         }
 
         const newState: BudgetState = {
@@ -1349,25 +1324,27 @@ export class SupabaseLedgerRepository implements LedgerRepository {
       async (userId) => {
         const promises: PromiseLike<unknown>[] = [];
 
-        if (paymentCategoryToDelete) {
+        for (const catId of plan.deleteCategoryIds) {
           promises.push(
             this.client
               .from('categories')
               .delete()
-              .eq('id', paymentCategoryToDelete)
+              .eq('id', catId)
               .eq('user_id', userId)
               .throwOnError()
           );
         }
 
-        promises.push(
-          this.client
-            .from('accounts')
-            .delete()
-            .eq('id', id)
-            .eq('user_id', userId)
-            .throwOnError()
-        );
+        for (const accId of plan.deleteAccountIds) {
+          promises.push(
+            this.client
+              .from('accounts')
+              .delete()
+              .eq('id', accId)
+              .eq('user_id', userId)
+              .throwOnError()
+          );
+        }
 
         await Promise.all(promises);
       }
@@ -1447,11 +1424,14 @@ export class SupabaseLedgerRepository implements LedgerRepository {
     }
 
     const childCount = Object.values(this.budgetState.categories).filter((c) => c.groupId === id).length;
-    assertCanDeleteCategoryGroup(childCount);
+    const plan = EntityManager.planCategoryGroupDeletion({
+      groupId: id,
+      childCategoryCount: childCount,
+    });
 
     this.executeOptimisticMutation(
       (state, groups) => {
-        const newGroups = groups.filter((g) => g.id !== id);
+        const newGroups = groups.filter((g) => !plan.deleteCategoryGroupIds.includes(g.id));
         return {
           newState: state,
           newGroups,
@@ -1459,12 +1439,15 @@ export class SupabaseLedgerRepository implements LedgerRepository {
         };
       },
       async (userId) => {
-        await this.client
-          .from('category_groups')
-          .delete()
-          .eq('id', id)
-          .eq('user_id', userId)
-          .throwOnError();
+        const promises = plan.deleteCategoryGroupIds.map((grpId) =>
+          this.client
+            .from('category_groups')
+            .delete()
+            .eq('id', grpId)
+            .eq('user_id', userId)
+            .throwOnError()
+        );
+        await Promise.all(promises);
       }
     );
   }
@@ -1583,16 +1566,17 @@ export class SupabaseLedgerRepository implements LedgerRepository {
     }
 
     const txCount = this.budgetState.transactions.filter((t) => t.categoryId === id).length;
-    assertCanDeleteCategory({
-      isCreditPayment: Boolean(existing.isCreditPayment),
-      availableCents: existing.availableCents,
+    const plan = EntityManager.planCategoryDeletion({
+      category: existing,
       transactionCount: txCount,
     });
 
     this.executeOptimisticMutation(
       (state) => {
         const newCategories = { ...state.categories };
-        delete newCategories[id];
+        for (const catId of plan.deleteCategoryIds) {
+          delete newCategories[catId];
+        }
 
         const newState: BudgetState = {
           ...state,
@@ -1605,12 +1589,15 @@ export class SupabaseLedgerRepository implements LedgerRepository {
         };
       },
       async (userId) => {
-        await this.client
-          .from('categories')
-          .delete()
-          .eq('id', id)
-          .eq('user_id', userId)
-          .throwOnError();
+        const promises = plan.deleteCategoryIds.map((catId) =>
+          this.client
+            .from('categories')
+            .delete()
+            .eq('id', catId)
+            .eq('user_id', userId)
+            .throwOnError()
+        );
+        await Promise.all(promises);
       }
     );
   }

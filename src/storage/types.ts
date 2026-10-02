@@ -1,4 +1,16 @@
-import { BudgetState, Transaction, CategoryGroup, Account, Category } from '../domain/ledger/types';
+import {
+  BudgetState,
+  Transaction,
+  CategoryGroup,
+  Account,
+  Category,
+  CreateAccountInput,
+  UpdateAccountInput,
+  CreateCategoryGroupInput,
+  UpdateCategoryGroupInput,
+  CreateCategoryInput,
+  UpdateCategoryInput,
+} from '../domain/ledger/types';
 import { MonthRolloverResult } from '../domain/ledger/rollover';
 import { ValidatedOnboardingConfig } from '../domain/onboarding/types';
 
@@ -12,6 +24,14 @@ export interface DatabaseAdapter {
 }
 
 export { CategoryGroup };
+export type {
+  CreateAccountInput,
+  UpdateAccountInput,
+  CreateCategoryGroupInput,
+  UpdateCategoryGroupInput,
+  CreateCategoryInput,
+  UpdateCategoryInput,
+};
 export {
   ValidationError,
   LedgerError,
@@ -21,46 +41,6 @@ export {
   ProtectedEntityError,
 } from '../domain/ledger/errors';
 
-export interface CreateAccountInput {
-  id?: string;
-  name: string;
-  accountType: Account['accountType'];
-  balanceCents: number;
-}
-
-export interface UpdateAccountInput {
-  id: string;
-  name: string;
-  balanceCents?: number;
-}
-
-export interface CreateCategoryGroupInput {
-  id?: string;
-  name: string;
-}
-
-export interface UpdateCategoryGroupInput {
-  id: string;
-  name: string;
-}
-
-export interface CreateCategoryInput {
-  id?: string;
-  groupId: string;
-  name: string;
-  targetCents?: number;
-  targetType?: Category['targetType'];
-  targetDueDay?: number;
-}
-
-export interface UpdateCategoryInput {
-  id: string;
-  groupId?: string;
-  name?: string;
-  targetCents?: number;
-  targetType?: Category['targetType'];
-  targetDueDay?: number;
-}
 export interface DiagnosticsData {
   schemaVersion: number;
   accountCount: number;
