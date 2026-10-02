@@ -9,6 +9,8 @@ This file records durable learnings, architectural decision records (ADRs), user
 | Date | ADR Title | Decision & Rationale | Status |
 |---|---|---|---|
 | 2026-09-08 | ADR-001: Mobile-First Expo Stack & Dual Financial Model | Adopt Expo SDK with Expo Router and Supabase Postgres. Mobile-first ergonomics enable low-friction transaction capture at point-of-sale, while Expo Web/PWA serves desktop budget planning. Unifies reactive cash tracking (Monarch) with zero-based budgeting (YNAB). | Accepted |
+| 2026-10-01 | ADR-002: Deepened Domain Seams, Port Segregation & Atomic Entity Manager | Segregate 25-method monolithic `LedgerRepository` into focused domain ports (`LedgerTransactionsPort`, `EntityCatalogPort`, `LedgerAdminPort`). Encapsulate entity mutation planning and integrity constraints inside deep `EntityManager` domain module, eliminating duplicated 9-step query dance across SQLite and Supabase repositories. Consolidate point-of-sale currency parsing, live deficit impact calculation, and smart payee matching into `ExpenseIntake` module, reducing modal presentational footprint by 75%. Absorb orphaned `SQLiteOnboardingRepository` directly into `SQLiteLedgerRepository` and decouple `useOnboardingGuard` from `DatabaseAdapter`. | Accepted |
+
 
 ---
 

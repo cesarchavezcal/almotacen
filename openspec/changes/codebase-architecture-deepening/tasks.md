@@ -39,32 +39,32 @@ flowchart LR
 ## Tasks Breakdown
 
 ### [Ticket 01: `EntityManager` Domain Module & Integrity Consolidation](./tickets/01-entity-manager-and-integrity.md)
-- [ ] Create `src/domain/ledger/entityManager.ts` implementing `planAccountDeletion`, `planCategoryDeletion`, `planCategoryGroupDeletion`, and `planAccountCreation`.
-- [ ] Author comprehensive unit tests in `src/domain/ledger/entityManager.test.ts` asserting `SCEN-060`, `SCEN-061`, and `SCEN-062`.
-- [ ] Refactor `SQLiteLedgerRepository` (`deleteAccount`, `deleteCategory`, `deleteCategoryGroup`, `createAccount`) to execute pre-computed mutation plans.
-- [ ] Refactor `SupabaseLedgerRepository` (`deleteAccount`, `deleteCategory`, `deleteCategoryGroup`, `createAccount`) to execute pre-computed mutation plans.
-- [ ] Deprecate or remove redundant micro-functions in `src/domain/ledger/entityOperations.ts`.
+- [x] Create `src/domain/ledger/entityManager.ts` implementing `planAccountDeletion`, `planCategoryDeletion`, `planCategoryGroupDeletion`, and `planAccountCreation`.
+- [x] Author comprehensive unit tests in `src/domain/ledger/entityManager.test.ts` asserting `SCEN-060`, `SCEN-061`, and `SCEN-062`.
+- [x] Refactor `SQLiteLedgerRepository` (`deleteAccount`, `deleteCategory`, `deleteCategoryGroup`, `createAccount`) to execute pre-computed mutation plans.
+- [x] Refactor `SupabaseLedgerRepository` (`deleteAccount`, `deleteCategory`, `deleteCategoryGroup`, `createAccount`) to execute pre-computed mutation plans.
+- [x] Deprecate or remove redundant micro-functions in `src/domain/ledger/entityOperations.ts`.
 
 ### [Ticket 02: Storage Port Segregation & Store Streamlining](./tickets/02-storage-port-segregation.md)
-- [ ] Define segregated interfaces in `src/storage/ports/` (`LedgerTransactionsPort`, `EntityCatalogPort`, `LedgerAdminPort`).
-- [ ] Compose `LedgerRepository` interface from the segregated ports in `src/storage/types.ts`.
-- [ ] Refactor `src/storage/useLedgerStore.ts` to eliminate 18 shallow `useCallback` boilerplate wrappers while maintaining backwards-compatible return contracts.
-- [ ] Author test in `src/storage/__tests__/` asserting port segregation and state notification dispatch (`SCEN-063`).
+- [x] Define segregated interfaces in `src/storage/ports/` (`LedgerTransactionsPort`, `EntityCatalogPort`, `LedgerAdminPort`).
+- [x] Compose `LedgerRepository` interface from the segregated ports in `src/storage/types.ts`.
+- [x] Refactor `src/storage/useLedgerStore.ts` to eliminate 18 shallow `useCallback` boilerplate wrappers while maintaining backwards-compatible return contracts.
+- [x] Author test in `src/storage/__tests__/` asserting port segregation and state notification dispatch (`SCEN-063`).
 
 ### [Ticket 03: Onboarding Seam Consolidation & Guard Decoupling](./tickets/03-onboarding-seam-consolidation.md)
-- [ ] Absorb `SQLiteOnboardingRepository` SQL execution directly into `SQLiteLedgerRepository.commitOnboardingConfig()`.
-- [ ] Delete `src/storage/onboardingRepository.ts`.
-- [ ] Refactor `src/hooks/useOnboardingGuard.ts` to query `LedgerRepository.isOnboardingCompleted()` without `DatabaseAdapter` branching.
-- [ ] Remove `DatabaseAdapter` imports and mock requirements from `useOnboardingGuard.test.ts` and `app/_layout.tsx`.
-- [ ] Verify `SCEN-064` pass rate.
+- [x] Absorb `SQLiteOnboardingRepository` SQL execution directly into `SQLiteLedgerRepository.commitOnboardingConfig()`.
+- [x] Delete `src/storage/onboardingRepository.ts`.
+- [x] Refactor `src/hooks/useOnboardingGuard.ts` to query `LedgerRepository.isOnboardingCompleted()` without `DatabaseAdapter` branching.
+- [x] Remove `DatabaseAdapter` imports and mock requirements from `useOnboardingGuard.test.ts` and `app/_layout.tsx`.
+- [x] Verify `SCEN-064` pass rate.
 
 ### [Ticket 04: Encapsulated Point-of-Sale Expense Intake Module](./tickets/04-expense-intake-module.md)
-- [ ] Create `src/domain/ledger/expenseIntake.ts` implementing `parseCurrencyInput`, `previewExpenseImpact`, `resolvePayeeSuggestion`, and `submitExpense`.
-- [ ] Author unit tests in `src/domain/ledger/expenseIntake.test.ts` asserting `SCEN-065`, `SCEN-066`, and `SCEN-067`.
-- [ ] Create `src/hooks/useExpenseIntake.ts` integrating form state with the domain engine.
-- [ ] Refactor `app/modal.tsx` to consume `useExpenseIntake()`, reducing file length from 601 lines to < 150 lines.
+- [x] Create `src/domain/ledger/expenseIntake.ts` implementing `parseCurrencyInput`, `previewExpenseImpact`, `resolvePayeeSuggestion`, and `submitExpense`.
+- [x] Author unit tests in `src/domain/ledger/expenseIntake.test.ts` asserting `SCEN-065`, `SCEN-066`, and `SCEN-067`.
+- [x] Create `src/hooks/useExpenseIntake.ts` integrating form state with the domain engine.
+- [x] Refactor `app/modal.tsx` to consume `useExpenseIntake()`, reducing file length from 601 lines to < 150 lines.
 
 ### [Ticket 05: Full Suite Verification, ADR Recording & Clean Pass](./tickets/05-verification-and-adr.md)
-- [ ] Run `./init.sh` and verify 0 typecheck errors and 100% test pass rate across all test suites.
-- [ ] Record ADR-002 ("Deepened Domain Seams & Port Segregation") in `MEMORY.md`.
-- [ ] Verify zero regressions in existing tab navigation (`app/(tabs)/*`) and settings management (`app/settings/*`).
+- [x] Run `./init.sh` and verify 0 typecheck errors and 100% test pass rate across all test suites.
+- [x] Record ADR-002 ("Deepened Domain Seams & Port Segregation") in `MEMORY.md`.
+- [x] Verify zero regressions in existing tab navigation (`app/(tabs)/*`) and settings management (`app/settings/*`).
