@@ -1,4 +1,6 @@
 import {
+  Account,
+  Category,
   CategoryGroup,
   CreateAccountInput,
   UpdateAccountInput,
@@ -6,10 +8,11 @@ import {
   UpdateCategoryGroupInput,
   CreateCategoryInput,
   UpdateCategoryInput,
+  BudgetState,
+  Transaction,
 } from '../domain/ledger/types';
-import { LedgerTransactionsPort } from './ports/ledgerTransactionsPort';
-import { EntityCatalogPort } from './ports/entityCatalogPort';
-import { LedgerAdminPort } from './ports/ledgerAdminPort';
+import { MonthRolloverResult } from '../domain/ledger/rollover';
+import { ValidatedOnboardingConfig } from '../domain/onboarding/types';
 
 export interface DatabaseAdapter {
   execSync(sql: string): void;
@@ -38,11 +41,72 @@ export {
   ProtectedEntityError,
 } from '../domain/ledger/errors';
 
-export * from './ports/ledgerTransactionsPort';
-export * from './ports/entityCatalogPort';
-export * from './ports/ledgerAdminPort';
+export interface DiagnosticsData {
+  schemaVersion: number;
+  accountCount: number;
+  categoryGroupCount: number;
+  categoryCount: number;
+  transactionCount: number;
+}
 
-export interface LedgerRepository
-  extends LedgerTransactionsPort,
-    EntityCatalogPort,
-    LedgerAdminPort {}
+export interface LedgerRepository {
+  // Transaction operations
+  getBudgetState(): BudgetState;
+  getCategoryGroups(): CategoryGroup[];
+  postOutflow(params: {
+    id: string;
+    accountId: string;
+    categoryId: string;
+    amountCents: number;
+    payee: string;
+    occurredAt?: string;
+  }): { transaction: Transaction; isOverspent: boolean };
+  postInflow(params: {
+    id: string;
+    accountId: string;
+    amountCents: number;
+    payee: string;
+    occurredAt?: string;
+  }): { transaction: Transaction };
+  allocateEnvelope(params: {
+    categoryId: string;
+    amountCents: number;
+  }): { isOverAssigned: boolean };
+  postCreditCardPayment(params: {
+    id: string;
+    fromAccountId: string;
+    toAccountId: string;
+    amountCents: number;
+    payee?: string;
+    occurredAt?: string;
+  }): { transaction: Transaction };
+  performMonthRollover(targetMonth?: string): MonthRolloverResult;
+  applyAutoAssign(): { totalAllocatedCents: number; assignedCount: number };
+  rebalanceCategoryFunds(params: {
+    targetCategoryId: string;
+    sourceCategoryId: string;
+    amountCents: number;
+  }): { coveredCents: number; isCreditDebtCovered: boolean };
+
+  // Entity catalog operations
+  createAccount(input: CreateAccountInput): Account;
+  updateAccount(input: UpdateAccountInput): Account;
+  deleteAccount(id: string): void;
+  createCategoryGroup(input: CreateCategoryGroupInput): CategoryGroup;
+  updateCategoryGroup(input: UpdateCategoryGroupInput): CategoryGroup;
+  deleteCategoryGroup(id: string): void;
+  createCategory(input: CreateCategoryInput): Category;
+  updateCategory(input: UpdateCategoryInput): Category;
+  deleteCategory(id: string): void;
+
+  // Admin & Lifecycle operations
+  initializeAsync?(): Promise<void>;
+  isOnboardingCompleted(): boolean;
+  commitOnboardingConfig(config: ValidatedOnboardingConfig): void;
+  resetDatabase(): void;
+  factoryReset(): void;
+  clearTransactionsOnly(): void;
+  seedDemoData(): void;
+  getDiagnostics(): DiagnosticsData;
+  dispose?(): void;
+}

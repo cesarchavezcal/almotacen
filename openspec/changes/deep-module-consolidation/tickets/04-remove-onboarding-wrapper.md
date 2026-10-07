@@ -20,5 +20,5 @@ Remove pass-through function `commitOnboardingConfig` and legacy port `Onboardin
 ---
 
 ## Verification Criteria
-- [ ] Pass-through wrapper and duplicate port interface removed.
-- [ ] `./init.sh` passes 100%.
+- [x] Pass-through wrapper and duplicate port interface removed.
+- [x] `./init.sh` passes 100%.

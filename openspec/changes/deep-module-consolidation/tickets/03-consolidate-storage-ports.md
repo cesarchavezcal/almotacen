@@ -21,6 +21,6 @@ Inline method signatures from `ports/ledgerTransactionsPort.ts`, `ports/entityCa
 ---
 
 ## Verification Criteria
-- [ ] `src/storage/ports/` deleted.
-- [ ] `LedgerRepository` is the single canonical seam.
-- [ ] `./init.sh` executes with 100% test pass.
+- [x] `src/storage/ports/` deleted.
+- [x] `LedgerRepository` is the single canonical seam.
+- [x] `./init.sh` executes with 100% test pass.

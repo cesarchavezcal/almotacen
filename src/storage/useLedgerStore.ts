@@ -16,9 +16,6 @@ import {
   UpdateCategoryGroupInput,
   CreateCategoryInput,
   UpdateCategoryInput,
-  LedgerTransactionsPort,
-  EntityCatalogPort,
-  LedgerAdminPort,
 } from './types';
 import { MonthRolloverResult } from '../domain/ledger/rollover';
 
@@ -321,18 +318,6 @@ export function useLedgerStore(): UseLedgerStoreResult {
     groups: store.groups,
     ...actions,
   };
-}
-
-export function useLedgerTransactions(): LedgerTransactionsPort {
-  return getRepository();
-}
-
-export function useEntityCatalog(): EntityCatalogPort {
-  return getRepository();
-}
-
-export function useLedgerAdmin(): LedgerAdminPort {
-  return getRepository();
 }
 
 export function setCustomLedgerRepository(customRepo: LedgerRepository | null): void {

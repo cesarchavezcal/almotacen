@@ -1,4 +1,3 @@
-export * from './AppleCardFace';
 export * from './CreditCardFace';
 export * from './EnvelopePassFace';
 export * from './CardStack';
