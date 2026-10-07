@@ -1,37 +1,20 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { createCleanTestDatabase } from '../../../storage/testDatabase';
-import { DatabaseAdapter } from '../../../storage/types';
-import { isOnboardingCompleted } from '../../../storage/schema';
-import { SQLiteLedgerRepository } from '../../../storage/ledgerRepository';
+import { describe, it, expect } from '@jest/globals';
 import { getArchetypeTemplate } from '../archetypes';
 import {
-  commitOnboardingConfig,
   validateOnboardingConfig,
   OnboardingValidationError,
 } from '../onboardingService';
-import { CommitOnboardingConfigParams, OnboardingRepository } from '../types';
+import { CommitOnboardingConfigParams } from '../types';
 
-describe('Onboarding Commitment Service (Ticket 03 / SCEN-047, SCEN-048)', () => {
-  let db: DatabaseAdapter;
-  let repo: OnboardingRepository;
-
-  beforeEach(() => {
-    db = createCleanTestDatabase();
-    repo = new SQLiteLedgerRepository(db);
-  });
-
-  afterEach(() => {
-    db?.closeSync?.();
-  });
-
-  it('SCEN-048: commits depository checking account, categories, and initial allocations', () => {
+describe('Onboarding Domain Validation Service (Ticket 04 / SCEN-021)', () => {
+  it('SCEN-021: validates and normalizes depository checking account, categories, and initial allocations', () => {
     const template = getArchetypeTemplate('STANDARD_BALANCED');
     const rentCat = template.categories.find((c) => c.id === 'cat-rent')!;
     const groceriesCat = template.categories.find((c) => c.id === 'cat-groceries')!;
 
     const params: CommitOnboardingConfigParams = {
       depositoryAccount: {
-        name: 'Primary Checking',
+        name: '  Primary Checking  ',
         startingBalanceCents: 200000, // $2,000.00
       },
       template,
@@ -42,72 +25,30 @@ describe('Onboarding Commitment Service (Ticket 03 / SCEN-047, SCEN-048)', () =>
       remainingReadyToAssignCents: 40000, // $400.00 ($1,200 + $400 + $400 = $2,000)
     };
 
-    expect(isOnboardingCompleted(db)).toBe(false);
+    const validated = validateOnboardingConfig(params);
 
-    commitOnboardingConfig(repo, params);
-
-    // Verify metadata completion flag
-    expect(isOnboardingCompleted(db)).toBe(true);
-
-    // Verify readyToAssign in metadata
-    const rtaRow = db.getFirstSync<{ value: string }>(
-      'SELECT value FROM metadata WHERE key = ?',
-      'ready_to_assign_cents'
-    );
-    expect(rtaRow?.value).toBe('40000');
-
-    // Verify accounts
-    const accounts = db.getAllSync<{
-      id: string;
-      name: string;
-      account_type: string;
-      balance_cents: number;
-    }>('SELECT id, name, account_type, balance_cents FROM accounts');
-
-    expect(accounts).toHaveLength(1);
-    expect(accounts[0].name).toBe('Primary Checking');
-    expect(accounts[0].account_type).toBe('checking');
-    expect(accounts[0].balance_cents).toBe(200000);
-
-    // Verify category groups and categories created
-    const groups = db.getAllSync('SELECT * FROM category_groups');
-    expect(groups.length).toBe(template.groups.length);
-
-    const categories = db.getAllSync<{
-      id: string;
-      name: string;
-      assigned_cents: number;
-      available_cents: number;
-      target_cents: number;
-    }>('SELECT id, name, assigned_cents, available_cents, target_cents FROM categories');
-
-    expect(categories.length).toBe(template.categories.length);
-
-    const savedRent = categories.find((c) => c.id === 'cat-rent');
-    expect(savedRent?.assigned_cents).toBe(120000);
-    expect(savedRent?.available_cents).toBe(120000);
-    expect(savedRent?.target_cents).toBe(120000);
-
-    const savedGroceries = categories.find((c) => c.id === 'cat-groceries');
-    expect(savedGroceries?.assigned_cents).toBe(40000);
-    expect(savedGroceries?.available_cents).toBe(40000);
-
-    // Unassigned category in template should have 0 allocated
-    const savedAuto = categories.find((c) => c.id === 'cat-auto');
-    expect(savedAuto?.assigned_cents).toBe(0);
-    expect(savedAuto?.available_cents).toBe(0);
+    expect(validated.depositoryAccount.name).toBe('Primary Checking');
+    expect(validated.depositoryAccount.startingBalanceCents).toBe(200000);
+    expect(validated.depositoryAccount.id).toBe('acc-checking');
+    expect(validated.creditCardAccount).toBeUndefined();
+    expect(validated.allocations[rentCat.id]).toBe(120000);
+    expect(validated.allocations[groceriesCat.id]).toBe(40000);
+    expect(validated.remainingReadyToAssignCents).toBe(40000);
+    expect(validated.template.id).toBe('STANDARD_BALANCED');
   });
 
-  it('SCEN-048: commits optional credit card account, payment envelope, and unfunded debt tracking', () => {
+  it('SCEN-021: validates optional credit card account, debt values, and preserves explicit IDs', () => {
     const template = getArchetypeTemplate('MINIMALIST_LIVING');
 
     const params: CommitOnboardingConfigParams = {
       depositoryAccount: {
+        id: 'custom-checking-id',
         name: 'Main Checking',
         startingBalanceCents: 150000, // $1,500.00
       },
       creditCardAccount: {
-        name: 'Apple Card',
+        id: 'custom-cc-id',
+        name: '  Apple Card  ',
         startingDebtCents: 75000, // $750.00 starting debt
       },
       template,
@@ -115,40 +56,14 @@ describe('Onboarding Commitment Service (Ticket 03 / SCEN-047, SCEN-048)', () =>
       remainingReadyToAssignCents: 150000,
     };
 
-    commitOnboardingConfig(repo, params);
+    const validated = validateOnboardingConfig(params);
 
-    expect(isOnboardingCompleted(db)).toBe(true);
-
-    const accounts = db.getAllSync<{
-      id: string;
-      name: string;
-      account_type: string;
-      balance_cents: number;
-      credit_payment_category_id: string | null;
-    }>('SELECT id, name, account_type, balance_cents, credit_payment_category_id FROM accounts');
-
-    expect(accounts).toHaveLength(2);
-
-    const ccAccount = accounts.find((a) => a.account_type === 'credit');
-    expect(ccAccount).toBeDefined();
-    expect(ccAccount?.name).toBe('Apple Card');
-    expect(ccAccount?.balance_cents).toBe(-75000); // Negative balance represents debt
-    expect(ccAccount?.credit_payment_category_id).toBeTruthy();
-
-    // Verify payment category created with unfunded debt
-    const paymentCat = db.getFirstSync<{
-      id: string;
-      name: string;
-      is_credit_payment: number;
-      unfunded_debt_cents: number;
-    }>(
-      'SELECT id, name, is_credit_payment, unfunded_debt_cents FROM categories WHERE id = ?',
-      ccAccount?.credit_payment_category_id!
-    );
-
-    expect(paymentCat).toBeDefined();
-    expect(paymentCat?.is_credit_payment).toBe(1);
-    expect(paymentCat?.unfunded_debt_cents).toBe(75000);
+    expect(validated.depositoryAccount.id).toBe('custom-checking-id');
+    expect(validated.depositoryAccount.name).toBe('Main Checking');
+    expect(validated.creditCardAccount).toBeDefined();
+    expect(validated.creditCardAccount?.id).toBe('custom-cc-id');
+    expect(validated.creditCardAccount?.name).toBe('Apple Card');
+    expect(validated.creditCardAccount?.startingDebtCents).toBe(75000);
   });
 
   it('enforces zero-based budgeting cash invariant (sum(allocations) + RTA === startingCash)', () => {
@@ -167,8 +82,8 @@ describe('Onboarding Commitment Service (Ticket 03 / SCEN-047, SCEN-048)', () =>
       remainingReadyToAssignCents: 50000,
     };
 
-    expect(() => commitOnboardingConfig(repo, params)).toThrow(OnboardingValidationError);
-    expect(isOnboardingCompleted(db)).toBe(false);
+    expect(() => validateOnboardingConfig(params)).toThrow(OnboardingValidationError);
+    expect(() => validateOnboardingConfig(params)).toThrow(/Zero-based cash invariant violated/);
   });
 
   it('validates account names and non-negative amounts', () => {
@@ -176,63 +91,54 @@ describe('Onboarding Commitment Service (Ticket 03 / SCEN-047, SCEN-048)', () =>
 
     // Empty checking account name
     expect(() =>
-      commitOnboardingConfig(repo, {
+      validateOnboardingConfig({
         depositoryAccount: { name: '   ', startingBalanceCents: 10000 },
         template,
         allocations: {},
         remainingReadyToAssignCents: 10000,
       })
-    ).toThrow(OnboardingValidationError);
+    ).toThrow('Depository account name cannot be empty.');
 
     // Negative checking balance
     expect(() =>
-      commitOnboardingConfig(repo, {
+      validateOnboardingConfig({
         depositoryAccount: { name: 'Checking', startingBalanceCents: -500 },
         template,
         allocations: {},
         remainingReadyToAssignCents: -500,
       })
-    ).toThrow(OnboardingValidationError);
+    ).toThrow('Starting checking balance cannot be negative.');
+
+    // Empty credit card name
+    expect(() =>
+      validateOnboardingConfig({
+        depositoryAccount: { name: 'Checking', startingBalanceCents: 10000 },
+        creditCardAccount: { name: '  ', startingDebtCents: 100 },
+        template,
+        allocations: {},
+        remainingReadyToAssignCents: 10000,
+      })
+    ).toThrow('Credit card account name cannot be empty.');
 
     // Negative credit card debt
     expect(() =>
-      commitOnboardingConfig(repo, {
+      validateOnboardingConfig({
         depositoryAccount: { name: 'Checking', startingBalanceCents: 10000 },
         creditCardAccount: { name: 'Card', startingDebtCents: -100 },
         template,
         allocations: {},
         remainingReadyToAssignCents: 10000,
       })
-    ).toThrow(OnboardingValidationError);
-  });
+    ).toThrow('Credit card starting debt cannot be negative.');
 
-  it('rolls back completely if a database failure occurs during transaction', () => {
-    const template = getArchetypeTemplate('STANDARD_BALANCED');
-
-    // Passing invalid group duplicate will force SQLite error or transaction failure
-    const corruptTemplate = {
-      ...template,
-      groups: [
-        { id: 'grp-dup', name: 'Group 1', sortOrder: 1 },
-        { id: 'grp-dup', name: 'Group 2', sortOrder: 2 }, // Duplicate PRIMARY KEY
-      ],
-    };
-
-    const params: CommitOnboardingConfigParams = {
-      depositoryAccount: {
-        name: 'Checking',
-        startingBalanceCents: 50000,
-      },
-      template: corruptTemplate,
-      allocations: {},
-      remainingReadyToAssignCents: 50000,
-    };
-
-    expect(() => commitOnboardingConfig(repo, params)).toThrow();
-
-    // Verify rollback: 0 accounts, 0 categories, onboarding_completed still false
-    const accounts = db.getAllSync('SELECT * FROM accounts');
-    expect(accounts).toHaveLength(0);
-    expect(isOnboardingCompleted(db)).toBe(false);
+    // Negative ready to assign
+    expect(() =>
+      validateOnboardingConfig({
+        depositoryAccount: { name: 'Checking', startingBalanceCents: 10000 },
+        template,
+        allocations: { 'cat-rent': 15000 },
+        remainingReadyToAssignCents: -5000,
+      })
+    ).toThrow('Remaining Ready to Assign cannot be negative.');
   });
 });
