@@ -9,9 +9,9 @@
 
 | Metric | Value |
 |---|---|
-| **Workspace Skills Registered** | 58 |
+| **Workspace Skills Registered** | 60 |
 | **Global / System Skills Available** | 25 |
-| **Total Ecosystem Skills** | 83 |
+| **Total Ecosystem Skills** | 85 |
 | **Workspace Sources** | `mattpocock/skills`, `cesarchavezcal/personal-skills`, `expo/skills`, `supabase/agent-skills`, `callstack/react-native-testing-library` |
 | **Global Sources** | `gentleman-programming` (SDD suite, Gentle AI, Skill tooling) |
 | **Storage Locations** | Workspace: `.agents/skills/` &bull; Global: `~/.agents/skills/` |
@@ -32,23 +32,25 @@
 | [`to-spec`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/to-spec/SKILL.md) | `/to-spec` | `mattpocock/skills` | Turn the current conversation into a spec and publish it to the project issue tracker — no interview, just synthesis of what you've already discussed. |
 | [`to-tickets`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/to-tickets/SKILL.md) | `/to-tickets` | `mattpocock/skills` | Break a plan, spec, or the current conversation into a set of tracer-bullet tickets, each declaring its blocking edges, published to the configured tracker — edges as text in one file per ticket locally, or native blocking links on a real tracker. |
 | [`wayfinder`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/wayfinder/SKILL.md) | `/wayfinder` | `mattpocock/skills` | Plan a huge chunk of work — more than one agent session can hold — as a shared map of decision tickets on your issue tracker, and resolve them one at a time until the way to the destination is clear. |
-| [`domain-modeling`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/domain-modeling/SKILL.md) | `/domain-modeling` | `mattpocock/skills` | Build and sharpen a project's domain model. Use when discussing codebase terminology, writing or editing a CONTEXT.md, or recording or editing an ADR. |
+| [`domain-modeling`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/domain-modeling/SKILL.md) | `/domain-modeling` | `mattpocock/skills` | Build and sharpen a project's domain model. Use when discussing codebase terminology, writing or editing a GLOSSARY.md, or recording or editing an ADR. |
 | [`codebase-design`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/codebase-design/SKILL.md) | `/codebase-design` | `mattpocock/skills` | Shared vocabulary for designing deep modules. Use when the user wants to design or improve a module's interface, find deepening opportunities, decide where a seam goes, make code more testable or AI-navigable, or when another skill needs the deep-module vocabulary. |
 
 ---
 
-## 2. Engineering, TDD & Execution (10 skills)
+## 2. Engineering, TDD & Execution (12 skills)
 
 | Skill | Trigger / Command | Source | Description |
 |---|---|---|---|
 | [`implement`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/implement/SKILL.md) | `/implement` | `mattpocock/skills` | Implement a piece of work based on a spec or set of tickets. |
+| [`implement-spec`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/implement-spec/SKILL.md) | `/implement-spec` | `mattpocock/skills` | Implement the result of /to-spec and /to-tickets in code across parallel task-graph worktrees. |
 | [`tdd`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/tdd/SKILL.md) | `/tdd` | `mattpocock/skills` | Test-driven development. Use when the user wants to build features or fix bugs test-first, mentions "red-green-refactor", or wants integration tests. |
 | [`harness`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/harness/SKILL.md) | `/harness` | `cesarchavezcal/personal-skills` | Autonomous code-to-production pipeline — takes an idea or ticket through implementation, CI, review, and finalization with zero to full interaction. |
 | [`team-cheap`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/team-cheap/SKILL.md) | `/team-cheap`, `swarm` | `cesarchavezcal/personal-skills` | Cost-optimized workspace-isolated subagent fan-out above /harness — a thin orchestrator dispatches one isolated, fire-and-collect subagent per repo/mandate (Gemini Flash for the bulk, Gemini Pro reserved for hard mandates and reviews) under standing governance. Each subagent runs /harness for its mandate and returns a result. Triggers on '/team-cheap', 'spin up a team', 'swarm agents on this', 'multi-repo team', 'run a team on'. |
 | [`diagnosing-bugs`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/diagnosing-bugs/SKILL.md) | `/diagnosing-bugs` | `mattpocock/skills` | Diagnosis loop for hard bugs and performance regressions. Use when the user says "diagnose"/"debug this", or reports something broken/throwing/failing/slow. |
 | [`code-review`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/code-review/SKILL.md) | `/code-review` | `mattpocock/skills` | Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes — Standards (does the code follow this repo's documented coding standards?) and Spec (does the code match what the originating issue/spec asked for?). Runs both reviews in parallel sub-agents and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to "review since X". |
+| [`pr`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/pr/SKILL.md) | `/pr` | `mattpocock/skills` | Write a standardized visual PR body (call trees, component trees, Mermaid, before/after evidence, blast radius). |
+| [`retro`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/retro/SKILL.md) | `/retro` | `mattpocock/skills` | Conduct a retrospective on a coding session, analyzing agent environment, guardrails, and deterministic checks. |
 | [`improve-codebase-architecture`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/improve-codebase-architecture/SKILL.md) | `/improve-codebase-architecture` | `mattpocock/skills` | Scan a codebase for deepening opportunities, present them as a visual HTML report, then grill through whichever one you pick. |
-| [`resolving-merge-conflicts`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/resolving-merge-conflicts/SKILL.md) | `/resolving-merge-conflicts` | `mattpocock/skills` | Use when you need to resolve an in-progress git merge/rebase conflict. |
 | [`prototype`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/prototype/SKILL.md) | `/prototype` | `mattpocock/skills` | Build a throwaway prototype to answer a design question. Use when the user wants to sanity-check whether a state model or logic feels right, or explore what a UI should look like. |
 | [`research`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/research/SKILL.md) | `/research` | `mattpocock/skills` | Investigate a question against high-trust primary sources and capture the findings as a Markdown file in the repo. Use when the user wants a topic researched, docs or API facts gathered, or reading legwork delegated to a background agent. |
 
@@ -58,7 +60,7 @@
 
 | Skill | Trigger / Command | Source | Description |
 |---|---|---|---|
-| [`init-project`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/init-project/SKILL.md) | `/init-project` | `cesarchavezcal/agent-boilerplate` | Bootstrap a new repository created from agent-boilerplate. Use when starting a new project, when CONTEXT.md contains uninitialized placeholders ([Your Project Name]), or when asked to initialize/setup the project. |
+| [`init-project`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/init-project/SKILL.md) | `/init-project` | `cesarchavezcal/agent-boilerplate` | Bootstrap a new repository created from agent-boilerplate. Use when starting a new project, when GLOSSARY.md contains uninitialized placeholders ([Your Project Name]), or when asked to initialize/setup the project. |
 | [`ask-matt`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/ask-matt/SKILL.md) | `/ask-matt` | `mattpocock/skills` | Ask which skill or flow fits your situation. A router over the skills in this repo. |
 | [`i-have-adhd`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/i-have-adhd/SKILL.md) | `/i-have-adhd` | `cesarchavezcal/personal-skills` | Shape output for a reader with ADHD: lead with the next action, number multi-step work, restate state across turns, suppress tangents, give specific time estimates, make wins visible. Invoke with /i-have-adhd; stays on until "stop adhd mode". |
 | [`to-questionnaire`](file:///Users/cesaradalbertochavezcalderon/Personal/agent-boilerplate/.agents/skills/to-questionnaire/SKILL.md) | `/to-questionnaire` | `mattpocock/skills` | Turn a decision you can't fully answer into a questionnaire for someone else to fill in. |
