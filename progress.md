@@ -229,18 +229,16 @@
 
 ### What's In Progress
 
-`deep-module-consolidation` (Ready for Review & PR on ALM-030 Tickets 02–05).
+None (`deep-module-consolidation` ALM-030 fully merged & archived).
 
 ### What's Next
 
-1. Run Two-Axis Review subagents on Tickets 02–05 (`ALM-030`).
-2. Push branch `chore/CCH/ALM-030-deep-module-consolidation` and open GitHub PR.
-3. Merge PR into `main`.
-4. Run `/sdd-archive` to archive completed `deep-module-consolidation` change.
+1. Plan next feature milestone or execute next prioritized product epic via `/autonomic plan`.
 
 ## Evidence of Completion
 
 - [x] `./init.sh`: 309/309 Jest unit/integration tests pass (38 suites), `tsc --noEmit` 0 errors.
+- [x] Change Archival: `deep-module-consolidation` archived to `openspec/changes/archive/2026-10-07-deep-module-consolidation/` (PR #81).
 - [x] Deep Module Consolidation Ticket 01: Deleted `src/domain/ledger/entityOperations.ts` (`SCEN-018`).
 - [x] Deep Module Consolidation Ticket 02: Removed dead port hooks from `useLedgerStore.ts` (`SCEN-019`).
 - [x] Deep Module Consolidation Ticket 03: Unified `LedgerRepository` contract and deleted `src/storage/ports/` (`SCEN-020`).
