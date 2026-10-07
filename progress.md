@@ -219,21 +219,33 @@
   - Verified `EntityManager` serves as direct authority across all entity mutation plans
   - Verified `./init.sh`: 38/38 Jest test suites passed, 309/309 tests passed, 0 failures, 0 TypeScript errors
 
+- [x] Executed Step 7 (Implementation - ALM-030 Tickets 02 - 05: Deep Module Consolidation):
+  - Removed dead port hook wrappers `useLedgerTransactions`, `useEntityCatalog`, `useLedgerAdmin` from `useLedgerStore.ts` (`SCEN-019`)
+  - Inlined transaction, entity catalog, and admin method declarations directly into `LedgerRepository` in `src/storage/types.ts` and deleted `src/storage/ports/` (`SCEN-020`)
+  - Refactored `portSegregation.test.ts` to `repositoryContract.test.ts` verifying unified `LedgerRepository` seam
+  - Removed `commitOnboardingConfig` pass-through wrapper and legacy `OnboardingRepository` port from `src/domain/onboarding/` (`SCEN-021`)
+  - Deleted unused mockup `src/components/AppleCardFace.tsx`, updated barrel exports and accessibility tests to assert `CreditCardFace` (`SCEN-022`)
+  - Verified `./init.sh`: 38/38 Jest test suites passed, 309/309 tests passed, 0 failures, 0 TypeScript errors
+
 ### What's In Progress
 
-`deep-module-consolidation` (Ready for Review & PR on ALM-030 Ticket 01).
+`deep-module-consolidation` (Ready for Review & PR on ALM-030 Tickets 02–05).
 
 ### What's Next
 
-1. Run Two-Axis Review subagents on Ticket 01 (`ALM-030`).
-2. Push branch `chore/CCH/ALM-030-delete-entity-operations` and open GitHub PR.
+1. Run Two-Axis Review subagents on Tickets 02–05 (`ALM-030`).
+2. Push branch `chore/CCH/ALM-030-deep-module-consolidation` and open GitHub PR.
 3. Merge PR into `main`.
-4. Proceed to Ticket 02 (`ALM-030`): Remove Dead Port Hooks from Store (`SCEN-019`).
+4. Run `/sdd-archive` to archive completed `deep-module-consolidation` change.
 
 ## Evidence of Completion
 
 - [x] `./init.sh`: 309/309 Jest unit/integration tests pass (38 suites), `tsc --noEmit` 0 errors.
 - [x] Deep Module Consolidation Ticket 01: Deleted `src/domain/ledger/entityOperations.ts` (`SCEN-018`).
+- [x] Deep Module Consolidation Ticket 02: Removed dead port hooks from `useLedgerStore.ts` (`SCEN-019`).
+- [x] Deep Module Consolidation Ticket 03: Unified `LedgerRepository` contract and deleted `src/storage/ports/` (`SCEN-020`).
+- [x] Deep Module Consolidation Ticket 04: Removed onboarding pass-through wrapper and legacy port (`SCEN-021`).
+- [x] Deep Module Consolidation Ticket 05: Deleted `AppleCardFace.tsx` and consolidated on `CreditCardFace.tsx` (`SCEN-022`).
 - [x] ALM-027 Ticket 01: 13 behavioral tests passing (`SCEN-060`, `SCEN-061`, `SCEN-062`).
 - [x] ALM-027 Ticket 02: 3 port segregation tests passing (`SCEN-063`).
 - [x] ALM-027 Ticket 03: 4 onboarding guard tests passing (`SCEN-064`).

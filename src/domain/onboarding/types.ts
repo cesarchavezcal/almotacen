@@ -67,7 +67,3 @@ export interface ValidatedOnboardingConfig {
   allocations: Record<string, number>;
   remainingReadyToAssignCents: number;
 }
-
-export interface OnboardingRepository {
-  commitOnboardingConfig(config: ValidatedOnboardingConfig): void;
-}

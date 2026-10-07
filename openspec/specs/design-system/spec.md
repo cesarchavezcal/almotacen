@@ -72,7 +72,7 @@ The `Button` component MUST expose explicit accessibility traits (`accessibility
 ---
 
 ### Requirement 4: Financial Card and Row Accessibility Summaries
-Financial display elements (`TransactionRow`, `AppleCardFace`, `CreditCardFace`, `EnvelopePassFace`) MUST provide descriptive `accessibilityLabel` strings summarizing their financial status for assistive technologies.
+Financial display elements (`TransactionRow`, `CreditCardFace`, `EnvelopePassFace`) MUST provide descriptive `accessibilityLabel` strings summarizing their financial status for assistive technologies.
 
 #### Scenario: Transaction Row Accessibility Announcement (SCEN-043)
 - GIVEN a `TransactionRow` for merchant "Supermarket" with amount "$45.00", category "Groceries", and date "Today"

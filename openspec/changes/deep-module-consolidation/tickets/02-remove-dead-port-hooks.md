@@ -19,5 +19,5 @@ Remove unused port hook wrappers `useLedgerTransactions()`, `useEntityCatalog()`
 ---
 
 ## Verification Criteria
-- [ ] Dead port hooks removed from `src/storage/useLedgerStore.ts`.
-- [ ] `./init.sh` executes with 0 errors.
+- [x] Dead port hooks removed from `src/storage/useLedgerStore.ts`.
+- [x] `./init.sh` executes with 0 errors.

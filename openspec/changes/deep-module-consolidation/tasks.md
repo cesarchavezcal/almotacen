@@ -24,24 +24,24 @@ This change is partitioned into 5 discrete, atomic tickets bound to behavioral s
 - [x] Run `./init.sh` to verify zero compilation or test breakages.
 
 ### [Ticket 02: Remove Dead Port Hooks from Store](./tickets/02-remove-dead-port-hooks.md)
-- [ ] Remove `useLedgerTransactions()`, `useEntityCatalog()`, and `useLedgerAdmin()` from `src/storage/useLedgerStore.ts`.
-- [ ] Clean up unused port type imports in `src/storage/useLedgerStore.ts`.
-- [ ] Verify `./init.sh` green pass.
+- [x] Remove `useLedgerTransactions()`, `useEntityCatalog()`, and `useLedgerAdmin()` from `src/storage/useLedgerStore.ts`.
+- [x] Clean up unused port type imports in `src/storage/useLedgerStore.ts`.
+- [x] Verify `./init.sh` green pass.
 
 ### [Ticket 03: Consolidate Storage Ports into Unified Repository Seam](./tickets/03-consolidate-storage-ports.md)
-- [ ] Merge methods from `ports/ledgerTransactionsPort.ts`, `ports/entityCatalogPort.ts`, and `ports/ledgerAdminPort.ts` directly into `LedgerRepository` in `src/storage/types.ts`.
-- [ ] Delete `src/storage/ports/` directory.
-- [ ] Update `src/storage/__tests__/portSegregation.test.ts` to `src/storage/__tests__/repositoryContract.test.ts` testing `LedgerRepository`.
-- [ ] Verify `./init.sh` green pass across all SQLite and Supabase tests.
+- [x] Merge methods from `ports/ledgerTransactionsPort.ts`, `ports/entityCatalogPort.ts`, and `ports/ledgerAdminPort.ts` directly into `LedgerRepository` in `src/storage/types.ts`.
+- [x] Delete `src/storage/ports/` directory.
+- [x] Update `src/storage/__tests__/portSegregation.test.ts` to `src/storage/__tests__/repositoryContract.test.ts` testing `LedgerRepository`.
+- [x] Verify `./init.sh` green pass across all SQLite and Supabase tests.
 
 ### [Ticket 04: Remove Onboarding Service Wrapper & Legacy Port](./tickets/04-remove-onboarding-wrapper.md)
-- [ ] Remove `commitOnboardingConfig` function from `src/domain/onboarding/onboardingService.ts`.
-- [ ] Remove `OnboardingRepository` interface from `src/domain/onboarding/types.ts`.
-- [ ] Update `src/domain/onboarding/__tests__/onboardingService.test.ts` to assert `validateOnboardingConfig` directly.
-- [ ] Verify `./init.sh` green pass.
+- [x] Remove `commitOnboardingConfig` function from `src/domain/onboarding/onboardingService.ts`.
+- [x] Remove `OnboardingRepository` interface from `src/domain/onboarding/types.ts`.
+- [x] Update `src/domain/onboarding/__tests__/onboardingService.test.ts` to assert `validateOnboardingConfig` directly.
+- [x] Verify `./init.sh` green pass.
 
 ### [Ticket 05: Remove Dead AppleCardFace.tsx Component](./tickets/05-remove-apple-card-face.md)
-- [ ] Remove `src/components/AppleCardFace.tsx`.
-- [ ] Remove `AppleCardFace` export from `src/components/index.ts`.
-- [ ] Update `src/components/__tests__/FinancialCardsAccessibility.test.tsx` to assert `CreditCardFace` screen reader output.
-- [ ] Verify `./init.sh` 100% green pass.
+- [x] Remove `src/components/AppleCardFace.tsx`.
+- [x] Remove `AppleCardFace` export from `src/components/index.ts`.
+- [x] Update `src/components/__tests__/FinancialCardsAccessibility.test.tsx` to assert `CreditCardFace` screen reader output.
+- [x] Verify `./init.sh` 100% green pass.

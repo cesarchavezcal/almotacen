@@ -1,11 +1,10 @@
 import React from 'react';
 import { describe, it, expect } from '@jest/globals';
 import { TransactionRow } from '../TransactionRow';
-import { AppleCardFace } from '../AppleCardFace';
 import { CreditCardFace } from '../CreditCardFace';
 import { EnvelopePassFace } from '../EnvelopePassFace';
 
-describe('Financial Cards & Rows Accessibility (SCEN-043, SCEN-044, SCEN-045)', () => {
+describe('Financial Cards & Rows Accessibility (SCEN-043, SCEN-044, SCEN-045, SCEN-022)', () => {
   it('SCEN-043: TransactionRow generates descriptive accessibilityLabel and accessible role', () => {
     const row = TransactionRow({
       merchant: 'Trader Joe’s',
@@ -23,16 +22,7 @@ describe('Financial Cards & Rows Accessibility (SCEN-043, SCEN-044, SCEN-045)', 
     expect(row.props.accessibilityLabel).toContain('Outflow $45.00');
   });
 
-  it('SCEN-044: AppleCardFace and CreditCardFace produce full screen reader summary', () => {
-    const appleCard = AppleCardFace({
-      cardholder: 'Cesar Chavez',
-      balance: '$1,425.50',
-    });
-
-    expect(appleCard.props.accessible).toBe(true);
-    expect(appleCard.props.accessibilityLabel).toContain('Apple Card');
-    expect(appleCard.props.accessibilityLabel).toContain('$1,425.50');
-
+  it('SCEN-044 / SCEN-022: CreditCardFace produces full screen reader summary as canonical card face', () => {
     const creditCard = CreditCardFace({
       issuer: 'Chase Sapphire Preferred',
       last4: '4521',

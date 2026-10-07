@@ -20,6 +20,6 @@ Delete `src/components/AppleCardFace.tsx`, a hardcoded mockup component with zer
 ---
 
 ## Verification Criteria
-- [ ] `AppleCardFace.tsx` deleted.
-- [ ] `CreditCardFace.tsx` verified as canonical card component.
-- [ ] `./init.sh` passes 100%.
+- [x] `AppleCardFace.tsx` deleted.
+- [x] `CreditCardFace.tsx` verified as canonical card component.
+- [x] `./init.sh` passes 100%.

@@ -1,7 +1,6 @@
 import {
   CommitOnboardingConfigParams,
   ValidatedOnboardingConfig,
-  OnboardingRepository,
 } from './types';
 
 export class OnboardingValidationError extends Error {
@@ -68,12 +67,4 @@ export function validateOnboardingConfig(
     allocations: params.allocations,
     remainingReadyToAssignCents: remainingReadyToAssignCents,
   };
-}
-
-export function commitOnboardingConfig(
-  repo: OnboardingRepository,
-  params: CommitOnboardingConfigParams
-): void {
-  const validated = validateOnboardingConfig(params);
-  repo.commitOnboardingConfig(validated);
 }
