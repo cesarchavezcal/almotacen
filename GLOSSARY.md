@@ -26,13 +26,41 @@ This file holds the project's domain definition, architecture overview, and tech
 
 ```text
 .
-├── app/                    # Expo Router file-based navigation (tabs, layouts, modals)
-│   ├── (tabs)/             # Main tab navigator (Dashboard/Cashflow, Budget, Accounts)
+├── app/                    # Expo Router file-based navigation (routes/containers)
+│   ├── (tabs)/             # Tab navigator: index (/), budget, accounts, settings
 │   ├── _layout.tsx         # Root app layout & providers
-│   └── modal.tsx           # Quick transaction entry modal
+│   ├── onboarding.tsx      # Onboarding flow route
+│   └── modal.tsx           # Quick transaction entry modal route
 ├── assets/                 # App icons, splash screens, and images
-├── components/             # Reusable UI components (Themed, Parallax, Forms)
-├── constants/              # App themes, colors, and static configuration
+├── src/                    # PRIMARY APPLICATION SOURCE ROOT
+│   ├── domain/             # Pure financial business rules & models
+│   │   ├── ledger/         # Core ledgerEngine, currency, rollover, targets, auto-assign
+│   │   ├── cashflow/       # Reactive cashflow trajectories & scrubbing math
+│   │   └── onboarding/     # Onboarding validation rules & archetypes
+│   ├── storage/            # Local SQLite & remote Supabase persistence engines
+│   │   ├── types.ts        # ⚡ Single source of truth for repository & entity contracts
+│   │   ├── database.ts     # Platform database adapter (expo-sqlite / node:sqlite)
+│   │   ├── schema.ts       # SQLite DDL migrations & default seed data
+│   │   ├── ledgerRepository.ts # Atomic SQLite double-sided ledger repository
+│   │   ├── supabase/       # Supabase Postgres client, DDL, and auth repository
+│   │   └── useLedgerStore.ts   # Unified storage hook & event emitter
+│   ├── hooks/              # State & data orchestration hooks
+│   │   ├── useCashflow.ts  # Reactive burn trajectory & chart state
+│   │   ├── useSmartPayeeMemory.ts # Auto-categorization memory
+│   │   └── useOnboardingWizard.ts # 4-step wizard coordinator
+│   ├── screens/            # Full-screen container layouts
+│   │   ├── DashboardScreen.tsx
+│   │   ├── OnboardingScreen.tsx
+│   │   └── SettingsScreen.tsx
+│   ├── components/         # In-app Design System & domain UI modules
+│   │   ├── Button.tsx, Card.tsx, Input.tsx, Modal.tsx # Primitives
+│   │   ├── budget/         # Budget table, envelope rows, coverage modals
+│   │   ├── cashflow/       # ReactiveBurnChart & trajectory visuals
+│   │   ├── onboarding/     # OnboardingWizardView & step cards
+│   │   └── settings/       # Entity CRUD modals & reset alerts
+│   └── theme/              # Active design tokens (colors, spacing, typography, shadows)
+├── components/             # [DEPRECATED] Boilerplate Expo starter templates (do not use)
+├── constants/              # Static fallback constants
 ├── .agents/                # Local agent skills and specialized workflows
 ├── .atl/                   # Skill registry index (.atl/skill-registry.md)
 ├── .gga                    # Gentleman Guardian Angel AI code review configuration
@@ -45,15 +73,30 @@ This file holds the project's domain definition, architecture overview, and tech
 ├── openspec/               # Spec-Driven Development (specs/, changes/, config.yaml)
 ├── scripts/                # Dynamic stack setup and skill installation scripts
 └── docs/
-    ├── planning/           # Implementation plans and walkthroughs
-    └── product-design/     # Product specs (/product-function, /ia, /ooux)
+    ├── planning/           # Active engineering plans (completed moved to archive/)
+    ├── product-design/     # Product specs (/product-function, /ia, /ooux)
+    └── product-description/# Outside-in UX state charts & verification matrices
 ```
 
 ---
 
-## 4. Key Conventions & Design System
+## 4. Route-to-Component Navigation Map
 
-- **Styling**: React Native StyleSheet with unified theme tokens (`constants/Colors.ts`).
-- **Components**: Functional components with strict TypeScript prop contracts and accessibility labels.
+| Route | Container / Screen | Primary Hook | Underlying Domain / Storage |
+|---|---|---|---|
+| `app/(tabs)/index.tsx` (`/`) | `DashboardScreen.tsx` & `ReactiveBurnChart` | `useCashflow` | `src/domain/cashflow/` & `useLedgerStore` |
+| `app/(tabs)/budget.tsx` (`/budget`) | `BudgetTableView.tsx` | `useLedgerStore` | `src/domain/ledger/ledgerEngine.ts` |
+| `app/(tabs)/accounts.tsx` (`/accounts`) | Account list & cards | `useLedgerStore` | `src/storage/types.ts` (`Account`) |
+| `app/(tabs)/settings.tsx` (`/settings`) | `SettingsScreen.tsx` | `useLedgerStore` | `src/storage/` (Entity CRUD & Diagnostics) |
+| `app/onboarding.tsx` (`/onboarding`) | `OnboardingScreen.tsx` & `OnboardingWizardView.tsx` | `useOnboardingWizard` | `src/domain/onboarding/` |
+| `app/modal.tsx` (`/modal`) | `QuickExpenseModal.tsx` | `useExpenseIntake` | `src/domain/ledger/expenseIntake.ts` |
+
+---
+
+## 5. Key Conventions & Design System
+
+- **Storage Contracts**: Always check [`src/storage/types.ts`](src/storage/types.ts) for method signatures and return shapes before reading repository implementations.
+- **Styling**: React Native StyleSheet with unified theme tokens from [`src/theme/`](src/theme/) (`colors.ts`, `spacing.ts`, `typography.ts`, `radius.ts`, `shadows.ts`). Do NOT use legacy `constants/Colors.ts`.
+- **Components**: Use components in [`src/components/`](src/components/). The root `components/` directory contains legacy starter code.
 - **Architecture**: Modular separation between domain financial logic (ledgers, allocation calculations), state/data hooks, and UI presentational components.
 - **Local-First & Offline**: Optimistic UI updates for quick expense logging with background sync.
